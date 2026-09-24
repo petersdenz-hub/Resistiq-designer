@@ -12,6 +12,16 @@ export interface GarmentRect {
   height: number
 }
 
+/** Print / placement guide in panel-local units. Editor overlay only. */
+export interface GarmentSafeAreaDefinition {
+  id: string
+  label: string
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
 export interface GarmentPanelDefinition {
   id: string
   label: string
@@ -24,6 +34,8 @@ export interface GarmentPanelDefinition {
   local: { width: number; height: number }
   /** Where this panel sits on the garment viewBox. */
   frame: GarmentRect
+  /** Optional design/safe area for this panel. */
+  safeArea?: GarmentSafeAreaDefinition
 }
 
 export interface GarmentRenderProps {

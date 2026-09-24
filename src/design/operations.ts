@@ -1,11 +1,14 @@
 import { getGarment } from '@/garments/registry'
 import { getGarmentPanel } from '@/garments/coordinates'
+import { constrainElementInDocument, getConstraintBounds } from './constraints'
 import { createId } from './ids'
+import { DEFAULT_TEXT_FONT } from './typography'
 import type {
   DesignDocument,
   DesignElement,
   DesignElementPatch,
   GraphicElement,
+  LayerDirection,
   TextElement,
 } from './types'
 
@@ -87,7 +90,7 @@ export function addElement(
 ): DesignDocument {
   return touch({
     ...document,
-    elements: [...document.elements, element],
+    elements: [...document.elements, constrainElementInDocument(document, element)],
   })
 }
 
@@ -98,6 +101,15 @@ export function removeElement(document: DesignDocument, elementId: string): Desi
   })
 }
 
+function patchTouchesBox(patch: DesignElementPatch): boolean {
+  return (
+    patch.x !== undefined ||
+    patch.y !== undefined ||
+    patch.width !== undefined ||
+    patch.height !== undefined
+  )
+}
+
 export function updateElement(
   document: DesignDocument,
   elementId: string,
@@ -105,16 +117,20 @@ export function updateElement(
 ): DesignDocument {
   return touch({
     ...document,
-    elements: document.elements.map((element) =>
-      element.id === elementId ? ({ ...element, ...patch } as DesignElement) : element,
-    ),
+    elements: document.elements.map((element) => {
+      if (element.id !== elementId) {
+        return element
+      }
+      const next = { ...element, ...patch } as DesignElement
+      return patchTouchesBox(patch) ? constrainElementInDocument(document, next) : next
+    }),
   })
 }
 
 export function moveElementLayer(
   document: DesignDocument,
   elementId: string,
-  direction: 'forward' | 'backward',
+  direction: LayerDirection,
 ): DesignDocument {
   const current = document.elements.find((element) => element.id === elementId)
   if (!current) {
@@ -122,41 +138,80 @@ export function moveElementLayer(
   }
 
   const siblings = document.elements
-    .filter((element) => element.panelId === current.panelId)
+    .filter((element) => element.viewId === current.viewId)
     .sort((a, b) => a.zIndex - b.zIndex)
 
   const index = siblings.findIndex((element) => element.id === elementId)
-  const swapWith = direction === 'forward' ? siblings[index + 1] : siblings[index - 1]
-  if (!swapWith) {
+  if (index < 0) {
     return document
   }
+
+  const nextOrder = siblings.slice()
+  if (direction === 'forward') {
+    if (index >= nextOrder.length - 1) {
+      return document
+    }
+    ;[nextOrder[index], nextOrder[index + 1]] = [nextOrder[index + 1], nextOrder[index]]
+  } else if (direction === 'backward') {
+    if (index <= 0) {
+      return document
+    }
+    ;[nextOrder[index - 1], nextOrder[index]] = [nextOrder[index], nextOrder[index - 1]]
+  } else if (direction === 'front') {
+    if (index >= nextOrder.length - 1) {
+      return document
+    }
+    nextOrder.push(...nextOrder.splice(index, 1))
+  } else if (index <= 0) {
+    return document
+  } else {
+    nextOrder.unshift(...nextOrder.splice(index, 1))
+  }
+
+  const zById = new Map(nextOrder.map((element, order) => [element.id, order + 1]))
 
   return touch({
     ...document,
     elements: document.elements.map((element) => {
-      if (element.id === current.id) {
-        return { ...element, zIndex: swapWith.zIndex }
-      }
-      if (element.id === swapWith.id) {
-        return { ...element, zIndex: current.zIndex }
-      }
-      return element
+      const zIndex = zById.get(element.id)
+      return zIndex === undefined || zIndex === element.zIndex
+        ? element
+        : { ...element, zIndex }
     }),
   })
 }
 
-function defaultPlacement(document: DesignDocument, panelId: string) {
+function defaultPlacement(
+  document: DesignDocument,
+  panelId: string,
+  kind: 'graphic' | 'text',
+) {
   const garment = getGarment(document.garmentType)
   const panel = getGarmentPanel(garment, panelId)
-  if (!panel) {
-    return { x: 40, y: 32, width: 64, height: 64 }
+  const bounds = getConstraintBounds(document, panelId)
+
+  if (!panel || !bounds) {
+    return kind === 'text'
+      ? { x: 16, y: 80, width: 140, height: 36 }
+      : { x: 40, y: 32, width: 64, height: 64 }
   }
 
-  const width = panel.local.width * 0.34
+  if (kind === 'text') {
+    const width = bounds.width * 0.78
+    const height = Math.max(24, bounds.height * 0.18)
+    return {
+      x: bounds.x + (bounds.width - width) / 2,
+      y: bounds.y + bounds.height * 0.28,
+      width,
+      height,
+    }
+  }
+
+  const width = bounds.width * 0.42
   const height = width
   return {
-    x: (panel.local.width - width) / 2,
-    y: panel.local.height * 0.12,
+    x: bounds.x + (bounds.width - width) / 2,
+    y: bounds.y + bounds.height * 0.16,
     width,
     height,
   }
@@ -168,7 +223,7 @@ export function createGraphicElement(
 ): GraphicElement {
   const resolvedPanelId = resolvePanelId(document, panelId)
   const panel = getDocumentPanel(document, resolvedPanelId)
-  const box = defaultPlacement(document, resolvedPanelId)
+  const box = defaultPlacement(document, resolvedPanelId, 'graphic')
 
   return {
     id: createId(),
@@ -193,23 +248,28 @@ export function createTextElement(document: DesignDocument, panelId?: string): T
   const panel = getDocumentPanel(document, resolvedPanelId)
   const garment = getGarment(document.garmentType)
   const geometry = getGarmentPanel(garment, resolvedPanelId)
-  const width = geometry ? geometry.local.width * 0.72 : 140
-  const height = geometry ? Math.max(28, geometry.local.height * 0.12) : 36
+  const box = defaultPlacement(document, resolvedPanelId, 'text')
+  const fontSize = geometry ? Math.max(10, Math.round(geometry.local.height * 0.085)) : 16
 
   return {
     id: createId(),
     type: 'text',
     panelId: resolvedPanelId,
     viewId: panel?.viewId ?? document.activeView,
-    x: geometry ? (geometry.local.width - width) / 2 : 16,
-    y: geometry ? geometry.local.height * 0.42 : 80,
-    width,
-    height,
+    x: box.x,
+    y: box.y,
+    width: box.width,
+    height: box.height,
     rotation: 0,
     opacity: 1,
     zIndex: nextZIndex(document),
     content: 'Text',
     color: '#1a1a1a',
-    fontFamily: 'IBM Plex Sans, sans-serif',
+    fontFamily: DEFAULT_TEXT_FONT,
+    fontSize,
+    fontWeight: 500,
+    italic: false,
+    textAlign: 'center',
+    letterSpacing: 0,
   }
 }

@@ -1,9 +1,10 @@
+import { FONT_WEIGHTS, TEXT_ALIGNS, TEXT_FONT_FAMILIES } from '@/design/typography'
 import { getPanelById } from '@/design/selectors'
-import { isGraphicElement, isTextElement } from '@/design/types'
+import { isGraphicElement, isTextElement, type LayerDirection } from '@/design/types'
 import { useDesign } from '@/design/useDesign'
 import { minLocalSize, getGarmentPanel } from '@/garments/coordinates'
 import { getGarment } from '@/garments/registry'
-import { Button, Field, NumberField } from '@/ui'
+import { Button, ColorPicker, Field, NumberField, SegmentedControl } from '@/ui'
 import { useRef, useState } from 'react'
 
 export function PropertiesPanel() {
@@ -19,7 +20,7 @@ export function PropertiesPanel() {
       <div className="flex-1 overflow-y-auto px-4 py-4">
         {selectedElement ? <SelectedProperties /> : (
           <p className="text-[12px] leading-5 text-mute">
-            Select an element on the garment to edit position, size, rotation, and color.
+            Select an element on the garment to edit position, size, rotation, and style.
           </p>
         )}
       </div>
@@ -50,6 +51,10 @@ function SelectedProperties() {
         Position and size are relative to this panel, not the browser window.
       </p>
 
+      {isTextElement(selectedElement) ? <TextStyleFields /> : null}
+
+      {isGraphicElement(selectedElement) ? <GraphicStyleFields /> : null}
+
       <div className="grid grid-cols-2 gap-2">
         <LiveNumber
           label="X"
@@ -78,53 +83,164 @@ function SelectedProperties() {
       <LiveNumber
         label="Rotation"
         value={Number(selectedElement.rotation.toFixed(1))}
+        digits={1}
         onCommit={(value) => updateSelected({ rotation: value })}
       />
 
       <OpacityField />
 
-      {isGraphicElement(selectedElement) ? (
-        <Field label="Color">
-          <div className="flex items-center gap-2">
-            <input
-              type="color"
-              value={selectedElement.color}
-              onChange={(event) => updateSelected({ color: event.target.value })}
-              className="h-8 w-8 cursor-pointer rounded border border-line bg-studio"
-              aria-label="Element color"
-            />
-            <span className="font-mono text-[12px] text-mute">{selectedElement.color}</span>
-          </div>
-        </Field>
-      ) : null}
-
-      {isTextElement(selectedElement) ? (
-        <>
-          <TextContentField />
-          <Field label="Color">
-            <input
-              type="color"
-              value={selectedElement.color}
-              onChange={(event) => updateSelected({ color: event.target.value })}
-              className="h-8 w-8 cursor-pointer rounded border border-line bg-studio"
-              aria-label="Text color"
-            />
-          </Field>
-        </>
-      ) : null}
-
-      <div className="flex gap-2">
-        <Button className="flex-1" onClick={() => moveSelectedLayer('backward')}>
-          Backward
-        </Button>
-        <Button className="flex-1" onClick={() => moveSelectedLayer('forward')}>
-          Forward
-        </Button>
-      </div>
+      <LayerButtons onMove={moveSelectedLayer} />
 
       <Button className="w-full" onClick={removeSelected}>
         Remove element
       </Button>
+    </div>
+  )
+}
+
+function GraphicStyleFields() {
+  const { selectedElement, updateSelected, document, commitGesture } = useDesign()
+  const originRef = useRef(document)
+
+  if (!selectedElement || !isGraphicElement(selectedElement)) {
+    return null
+  }
+
+  return (
+    <>
+      <Field label="Shape">
+        <SegmentedControl
+          value={selectedElement.shape}
+          options={[
+            { value: 'rect' as const, label: 'Rect' },
+            { value: 'ellipse' as const, label: 'Ellipse' },
+          ]}
+          onChange={(shape) => updateSelected({ shape })}
+        />
+      </Field>
+      {selectedElement.shape === 'rect' ? (
+        <LiveNumber
+          label="Corner"
+          value={selectedElement.cornerRadius}
+          min={0}
+          onCommit={(value) => updateSelected({ cornerRadius: value })}
+        />
+      ) : null}
+      <ColorPicker
+        label="Color"
+        value={selectedElement.color}
+        presets={[]}
+        onCommit={(color) => updateSelected({ color })}
+        onLiveStart={() => {
+          originRef.current = document
+        }}
+        onLiveChange={(color) => updateSelected({ color }, 'replace')}
+        onLiveEnd={() => commitGesture(originRef.current)}
+      />
+    </>
+  )
+}
+
+function TextStyleFields() {
+  const { selectedElement, updateSelected, document, commitGesture } = useDesign()
+  const originRef = useRef(document)
+
+  if (!selectedElement || !isTextElement(selectedElement)) {
+    return null
+  }
+
+  return (
+    <>
+      <TextContentField />
+      <Field label="Font">
+        <select
+          value={selectedElement.fontFamily}
+          onChange={(event) => updateSelected({ fontFamily: event.target.value })}
+          className="h-8 w-full rounded-md border border-line bg-studio px-2 text-[12px] text-ink outline-none focus:border-accent/50"
+        >
+          {TEXT_FONT_FAMILIES.map((font) => (
+            <option key={font.id} value={font.id}>
+              {font.label}
+            </option>
+          ))}
+        </select>
+      </Field>
+      <div className="grid grid-cols-2 gap-2">
+        <LiveNumber
+          label="Size"
+          value={selectedElement.fontSize}
+          min={6}
+          digits={1}
+          onCommit={(value) => updateSelected({ fontSize: value })}
+        />
+        <LiveNumber
+          label="Tracking"
+          value={selectedElement.letterSpacing}
+          digits={1}
+          onCommit={(value) => updateSelected({ letterSpacing: value })}
+        />
+      </div>
+      <Field label="Weight">
+        <SegmentedControl
+          value={String(selectedElement.fontWeight)}
+          options={FONT_WEIGHTS.map((weight) => ({
+            value: String(weight),
+            label: weight === 400 ? 'Reg' : weight === 500 ? 'Med' : 'Bold',
+          }))}
+          onChange={(value) =>
+            updateSelected({ fontWeight: Number(value) as (typeof FONT_WEIGHTS)[number] })
+          }
+        />
+      </Field>
+      <Field label="Style">
+        <button
+          type="button"
+          aria-pressed={selectedElement.italic}
+          onClick={() => updateSelected({ italic: !selectedElement.italic })}
+          className={`h-8 w-full rounded-md border text-[12px] italic ${
+            selectedElement.italic
+              ? 'border-accent/50 bg-accent/10 text-ink'
+              : 'border-line text-mute hover:text-ink'
+          }`}
+        >
+          Italic
+        </button>
+      </Field>
+      <Field label="Align">
+        <SegmentedControl
+          value={selectedElement.textAlign}
+          options={TEXT_ALIGNS.map((align) => ({
+            value: align,
+            label: align === 'left' ? 'Left' : align === 'right' ? 'Right' : 'Center',
+          }))}
+          onChange={(textAlign) => updateSelected({ textAlign })}
+        />
+      </Field>
+      <ColorPicker
+        label="Text color"
+        value={selectedElement.color}
+        presets={[]}
+        onCommit={(color) => updateSelected({ color })}
+        onLiveStart={() => {
+          originRef.current = document
+        }}
+        onLiveChange={(color) => updateSelected({ color }, 'replace')}
+        onLiveEnd={() => commitGesture(originRef.current)}
+      />
+    </>
+  )
+}
+
+function LayerButtons({ onMove }: { onMove: (direction: LayerDirection) => void }) {
+  return (
+    <div className="space-y-2">
+      <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Layer</div>
+      <div className="grid grid-cols-2 gap-2">
+        <Button onClick={() => onMove('backward')}>Backward</Button>
+        <Button onClick={() => onMove('forward')}>Forward</Button>
+        <Button onClick={() => onMove('back')}>To back</Button>
+        <Button onClick={() => onMove('front')}>To front</Button>
+      </div>
     </div>
   )
 }
@@ -176,8 +292,9 @@ function TextContentField() {
 
   return (
     <Field label="Content">
-      <input
+      <textarea
         value={draft.text}
+        rows={3}
         onChange={(event) =>
           setDraft((current) => ({ ...current, text: event.target.value }))
         }
@@ -186,7 +303,7 @@ function TextContentField() {
             updateSelected({ content: draft.text })
           }
         }}
-        className="h-8 w-full rounded-md border border-line bg-studio px-2 text-[12px] text-ink outline-none focus:border-accent/50"
+        className="w-full resize-none rounded-md border border-line bg-studio px-2 py-1.5 text-[12px] leading-5 text-ink outline-none focus:border-accent/50"
       />
     </Field>
   )
@@ -196,23 +313,27 @@ function LiveNumber({
   label,
   value,
   min,
+  digits = 0,
   onCommit,
 }: {
   label: string
   value: number
   min?: number
+  digits?: number
   onCommit: (value: number) => void
 }) {
-  const [draft, setDraft] = useState({ value, text: String(Math.round(value)) })
+  const display = digits > 0 ? value.toFixed(digits) : String(Math.round(value))
+  const [draft, setDraft] = useState({ value, text: display })
 
   if (draft.value !== value) {
-    setDraft({ value, text: String(Math.round(value)) })
+    setDraft({ value, text: display })
   }
 
   return (
     <NumberField
       label={label}
       value={draft.text}
+      step={digits > 0 ? 0.1 : 1}
       onChange={(event) =>
         setDraft((current) => ({ ...current, text: event.target.value }))
       }
@@ -221,7 +342,7 @@ function LiveNumber({
         if (Number.isFinite(next)) {
           onCommit(min === undefined ? next : Math.max(min, next))
         } else {
-          setDraft({ value, text: String(Math.round(value)) })
+          setDraft({ value, text: display })
         }
       }}
     />

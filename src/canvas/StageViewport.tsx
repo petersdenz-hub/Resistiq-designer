@@ -1,4 +1,4 @@
-import { getBodyColor, getElementsInView } from '@/design/selectors'
+import { getBodyColor, getElementsInView, getSafeAreasInView } from '@/design/selectors'
 import { useDesign } from '@/design/useDesign'
 import { getGarment } from '@/garments/registry'
 import { getPanelsForView } from '@/garments/coordinates'
@@ -12,9 +12,10 @@ import { applyPreview, useElementGesture } from './useElementGesture'
 
 interface StageViewportProps {
   zoom: number
+  showSafeAreas: boolean
 }
 
-export function StageViewport({ zoom }: StageViewportProps) {
+export function StageViewport({ zoom, showSafeAreas }: StageViewportProps) {
   const svgRef = useRef<SVGSVGElement | null>(null)
   const {
     document,
@@ -71,7 +72,9 @@ export function StageViewport({ zoom }: StageViewportProps) {
 
       <PanelGuides
         panels={viewPanels}
+        safeAreas={getSafeAreasInView(document, document.activeView)}
         activePanelId={document.activePanelId}
+        showSafeAreas={showSafeAreas}
         onSelectPanel={(panelId) => {
           selectElement(null)
           setActivePanel(panelId)

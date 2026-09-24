@@ -78,6 +78,12 @@ export function toDisplayElement<T extends DesignElement>(
     ...(element.type === 'graphic'
       ? { cornerRadius: element.cornerRadius * scaleX }
       : {}),
+    ...(element.type === 'text'
+      ? {
+          fontSize: element.fontSize * scaleX,
+          letterSpacing: element.letterSpacing * scaleX,
+        }
+      : {}),
   }
 }
 

@@ -1,5 +1,5 @@
 import { createContext } from 'react'
-import type { DesignDocument, DesignElement, DesignElementPatch } from './types'
+import type { DesignDocument, DesignElement, DesignElementPatch, LayerDirection } from './types'
 
 export type HistoryMode = 'record' | 'replace'
 
@@ -13,7 +13,7 @@ export interface DesignContextValue {
   setActiveView: (viewId: string) => void
   setActivePanel: (panelId: string) => void
   renameDesign: (name: string) => void
-  setBodyColor: (value: string) => void
+  setBodyColor: (value: string, history?: HistoryMode) => void
   addGraphic: () => void
   addText: () => void
   removeSelected: () => void
@@ -24,7 +24,7 @@ export interface DesignContextValue {
     patch: DesignElementPatch,
     history?: HistoryMode,
   ) => void
-  moveSelectedLayer: (direction: 'forward' | 'backward') => void
+  moveSelectedLayer: (direction: LayerDirection) => void
   commitGesture: (previous: DesignDocument) => void
   undo: () => void
   redo: () => void

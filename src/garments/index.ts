@@ -17,5 +17,6 @@ export type {
   GarmentPanelDefinition,
   GarmentRect,
   GarmentRenderProps,
+  GarmentSafeAreaDefinition,
   GarmentViewDefinition,
 } from './types'

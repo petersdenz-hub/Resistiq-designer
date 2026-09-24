@@ -1,4 +1,4 @@
-import type { DesignElement } from '@/design/types'
+import type { DesignElement, TextElement } from '@/design/types'
 import { isGraphicElement, isTextElement } from '@/design/types'
 import type { PointerEvent as ReactPointerEvent } from 'react'
 
@@ -52,27 +52,10 @@ export function DesignElements({
           ) : null}
 
           {isTextElement(element) ? (
-            <>
-              <rect
-                x={element.x}
-                y={element.y}
-                width={element.width}
-                height={element.height}
-                fill={selectedElementId === element.id ? 'rgba(201,163,106,0.06)' : 'transparent'}
-              />
-              <text
-                x={element.x + element.width / 2}
-                y={element.y + element.height / 2}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fill={element.color}
-                fontFamily={element.fontFamily}
-                fontSize={Math.max(12, element.height * 0.52)}
-                style={{ userSelect: 'none' }}
-              >
-                {element.content}
-              </text>
-            </>
+            <TextGraphic
+              element={element}
+              selected={selectedElementId === element.id}
+            />
           ) : null}
 
           {element.type === 'image' || element.type === 'logo' ? (
@@ -89,5 +72,57 @@ export function DesignElements({
         </g>
       ))}
     </g>
+  )
+}
+
+function TextGraphic({
+  element,
+  selected,
+}: {
+  element: TextElement
+  selected: boolean
+}) {
+  const lines = element.content.split('\n')
+  const fontSize = Math.max(6, element.fontSize)
+  const lineHeight = fontSize * 1.2
+  const textX =
+    element.textAlign === 'left'
+      ? element.x
+      : element.textAlign === 'right'
+        ? element.x + element.width
+        : element.x + element.width / 2
+  const blockHeight = lineHeight * lines.length
+  const textY = element.y + (element.height - blockHeight) / 2 + fontSize * 0.82
+  const anchor =
+    element.textAlign === 'left' ? 'start' : element.textAlign === 'right' ? 'end' : 'middle'
+
+  return (
+    <>
+      <rect
+        x={element.x}
+        y={element.y}
+        width={element.width}
+        height={element.height}
+        fill={selected ? 'rgba(201,163,106,0.06)' : 'transparent'}
+      />
+      <text
+        x={textX}
+        y={textY}
+        textAnchor={anchor}
+        fill={element.color}
+        fontFamily={element.fontFamily}
+        fontSize={fontSize}
+        fontWeight={element.fontWeight}
+        fontStyle={element.italic ? 'italic' : 'normal'}
+        letterSpacing={element.letterSpacing}
+        style={{ userSelect: 'none' }}
+      >
+        {lines.map((line, index) => (
+          <tspan key={`${index}-${line}`} x={textX} dy={index === 0 ? 0 : lineHeight}>
+            {line.length > 0 ? line : ' '}
+          </tspan>
+        ))}
+      </text>
+    </>
   )
 }

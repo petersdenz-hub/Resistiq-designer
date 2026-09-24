@@ -1,5 +1,6 @@
 export { Button } from './Button'
-export { shadeHex } from './color'
+export { ColorPicker } from './ColorPicker'
+export { GARMENT_COLOR_PRESETS, normalizeHex, shadeHex } from './color'
 export { Field, NumberField } from './Field'
 export { IconButton } from './IconButton'
 export {

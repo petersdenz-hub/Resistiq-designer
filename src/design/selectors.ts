@@ -1,4 +1,4 @@
-import type { DesignDocument, DesignElement, DesignPanel } from './types'
+import type { DesignDocument, DesignElement, DesignPanel, DesignSafeArea } from './types'
 
 export function getBodyColor(document: DesignDocument): string {
   return document.colors.find((color) => color.role === 'body')?.value ?? '#e8e4dc'
@@ -15,16 +15,27 @@ export function getPanelsInView(document: DesignDocument, viewId: string): Desig
   return document.panels.filter((panel) => panel.viewId === viewId)
 }
 
+export function getSafeAreasInView(
+  document: DesignDocument,
+  viewId: string,
+): DesignSafeArea[] {
+  const panelIds = new Set(getPanelsInView(document, viewId).map((panel) => panel.id))
+  return document.safeAreas.filter((area) => panelIds.has(area.panelId))
+}
+
 export function getElementsInView(
   document: DesignDocument,
   viewId: string,
+  order: 'paint' | 'stack' = 'paint',
 ): DesignElement[] {
-  return document.elements
-    .filter((element) => {
-      const panel = getPanelById(document, element.panelId)
-      return (panel?.viewId ?? element.viewId) === viewId
-    })
-    .sort((a, b) => a.zIndex - b.zIndex)
+  const elements = document.elements.filter((element) => {
+    const panel = getPanelById(document, element.panelId)
+    return (panel?.viewId ?? element.viewId) === viewId
+  })
+
+  return elements.sort((a, b) =>
+    order === 'stack' ? b.zIndex - a.zIndex : a.zIndex - b.zIndex,
+  )
 }
 
 export function getElementById(
