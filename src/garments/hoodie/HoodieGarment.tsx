@@ -7,28 +7,30 @@ import { clothShades } from '../render/cloth'
  */
 
 const BODY_FRONT =
-  'M170 214 L184 508 C184 524 198 534 216 534 L344 534 C362 534 376 524 376 508 L390 214 L404 178 L332 178 C322 214 238 214 228 178 L156 178 L170 214 Z'
+  'M166 222 L176 512 C176 530 192 542 214 542 L346 542 C368 542 384 530 384 512 L394 222 L412 184 L328 184 C318 222 242 222 232 184 L148 184 L166 222 Z'
 
 const BODY_BACK =
-  'M170 214 L184 508 C184 524 198 534 216 534 L344 534 C362 534 376 524 376 508 L390 214 L404 178 L328 178 C320 200 240 200 232 178 L156 178 L170 214 Z'
+  'M166 222 L176 512 C176 530 192 542 214 542 L346 542 C368 542 384 530 384 512 L394 222 L412 184 L324 184 C316 208 244 208 236 184 L148 184 L166 222 Z'
 
 const HOOD_SHELL =
-  'M176 186 C168 70 392 70 384 186 L356 200 C348 108 212 108 204 200 Z'
+  'M168 188 C156 64 404 64 392 188 L352 204 C344 96 216 96 208 204 Z'
 
 const HOOD_LINING =
-  'M214 186 C222 112 338 112 346 186 C318 214 242 214 214 186 Z'
+  'M222 190 C232 108 328 108 338 190 C314 224 246 224 222 190 Z'
 
 const HOOD_BACK =
-  'M176 186 C168 70 392 70 384 186 L348 198 C340 112 220 112 212 198 Z'
+  'M168 188 C156 64 404 64 392 188 L348 202 C340 100 220 100 212 202 Z'
 
-const RIGHT_SLEEVE = 'M156 178 L44 208 L66 340 L176 314 L156 178 Z'
-const LEFT_SLEEVE = 'M404 178 L516 208 L494 340 L384 314 L404 178 Z'
+const RIGHT_SLEEVE = 'M148 184 L36 222 L62 368 L174 332 L166 222 L148 184 Z'
+const LEFT_SLEEVE = 'M412 184 L524 222 L498 368 L386 332 L394 222 L412 184 Z'
 
-const RIGHT_CUFF = 'M42 332 C38 332 36 338 38 348 L48 376 C52 382 62 382 68 376 L78 348 C80 338 74 332 66 332 Z'
-const LEFT_CUFF = 'M518 332 C522 332 524 338 522 348 L512 376 C508 382 498 382 492 376 L482 348 C480 338 486 332 494 332 Z'
+const RIGHT_CUFF =
+  'M34 360 C28 360 26 368 28 378 L40 404 C44 412 56 412 64 404 L78 378 C80 368 72 360 62 360 Z'
+const LEFT_CUFF =
+  'M526 360 C532 360 534 368 532 378 L520 404 C516 412 504 412 496 404 L482 378 C480 368 488 360 498 360 Z'
 
 const POCKET =
-  'M208 352 C208 346 214 342 222 342 L338 342 C346 342 352 346 352 352 L352 428 C352 436 344 442 334 442 L226 442 C216 442 208 436 208 428 Z'
+  'M206 348 C206 340 214 334 224 334 L336 334 C346 334 354 340 354 348 L354 430 C354 440 344 448 332 448 L228 448 C216 448 206 440 206 430 Z'
 
 export function HoodieGarment({ viewId, bodyColor }: GarmentRenderProps) {
   const isBack = viewId === 'back'
@@ -38,20 +40,20 @@ export function HoodieGarment({ viewId, bodyColor }: GarmentRenderProps) {
   return (
     <g pointerEvents="none">
       <defs>
-        <linearGradient id={`${id}-body`} x1="280" y1="170" x2="280" y2="534" gradientUnits="userSpaceOnUse">
+        <linearGradient id={`${id}-body`} x1="280" y1="170" x2="280" y2="542" gradientUnits="userSpaceOnUse">
           <stop offset="0" stopColor={highlight} />
           <stop offset="0.42" stopColor={cloth} />
           <stop offset="1" stopColor={clothDeep} />
         </linearGradient>
-        <linearGradient id={`${id}-hood`} x1="280" y1="70" x2="280" y2="200" gradientUnits="userSpaceOnUse">
+        <linearGradient id={`${id}-hood`} x1="280" y1="64" x2="280" y2="204" gradientUnits="userSpaceOnUse">
           <stop offset="0" stopColor={highlight} />
           <stop offset="1" stopColor={rib} />
         </linearGradient>
-        <linearGradient id={`${id}-sleeve-r`} x1="160" y1="178" x2="50" y2="340" gradientUnits="userSpaceOnUse">
+        <linearGradient id={`${id}-sleeve-r`} x1="160" y1="184" x2="40" y2="368" gradientUnits="userSpaceOnUse">
           <stop offset="0" stopColor={cloth} />
           <stop offset="1" stopColor={clothDark} />
         </linearGradient>
-        <linearGradient id={`${id}-sleeve-l`} x1="400" y1="178" x2="510" y2="340" gradientUnits="userSpaceOnUse">
+        <linearGradient id={`${id}-sleeve-l`} x1="400" y1="184" x2="520" y2="368" gradientUnits="userSpaceOnUse">
           <stop offset="0" stopColor={cloth} />
           <stop offset="1" stopColor={clothDark} />
         </linearGradient>
@@ -71,26 +73,22 @@ export function HoodieGarment({ viewId, bodyColor }: GarmentRenderProps) {
         <g data-garment-part={isBack ? 'hood_back' : 'hood'}>
           <path d={isBack ? HOOD_BACK : HOOD_SHELL} fill={`url(#${id}-hood)`} />
           {isBack ? (
-            <path
-              d="M280 86 L280 186"
-              fill="none"
-              stroke={stitch}
-              strokeWidth="1.4"
-              opacity="0.35"
-            />
+            <path d="M280 82 L280 190" fill="none" stroke={stitch} strokeWidth="1.6" opacity="0.4" />
           ) : (
             <>
-              <path d={HOOD_LINING} fill={tape} opacity="0.92" />
+              <path d={HOOD_LINING} fill={tape} />
               <path
-                d="M226 188 C236 168 324 168 334 188"
+                d="M230 192 C240 164 320 164 330 192"
                 fill="none"
                 stroke={highlight}
-                strokeWidth="1.6"
+                strokeWidth="1.8"
                 strokeLinecap="round"
-                opacity="0.28"
+                opacity="0.3"
               />
-              <path d="M248 198 L242 228" fill="none" stroke={stitch} strokeWidth="2" strokeLinecap="round" opacity="0.55" />
-              <path d="M312 198 L318 228" fill="none" stroke={stitch} strokeWidth="2" strokeLinecap="round" opacity="0.55" />
+              <path d="M250 204 L238 248" fill="none" stroke={stitch} strokeWidth="2.2" strokeLinecap="round" />
+              <path d="M310 204 L322 248" fill="none" stroke={stitch} strokeWidth="2.2" strokeLinecap="round" />
+              <circle cx="238" cy="250" r="3" fill={clothDark} />
+              <circle cx="322" cy="250" r="3" fill={clothDark} />
             </>
           )}
         </g>
@@ -101,58 +99,32 @@ export function HoodieGarment({ viewId, bodyColor }: GarmentRenderProps) {
 
         <g data-garment-part={isBack ? 'cuff_left_back' : 'cuff_right'}>
           <path d={RIGHT_CUFF} fill={rib} />
-          <path d="M44 352 H72" fill="none" stroke={stitch} strokeWidth="1.4" opacity="0.35" />
+          <path d="M40 380 H70" fill="none" stroke={stitch} strokeWidth="1.6" opacity="0.4" />
         </g>
         <g data-garment-part={isBack ? 'cuff_right_back' : 'cuff_left'}>
           <path d={LEFT_CUFF} fill={rib} />
-          <path d="M488 352 H516" fill="none" stroke={stitch} strokeWidth="1.4" opacity="0.35" />
+          <path d="M490 380 H520" fill="none" stroke={stitch} strokeWidth="1.6" opacity="0.4" />
         </g>
       </g>
 
-      <path d="M176 222 L188 508" fill="none" stroke={stitch} strokeWidth="1" opacity="0.2" />
-      <path d="M384 222 L372 508" fill="none" stroke={stitch} strokeWidth="1" opacity="0.2" />
-      <path
-        d="M216 526 H344"
-        fill="none"
-        stroke={stitch}
-        strokeWidth="6"
-        strokeLinecap="round"
-        opacity="0.28"
-      />
-      <path
-        d="M216 518 H344"
-        fill="none"
-        stroke={highlight}
-        strokeWidth="1.2"
-        strokeLinecap="round"
-        opacity="0.2"
-      />
+      <path d="M172 230 L182 516" fill="none" stroke={stitch} strokeWidth="1" opacity="0.2" />
+      <path d="M388 230 L378 516" fill="none" stroke={stitch} strokeWidth="1" opacity="0.2" />
+      <path d="M214 534 H346" fill="none" stroke={rib} strokeWidth="10" strokeLinecap="round" opacity="0.55" />
+      <path d="M214 528 H346" fill="none" stroke={highlight} strokeWidth="1.2" strokeLinecap="round" opacity="0.22" />
 
       {isBack ? (
         <path
-          d="M236 198 C248 220 312 220 324 198"
+          d="M232 196 C246 226 314 226 328 196"
           fill="none"
           stroke={highlight}
-          strokeWidth="1.4"
-          opacity="0.2"
+          strokeWidth="1.6"
+          opacity="0.22"
         />
       ) : (
         <g data-garment-part="kangaroo_pocket">
-          <path d={POCKET} fill={clothDark} opacity="0.55" />
-          <path
-            d="M216 352 L216 430 M344 352 L344 430"
-            fill="none"
-            stroke={stitch}
-            strokeWidth="1.6"
-            opacity="0.45"
-          />
-          <path
-            d="M222 348 H338"
-            fill="none"
-            stroke={highlight}
-            strokeWidth="1.2"
-            opacity="0.18"
-          />
+          <path d={POCKET} fill={clothDark} opacity="0.62" />
+          <path d="M218 348 L218 434 M342 348 L342 434" fill="none" stroke={stitch} strokeWidth="1.8" opacity="0.5" />
+          <path d="M224 340 H336" fill="none" stroke={highlight} strokeWidth="1.3" opacity="0.2" />
         </g>
       )}
     </g>

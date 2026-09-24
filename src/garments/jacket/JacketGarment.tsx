@@ -7,22 +7,22 @@ import { clothShades } from '../render/cloth'
  */
 
 const FRONT_LEFT =
-  'M172 206 L184 508 C184 522 196 530 214 530 L276 530 L276 168 L160 168 L172 206 Z'
+  'M164 208 L176 508 C176 524 190 534 210 534 L274 534 L274 168 L150 168 L164 208 Z'
 
 const FRONT_RIGHT =
-  'M388 206 L376 508 C376 522 364 530 346 530 L284 530 L284 168 L400 168 L388 206 Z'
+  'M396 208 L384 508 C384 524 370 534 350 534 L286 534 L286 168 L410 168 L396 208 Z'
 
 const BODY_BACK =
-  'M172 206 L184 508 C184 522 196 530 214 530 L346 530 C364 530 376 522 376 508 L388 206 L400 160 L328 160 C320 180 240 180 232 160 L160 160 L172 206 Z'
+  'M164 208 L176 508 C176 524 190 534 210 534 L350 534 C370 534 384 524 384 508 L396 208 L410 160 L324 160 C316 184 244 184 236 160 L150 160 L164 208 Z'
 
-const RIGHT_SLEEVE = 'M160 168 L56 188 L78 308 L178 292 L160 168 Z'
-const LEFT_SLEEVE = 'M400 168 L504 188 L482 308 L382 292 L400 168 Z'
+const RIGHT_SLEEVE = 'M150 168 L46 196 L72 330 L178 304 L164 208 L150 168 Z'
+const LEFT_SLEEVE = 'M410 168 L514 196 L488 330 L382 304 L396 208 L410 168 Z'
 
 const COLLAR_FRONT =
-  'M214 136 L232 168 L328 168 L346 136 C336 128 224 128 214 136 Z'
+  'M208 128 L230 168 L330 168 L352 128 C338 116 222 116 208 128 Z'
 
 const COLLAR_BACK =
-  'M222 138 L236 166 L324 166 L338 138 C328 130 232 130 222 138 Z'
+  'M218 130 L236 164 L324 164 L342 130 C330 120 230 120 218 130 Z'
 
 export function JacketGarment({ viewId, bodyColor }: GarmentRenderProps) {
   const isBack = viewId === 'back'
@@ -32,20 +32,20 @@ export function JacketGarment({ viewId, bodyColor }: GarmentRenderProps) {
   return (
     <g pointerEvents="none">
       <defs>
-        <linearGradient id={`${id}-body`} x1="280" y1="150" x2="280" y2="530" gradientUnits="userSpaceOnUse">
+        <linearGradient id={`${id}-body`} x1="280" y1="150" x2="280" y2="534" gradientUnits="userSpaceOnUse">
           <stop offset="0" stopColor={highlight} />
           <stop offset="0.45" stopColor={cloth} />
           <stop offset="1" stopColor={clothDeep} />
         </linearGradient>
-        <linearGradient id={`${id}-sleeve-r`} x1="168" y1="168" x2="60" y2="300" gradientUnits="userSpaceOnUse">
+        <linearGradient id={`${id}-sleeve-r`} x1="168" y1="168" x2="52" y2="320" gradientUnits="userSpaceOnUse">
           <stop offset="0" stopColor={cloth} />
           <stop offset="1" stopColor={clothDark} />
         </linearGradient>
-        <linearGradient id={`${id}-sleeve-l`} x1="392" y1="168" x2="500" y2="300" gradientUnits="userSpaceOnUse">
+        <linearGradient id={`${id}-sleeve-l`} x1="392" y1="168" x2="508" y2="320" gradientUnits="userSpaceOnUse">
           <stop offset="0" stopColor={cloth} />
           <stop offset="1" stopColor={clothDark} />
         </linearGradient>
-        <linearGradient id={`${id}-collar`} x1="280" y1="128" x2="280" y2="168" gradientUnits="userSpaceOnUse">
+        <linearGradient id={`${id}-collar`} x1="280" y1="118" x2="280" y2="168" gradientUnits="userSpaceOnUse">
           <stop offset="0" stopColor={highlight} />
           <stop offset="1" stopColor={rib} />
         </linearGradient>
@@ -57,9 +57,11 @@ export function JacketGarment({ viewId, bodyColor }: GarmentRenderProps) {
       <g filter={`url(#${id}-soft)`}>
         <g data-garment-part="right_sleeve">
           <path d={RIGHT_SLEEVE} fill={`url(#${id}-sleeve-r)`} />
+          <path d="M58 318 L170 296" fill="none" stroke={rib} strokeWidth="7" strokeLinecap="round" opacity="0.45" />
         </g>
         <g data-garment-part="left_sleeve">
           <path d={LEFT_SLEEVE} fill={`url(#${id}-sleeve-l)`} />
+          <path d="M390 296 L502 318" fill="none" stroke={rib} strokeWidth="7" strokeLinecap="round" opacity="0.45" />
         </g>
 
         {isBack ? (
@@ -81,36 +83,29 @@ export function JacketGarment({ viewId, bodyColor }: GarmentRenderProps) {
         <g data-garment-part={isBack ? 'collar_back' : 'collar'}>
           <path d={isBack ? COLLAR_BACK : COLLAR_FRONT} fill={`url(#${id}-collar)`} />
           <path
-            d={isBack ? 'M238 148 H322' : 'M228 150 H332'}
+            d={isBack ? 'M240 146 H320' : 'M226 148 H334'}
             fill="none"
             stroke={highlight}
-            strokeWidth="1.4"
-            opacity="0.3"
+            strokeWidth="1.6"
+            opacity="0.32"
           />
         </g>
       </g>
 
-      <path d="M178 214 L188 512" fill="none" stroke={stitch} strokeWidth="1" opacity="0.2" />
-      <path d="M382 214 L372 512" fill="none" stroke={stitch} strokeWidth="1" opacity="0.2" />
-      <path
-        d="M214 522 H346"
-        fill="none"
-        stroke={stitch}
-        strokeWidth="3"
-        strokeLinecap="round"
-        opacity="0.35"
-      />
+      <path d="M170 216 L182 516" fill="none" stroke={stitch} strokeWidth="1" opacity="0.2" />
+      <path d="M390 216 L378 516" fill="none" stroke={stitch} strokeWidth="1" opacity="0.2" />
+      <path d="M210 526 H350" fill="none" stroke={stitch} strokeWidth="3.5" strokeLinecap="round" opacity="0.4" />
     </g>
   )
 }
 
 function Zipper({ tape, metal }: { tape: string; metal: string }) {
-  const teeth = Array.from({ length: 26 }, (_, index) => {
-    const y = 178 + index * 13
+  const teeth = Array.from({ length: 27 }, (_, index) => {
+    const y = 176 + index * 13
     return (
       <rect
         key={y}
-        x={index % 2 === 0 ? 274 : 280}
+        x={index % 2 === 0 ? 273 : 281}
         y={y}
         width="6"
         height="7"
@@ -122,10 +117,10 @@ function Zipper({ tape, metal }: { tape: string; metal: string }) {
 
   return (
     <g data-garment-part="zipper">
-      <rect x="274" y="168" width="12" height="362" rx="2" fill={tape} />
+      <rect x="273" y="168" width="14" height="366" rx="2" fill={tape} />
       {teeth}
-      <rect x="271" y="186" width="18" height="22" rx="3" fill={metal} />
-      <path d="M280 208 L280 226" fill="none" stroke={metal} strokeWidth="2" strokeLinecap="round" />
+      <rect x="269" y="184" width="22" height="24" rx="3" fill={metal} />
+      <path d="M280 208 L280 230" fill="none" stroke={metal} strokeWidth="2.2" strokeLinecap="round" />
     </g>
   )
 }

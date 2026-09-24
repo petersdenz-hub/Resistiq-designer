@@ -7,8 +7,6 @@ import type { BottomsKind } from './definition'
  * difference. Back pockets and the fly are garment structure.
  */
 
-const WAISTBAND = 'M196 70 C196 64 204 62 214 62 L346 62 C356 62 364 64 364 70 L364 108 L196 108 Z'
-
 export function BottomsGarment({
   viewId,
   bodyColor,
@@ -16,17 +14,17 @@ export function BottomsGarment({
 }: GarmentRenderProps & { kind: BottomsKind }) {
   const isBack = viewId === 'back'
   const long = kind === 'pants'
-  const hem = long ? 548 : 308
+  const hem = long ? 560 : 322
   const { cloth, clothDeep, clothDark, stitch, highlight, rib } = clothShades(bodyColor)
   const id = `${kind}-${viewId}`
 
   const leftLeg = long
-    ? `M196 108 L196 ${hem - 16} C196 ${hem + 10} 220 ${hem + 16} 238 ${hem - 8} L268 ${hem - 8} L276 108 Z`
-    : `M196 108 L200 ${hem - 8} C204 ${hem + 8} 230 ${hem + 8} 246 ${hem - 4} L270 ${hem - 4} L276 108 Z`
+    ? 'M198 110 C176 168 164 250 172 380 L178 528 C180 552 206 562 230 548 L256 548 L268 260 C272 186 274 136 280 110 Z'
+    : 'M198 110 C176 150 168 200 176 250 L184 300 C188 318 214 324 236 312 L258 304 L270 200 C274 150 276 124 280 110 Z'
 
   const rightLeg = long
-    ? `M364 108 L364 ${hem - 16} C364 ${hem + 10} 340 ${hem + 16} 322 ${hem - 8} L292 ${hem - 8} L284 108 Z`
-    : `M364 108 L360 ${hem - 8} C356 ${hem + 8} 330 ${hem + 8} 314 ${hem - 4} L290 ${hem - 4} L284 108 Z`
+    ? 'M362 110 C384 168 396 250 388 380 L382 528 C380 552 354 562 330 548 L304 548 L292 260 C288 186 286 136 280 110 Z'
+    : 'M362 110 C384 150 392 200 384 250 L376 300 C372 318 346 324 324 312 L302 304 L290 200 C286 150 284 124 280 110 Z'
 
   return (
     <g pointerEvents="none">
@@ -49,45 +47,51 @@ export function BottomsGarment({
           <path d={rightLeg} fill={`url(#${id}-leg)`} />
         </g>
         <g data-garment-part={isBack ? 'waistband_back' : 'waistband'}>
-          <path d={WAISTBAND} fill={rib} />
-          <path d="M210 84 H350" fill="none" stroke={stitch} strokeWidth="1.4" opacity="0.35" />
-          <path d="M214 70 V108 M280 70 V108 M346 70 V108" fill="none" stroke={stitch} strokeWidth="1.2" opacity="0.28" />
+          <path
+            d="M196 66 C196 58 208 54 222 54 L338 54 C352 54 364 58 364 66 L364 110 L196 110 Z"
+            fill={rib}
+          />
+          <path d="M214 80 H346" fill="none" stroke={stitch} strokeWidth="1.5" opacity="0.4" />
+          <path
+            d="M218 56 V110 M280 56 V110 M342 56 V110"
+            fill="none"
+            stroke={stitch}
+            strokeWidth="1.3"
+            opacity="0.3"
+          />
         </g>
       </g>
 
-      <path d="M276 108 L276 200" fill="none" stroke={stitch} strokeWidth="1.2" opacity="0.22" />
-      <path d="M284 108 L284 200" fill="none" stroke={stitch} strokeWidth="1.2" opacity="0.22" />
-
       {isBack ? (
         <>
-          <path d="M214 124 H346" fill="none" stroke={stitch} strokeWidth="1.4" opacity="0.28" />
-          <rect x="208" y="148" width="52" height="58" rx="6" fill="none" stroke={clothDark} strokeWidth="2" opacity="0.55" />
-          <rect x="300" y="148" width="52" height="58" rx="6" fill="none" stroke={clothDark} strokeWidth="2" opacity="0.55" />
+          <path d="M216 128 H344" fill="none" stroke={stitch} strokeWidth="1.5" opacity="0.3" />
+          <rect x="206" y="152" width="56" height="64" rx="8" fill="none" stroke={clothDark} strokeWidth="2.2" opacity="0.65" />
+          <rect x="298" y="152" width="56" height="64" rx="8" fill="none" stroke={clothDark} strokeWidth="2.2" opacity="0.65" />
         </>
       ) : (
         <>
-          <path d="M280 108 L280 196" fill="none" stroke={stitch} strokeWidth="1.6" opacity="0.4" />
-          <path d="M268 140 C274 148 274 168 268 178" fill="none" stroke={highlight} strokeWidth="1.2" opacity="0.2" />
-          <path d="M208 124 L236 154 L236 196" fill="none" stroke={stitch} strokeWidth="1.3" opacity="0.32" />
-          <path d="M352 124 L324 154 L324 196" fill="none" stroke={stitch} strokeWidth="1.3" opacity="0.32" />
+          <path d="M280 110 L280 198" fill="none" stroke={stitch} strokeWidth="1.8" opacity="0.45" />
+          <path d="M268 140 C274 150 274 176 268 190" fill="none" stroke={highlight} strokeWidth="1.3" opacity="0.22" />
+          <path d="M208 126 L242 162 L242 204" fill="none" stroke={stitch} strokeWidth="1.4" opacity="0.35" />
+          <path d="M352 126 L318 162 L318 204" fill="none" stroke={stitch} strokeWidth="1.4" opacity="0.35" />
         </>
       )}
 
       <path
-        d={long ? `M208 ${hem - 10} H252` : `M208 ${hem - 6} H252`}
+        d={long ? 'M204 542 H248' : 'M206 306 H248'}
         fill="none"
-        stroke={stitch}
-        strokeWidth="3"
+        stroke={rib}
+        strokeWidth="8"
         strokeLinecap="round"
-        opacity="0.3"
+        opacity="0.5"
       />
       <path
-        d={long ? `M308 ${hem - 10} H352` : `M308 ${hem - 6} H352`}
+        d={long ? 'M312 542 H356' : 'M312 306 H354'}
         fill="none"
-        stroke={stitch}
-        strokeWidth="3"
+        stroke={rib}
+        strokeWidth="8"
         strokeLinecap="round"
-        opacity="0.3"
+        opacity="0.5"
       />
     </g>
   )

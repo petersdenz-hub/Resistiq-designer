@@ -17,7 +17,7 @@ function legPrint(id: string, height: number): GarmentPanelDefinition['safeArea'
 
 export function createBottomsMeta(kind: BottomsKind): Omit<GarmentDefinition, 'render'> {
   const long = kind === 'pants'
-  const legFrameHeight = long ? 436 : 196
+  const legFrameHeight = long ? 450 : 214
   const legLocalHeight = long ? 280 : 140
   const printHeight = long ? 170 : 88
   const name = long ? 'Pants' : 'Shorts'
@@ -29,7 +29,7 @@ export function createBottomsMeta(kind: BottomsKind): Omit<GarmentDefinition, 'r
       viewId: 'front',
       type: 'waistband',
       local: { width: 160, height: 40 },
-      frame: { x: 196, y: 68, width: 168, height: 42 },
+      frame: { x: 198, y: 56, width: 164, height: 54 },
     },
     {
       id: 'waistband_back',
@@ -37,7 +37,7 @@ export function createBottomsMeta(kind: BottomsKind): Omit<GarmentDefinition, 'r
       viewId: 'back',
       type: 'waistband',
       local: { width: 160, height: 40 },
-      frame: { x: 196, y: 68, width: 168, height: 42 },
+      frame: { x: 198, y: 56, width: 164, height: 54 },
     },
     {
       id: 'left_leg',
@@ -45,7 +45,7 @@ export function createBottomsMeta(kind: BottomsKind): Omit<GarmentDefinition, 'r
       viewId: 'front',
       type: 'leg',
       local: { width: 90, height: legLocalHeight },
-      frame: { x: 188, y: 108, width: 92, height: legFrameHeight },
+      frame: { x: 164, y: 108, width: 108, height: legFrameHeight },
       safeArea: legPrint(`${kind}_left_leg_print`, printHeight),
     },
     {
@@ -54,7 +54,7 @@ export function createBottomsMeta(kind: BottomsKind): Omit<GarmentDefinition, 'r
       viewId: 'front',
       type: 'leg',
       local: { width: 90, height: legLocalHeight },
-      frame: { x: 280, y: 108, width: 92, height: legFrameHeight },
+      frame: { x: 288, y: 108, width: 108, height: legFrameHeight },
       safeArea: legPrint(`${kind}_right_leg_print`, printHeight),
     },
     {
@@ -63,7 +63,7 @@ export function createBottomsMeta(kind: BottomsKind): Omit<GarmentDefinition, 'r
       viewId: 'back',
       type: 'leg',
       local: { width: 90, height: legLocalHeight },
-      frame: { x: 188, y: 108, width: 92, height: legFrameHeight },
+      frame: { x: 164, y: 108, width: 108, height: legFrameHeight },
       safeArea: legPrint(`${kind}_left_leg_back_print`, printHeight),
     },
     {
@@ -72,7 +72,7 @@ export function createBottomsMeta(kind: BottomsKind): Omit<GarmentDefinition, 'r
       viewId: 'back',
       type: 'leg',
       local: { width: 90, height: legLocalHeight },
-      frame: { x: 280, y: 108, width: 92, height: legFrameHeight },
+      frame: { x: 288, y: 108, width: 108, height: legFrameHeight },
       safeArea: legPrint(`${kind}_right_leg_back_print`, printHeight),
     },
   ]

@@ -49,7 +49,7 @@ export const JACKET_PANELS: GarmentPanelDefinition[] = [
     viewId: 'front',
     type: 'body',
     local: { width: 120, height: 300 },
-    frame: { x: 176, y: 186, width: 102, height: 332 },
+    frame: { x: 164, y: 176, width: 110, height: 358 },
     safeArea: LEFT_CHEST,
   },
   {
@@ -58,7 +58,7 @@ export const JACKET_PANELS: GarmentPanelDefinition[] = [
     viewId: 'front',
     type: 'body',
     local: { width: 120, height: 300 },
-    frame: { x: 282, y: 186, width: 102, height: 332 },
+    frame: { x: 286, y: 176, width: 110, height: 358 },
     safeArea: RIGHT_CHEST,
   },
   {
@@ -67,7 +67,7 @@ export const JACKET_PANELS: GarmentPanelDefinition[] = [
     viewId: 'back',
     type: 'body',
     local: { width: 200, height: 320 },
-    frame: { x: 180, y: 180, width: 200, height: 340 },
+    frame: { x: 168, y: 168, width: 224, height: 366 },
     safeArea: BACK_PRINT,
   },
   {
@@ -76,7 +76,7 @@ export const JACKET_PANELS: GarmentPanelDefinition[] = [
     viewId: 'front',
     type: 'sleeve',
     local: { width: 100, height: 140 },
-    frame: { x: 52, y: 154, width: 122, height: 150 },
+    frame: { x: 42, y: 160, width: 128, height: 172 },
     safeArea: sleevePrint('jacket_right_sleeve_print'),
   },
   {
@@ -85,7 +85,7 @@ export const JACKET_PANELS: GarmentPanelDefinition[] = [
     viewId: 'front',
     type: 'sleeve',
     local: { width: 100, height: 140 },
-    frame: { x: 386, y: 154, width: 122, height: 150 },
+    frame: { x: 390, y: 160, width: 128, height: 172 },
     safeArea: sleevePrint('jacket_left_sleeve_print'),
   },
   {
@@ -94,7 +94,7 @@ export const JACKET_PANELS: GarmentPanelDefinition[] = [
     viewId: 'back',
     type: 'sleeve',
     local: { width: 100, height: 140 },
-    frame: { x: 386, y: 154, width: 122, height: 150 },
+    frame: { x: 390, y: 160, width: 128, height: 172 },
     safeArea: sleevePrint('jacket_right_sleeve_back_print'),
   },
   {
@@ -103,7 +103,7 @@ export const JACKET_PANELS: GarmentPanelDefinition[] = [
     viewId: 'back',
     type: 'sleeve',
     local: { width: 100, height: 140 },
-    frame: { x: 52, y: 154, width: 122, height: 150 },
+    frame: { x: 42, y: 160, width: 128, height: 172 },
     safeArea: sleevePrint('jacket_left_sleeve_back_print'),
   },
   {
@@ -112,7 +112,7 @@ export const JACKET_PANELS: GarmentPanelDefinition[] = [
     viewId: 'front',
     type: 'collar',
     local: { width: 140, height: 50 },
-    frame: { x: 210, y: 132, width: 140, height: 50 },
+    frame: { x: 208, y: 120, width: 144, height: 50 },
   },
   {
     id: 'collar_back',
@@ -120,7 +120,7 @@ export const JACKET_PANELS: GarmentPanelDefinition[] = [
     viewId: 'back',
     type: 'collar',
     local: { width: 140, height: 44 },
-    frame: { x: 214, y: 134, width: 132, height: 42 },
+    frame: { x: 216, y: 124, width: 128, height: 42 },
   },
 ]
 

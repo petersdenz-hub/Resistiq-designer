@@ -53,7 +53,7 @@ export const HOODIE_PANELS: GarmentPanelDefinition[] = [
     viewId: 'front',
     type: 'body',
     local: { width: 200, height: 300 },
-    frame: { x: 186, y: 198, width: 188, height: 328 },
+    frame: { x: 174, y: 200, width: 212, height: 342 },
     safeArea: CHEST_PRINT,
   },
   {
@@ -62,7 +62,7 @@ export const HOODIE_PANELS: GarmentPanelDefinition[] = [
     viewId: 'back',
     type: 'body',
     local: { width: 200, height: 320 },
-    frame: { x: 186, y: 188, width: 188, height: 338 },
+    frame: { x: 174, y: 190, width: 212, height: 352 },
     safeArea: BACK_PRINT,
   },
   {
@@ -71,7 +71,7 @@ export const HOODIE_PANELS: GarmentPanelDefinition[] = [
     viewId: 'front',
     type: 'hood',
     local: { width: 200, height: 120 },
-    frame: { x: 176, y: 64, width: 208, height: 132 },
+    frame: { x: 168, y: 64, width: 224, height: 140 },
     safeArea: hoodPrint('hoodie_hood_front_print'),
   },
   {
@@ -80,7 +80,7 @@ export const HOODIE_PANELS: GarmentPanelDefinition[] = [
     viewId: 'back',
     type: 'hood',
     local: { width: 200, height: 120 },
-    frame: { x: 176, y: 64, width: 208, height: 132 },
+    frame: { x: 168, y: 64, width: 224, height: 140 },
     safeArea: hoodPrint('hoodie_hood_back_print'),
   },
   {
@@ -89,7 +89,7 @@ export const HOODIE_PANELS: GarmentPanelDefinition[] = [
     viewId: 'front',
     type: 'sleeve',
     local: { width: 110, height: 160 },
-    frame: { x: 42, y: 176, width: 138, height: 168 },
+    frame: { x: 32, y: 180, width: 142, height: 186 },
     safeArea: sleevePrint('hoodie_right_sleeve_print'),
   },
   {
@@ -98,7 +98,7 @@ export const HOODIE_PANELS: GarmentPanelDefinition[] = [
     viewId: 'front',
     type: 'sleeve',
     local: { width: 110, height: 160 },
-    frame: { x: 380, y: 176, width: 138, height: 168 },
+    frame: { x: 386, y: 180, width: 142, height: 186 },
     safeArea: sleevePrint('hoodie_left_sleeve_print'),
   },
   {
@@ -107,7 +107,7 @@ export const HOODIE_PANELS: GarmentPanelDefinition[] = [
     viewId: 'back',
     type: 'sleeve',
     local: { width: 110, height: 160 },
-    frame: { x: 380, y: 176, width: 138, height: 168 },
+    frame: { x: 386, y: 180, width: 142, height: 186 },
     safeArea: sleevePrint('hoodie_right_sleeve_back_print'),
   },
   {
@@ -116,7 +116,7 @@ export const HOODIE_PANELS: GarmentPanelDefinition[] = [
     viewId: 'back',
     type: 'sleeve',
     local: { width: 110, height: 160 },
-    frame: { x: 42, y: 176, width: 138, height: 168 },
+    frame: { x: 32, y: 180, width: 142, height: 186 },
     safeArea: sleevePrint('hoodie_left_sleeve_back_print'),
   },
   {
@@ -125,7 +125,7 @@ export const HOODIE_PANELS: GarmentPanelDefinition[] = [
     viewId: 'front',
     type: 'cuff',
     local: { width: 60, height: 40 },
-    frame: { x: 36, y: 336, width: 56, height: 42 },
+    frame: { x: 26, y: 356, width: 58, height: 52 },
   },
   {
     id: 'cuff_left',
@@ -133,7 +133,7 @@ export const HOODIE_PANELS: GarmentPanelDefinition[] = [
     viewId: 'front',
     type: 'cuff',
     local: { width: 60, height: 40 },
-    frame: { x: 468, y: 336, width: 56, height: 42 },
+    frame: { x: 476, y: 356, width: 58, height: 52 },
   },
   {
     id: 'cuff_right_back',
@@ -141,7 +141,7 @@ export const HOODIE_PANELS: GarmentPanelDefinition[] = [
     viewId: 'back',
     type: 'cuff',
     local: { width: 60, height: 40 },
-    frame: { x: 468, y: 336, width: 56, height: 42 },
+    frame: { x: 476, y: 356, width: 58, height: 52 },
   },
   {
     id: 'cuff_left_back',
@@ -149,7 +149,7 @@ export const HOODIE_PANELS: GarmentPanelDefinition[] = [
     viewId: 'back',
     type: 'cuff',
     local: { width: 60, height: 40 },
-    frame: { x: 36, y: 336, width: 56, height: 42 },
+    frame: { x: 26, y: 356, width: 58, height: 52 },
   },
 ]
 
