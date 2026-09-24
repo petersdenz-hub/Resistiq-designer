@@ -6,6 +6,7 @@ import type { PointerEvent as ReactPointerEvent } from 'react'
 interface DesignElementsProps {
   elements: DesignElement[]
   selectedElementId: string | null
+  interactive?: boolean
   onSelect: (elementId: string) => void
   onMoveStart: (elementId: string, event: ReactPointerEvent<SVGElement>) => void
 }
@@ -13,25 +14,30 @@ interface DesignElementsProps {
 export function DesignElements({
   elements,
   selectedElementId,
+  interactive = true,
   onSelect,
   onMoveStart,
 }: DesignElementsProps) {
   return (
-    <g>
+    <g pointerEvents={interactive ? 'auto' : 'none'}>
       {elements.map((element) => (
         <g
           key={element.id}
           transform={`rotate(${element.rotation} ${element.x + element.width / 2} ${element.y + element.height / 2})`}
           opacity={element.opacity}
-          style={{ cursor: isPlacedImage(element) && element.locked ? 'default' : 'move' }}
-          onPointerDown={(event) => {
-            event.stopPropagation()
-            event.preventDefault()
-            onSelect(element.id)
-            if (!(isPlacedImage(element) && element.locked)) {
-              onMoveStart(element.id, event)
-            }
-          }}
+          style={{ cursor: interactive ? (isPlacedImage(element) && element.locked ? 'default' : 'move') : 'default' }}
+          onPointerDown={
+            interactive
+              ? (event) => {
+                  event.stopPropagation()
+                  event.preventDefault()
+                  onSelect(element.id)
+                  if (!(isPlacedImage(element) && element.locked)) {
+                    onMoveStart(element.id, event)
+                  }
+                }
+              : undefined
+          }
         >
           {isGraphicElement(element) ? (
             element.shape === 'ellipse' ? (

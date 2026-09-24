@@ -44,3 +44,9 @@ export async function persistAsset(asset: DesignAsset): Promise<void> {
     // Keep the in-memory copy so this session still works.
   }
 }
+
+export function forgetAsset(id: string) {
+  if (cache.delete(id)) {
+    emit()
+  }
+}

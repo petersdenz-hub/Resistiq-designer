@@ -18,7 +18,7 @@ export function PanelGuides({
   onSelectPanel,
 }: PanelGuidesProps) {
   return (
-    <g>
+    <g data-editor-chrome="true">
       {panels.map((panel) => {
         const active = panel.id === activePanelId
         const safe = showSafeAreas
