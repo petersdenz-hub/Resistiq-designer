@@ -1,7 +1,6 @@
 import { persistAsset } from '@/persistence/assetCache'
-import { loadLocalDocument, saveLocalDocument } from '@/persistence/localDocumentStore'
 import { createId } from './ids'
-import { useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useRef, type ReactNode } from 'react'
+import { useCallback, useLayoutEffect, useMemo, useReducer, useRef, type ReactNode } from 'react'
 import { DesignContext, type DesignContextValue, type HistoryMode } from './context'
 import { createNewDesign } from './createDesign'
 import { ingestImageError, ingestImageFile } from './ingestImage'
@@ -36,6 +35,7 @@ type DesignAction =
   | { type: 'setActivePanel'; panelId: string }
   | { type: 'apply'; document: DesignDocument; history: HistoryMode }
   | { type: 'commitGesture'; previous: DesignDocument }
+  | { type: 'hydrate'; document: DesignDocument }
   | { type: 'undo' }
   | { type: 'redo' }
 
@@ -75,6 +75,11 @@ function reducer(state: DesignState, action: DesignAction): DesignState {
         return { ...state, document: action.document }
       }
       return withHistory(state, action.document)
+    case 'hydrate':
+      return {
+        ...state,
+        document: action.document,
+      }
     case 'commitGesture':
       if (action.previous.updatedAt === state.document.updatedAt) {
         return state
@@ -128,17 +133,19 @@ function keepEditorChrome(
   }
 }
 
-export function DesignProvider({ children }: { children: ReactNode }) {
+export function DesignProvider({
+  children,
+  initialDocument,
+}: {
+  children: ReactNode
+  initialDocument?: DesignDocument
+}) {
   const [state, dispatch] = useReducer(reducer, undefined, () => ({
-    document: loadLocalDocument() ?? createNewDesign('tshirt'),
+    document: initialDocument ?? createNewDesign('tshirt'),
     selectedElementId: null,
     past: [],
     future: [],
   }))
-
-  useEffect(() => {
-    saveLocalDocument(state.document)
-  }, [state.document])
 
   const stateRef = useRef(state)
   useLayoutEffect(() => {
@@ -243,6 +250,7 @@ export function DesignProvider({ children }: { children: ReactNode }) {
         apply(moveElementLayer(document, selectedElementId, direction))
       },
       commitGesture: (previous) => dispatch({ type: 'commitGesture', previous }),
+      hydrateDocument: (document) => dispatch({ type: 'hydrate', document }),
       undo: () => dispatch({ type: 'undo' }),
       redo: () => dispatch({ type: 'redo' }),
     }

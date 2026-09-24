@@ -27,6 +27,7 @@ export interface DesignContextValue {
   ) => void
   moveSelectedLayer: (direction: LayerDirection) => void
   commitGesture: (previous: DesignDocument) => void
+  hydrateDocument: (document: DesignDocument) => void
   undo: () => void
   redo: () => void
 }

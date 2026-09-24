@@ -29,4 +29,5 @@ export interface AssetStore {
   get(id: string): Promise<DesignAsset | null>
   put(asset: DesignAsset): Promise<void>
   list(): Promise<DesignAsset[]>
+  remove(id: string): Promise<void>
 }

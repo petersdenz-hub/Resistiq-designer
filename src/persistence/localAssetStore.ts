@@ -51,4 +51,8 @@ export const localAssetStore: AssetStore = {
       return []
     }
   },
+
+  async remove(id) {
+    await withStore('readwrite', (store) => store.delete(id))
+  },
 }

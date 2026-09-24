@@ -1,12 +1,19 @@
 import { useDesign } from '@/design/useDesign'
-import { useEffect } from 'react'
+import { PreviewOverlay } from '@/preview/PreviewOverlay'
+import { useEffect, useState } from 'react'
 import { CanvasStage } from './canvas-stage/CanvasStage'
 import { PropertiesPanel } from './properties/PropertiesPanel'
 import { Sidebar } from './sidebar/Sidebar'
 import { Topbar } from './topbar/Topbar'
 
-export function Studio() {
-  const { undo, redo, removeSelected, selectedElementId } = useDesign()
+interface StudioProps {
+  onClose: () => void
+  onNew: () => void
+}
+
+export function Studio({ onClose, onNew }: StudioProps) {
+  const { document, undo, redo, removeSelected, selectedElementId } = useDesign()
+  const [previewing, setPreviewing] = useState(false)
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -46,13 +53,16 @@ export function Studio() {
   }, [redo, removeSelected, selectedElementId, undo])
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-studio text-ink">
-      <Topbar />
+    <div className="relative flex h-full min-h-0 flex-col bg-studio text-ink">
+      <Topbar onClose={onClose} onNew={onNew} onPreview={() => setPreviewing(true)} />
       <div className="flex min-h-0 flex-1">
         <Sidebar />
         <CanvasStage />
         <PropertiesPanel />
       </div>
+      {previewing ? (
+        <PreviewOverlay document={document} onClose={() => setPreviewing(false)} />
+      ) : null}
     </div>
   )
 }

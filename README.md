@@ -8,15 +8,16 @@ This is **not** the Resistiq webshop. It has its own repository, its own future 
 
 A user can:
 
-1. Open a T-shirt
-2. Switch Front / Back without losing elements
-3. Add structured text (content, font, size, weight, italic, color, tracking, align)
-4. Add a vector graphic (position, size, rotation, opacity, color, shape)
-5. Upload a PNG, JPG, WEBP, or SVG image/logo onto a panel
-6. Change layer order (forward, backward, front, back)
-7. Place work on a specific panel (body, sleeves, collar) and see its safe / print area
-8. Change garment color with a color picker
-9. Undo and redo those changes
+1. Create a named design and save it in this browser
+2. See saved designs on a Designs screen
+3. Open a design and keep editing
+4. Preview front/back without editor controls
+5. Duplicate or delete a saved design
+6. Place structured text, graphics, and uploaded images on T-shirt panels
+7. Switch Front / Back without losing elements
+8. Undo and redo editor changes
+
+Save is explicit. There is no autosave.
 
 The **Design Document** is the source of truth. The canvas is only a picture of that document. Designs are not saved as one flattened image.
 
@@ -43,13 +44,15 @@ npm run preview
 ## What this first version does
 
 - React + TypeScript + Vite + Tailwind CSS
-- Local draft in this browser (Design Document in localStorage, image files in IndexedDB)
+- Saved designs in this browser (Design Document library in localStorage, image files in IndexedDB)
+- Designs dashboard: open, duplicate, delete
+- Preview (not an export)
 - One garment type: T-shirt, with front and back
 - Structured design elements (graphic, text, image, and logo)
 - Undo / redo
 - Zoom
 
-Save, preview, export, login, and the database are **not** implemented yet. Those buttons are visible and disabled on purpose.
+Export, login, and the database are **not** implemented yet.
 
 ## Canvas choice
 
@@ -69,7 +72,7 @@ A library can still be added later if we hit a real limit.
 - Other garments (hoodie, jacket, pants, shorts, leggings, ski/snowboard)
 - Materials
 - Durable save (this project’s own Supabase, when we decide to)
-- Preview rendering and export
+- Export
 - Tech packs
 - AI assistance
 - Anything connected to the Resistiq webshop
@@ -80,10 +83,12 @@ A library can still be added later if we hit a real limit.
 src/
   app/           App shell
   studio/        Designer layout (top bar, sidebars, canvas)
+  designs/       Saved-design dashboard
+  preview/       Editor-free garment preview
   design/        Design Document types and in-memory editing
   garments/      Garment definitions and renderers (T-shirt first)
   canvas/        SVG stage, selection, transform
-  persistence/   Local draft + asset store (replaceable later)
+  persistence/   Local design repository + asset store (replaceable later)
   export/        Future export pipelines
   ui/            Shared controls
   assets/        Future garment artwork

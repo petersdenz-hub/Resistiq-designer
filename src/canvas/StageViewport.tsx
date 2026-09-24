@@ -51,6 +51,7 @@ export function StageViewport({ zoom, showSafeAreas }: StageViewportProps) {
       width={width}
       height={height}
       viewBox={`0 0 ${garment.viewBox.width} ${garment.viewBox.height}`}
+      id="design-stage"
       className="overflow-visible"
       onPointerDown={(event) => {
         if (event.target === event.currentTarget) {
@@ -104,6 +105,7 @@ export function StageViewport({ zoom, showSafeAreas }: StageViewportProps) {
         viewPanels.some((panel) => panel.id === selectedDisplay.panelId) &&
         isLockedElement(selectedDisplay) ? (
         <g
+          data-editor-chrome="true"
           transform={`rotate(${selectedDisplay.rotation} ${selectedDisplay.x + selectedDisplay.width / 2} ${selectedDisplay.y + selectedDisplay.height / 2})`}
           pointerEvents="none"
         >

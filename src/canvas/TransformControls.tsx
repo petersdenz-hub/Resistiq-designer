@@ -38,7 +38,7 @@ export function TransformControls({
   const top = handleLocalPoint(element, 'n')
 
   return (
-    <g transform={`rotate(${element.rotation} ${center.x} ${center.y})`}>
+    <g data-editor-chrome="true" transform={`rotate(${element.rotation} ${center.x} ${center.y})`}>
       <rect
         x={element.x}
         y={element.y}
