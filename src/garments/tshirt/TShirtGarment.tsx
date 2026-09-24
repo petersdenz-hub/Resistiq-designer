@@ -13,6 +13,9 @@ import { constructionStyle, cuffStyle, fabricFilter } from '../render/constructi
 const BODY_FRONT =
   'M176 228 L188 486 C188 500 200 508 216 508 L344 508 C360 508 372 500 372 486 L384 228 L398 148 L324 148 C314 184 246 184 236 148 L162 148 L176 228 Z'
 
+const BODY_FRONT_VNECK =
+  'M176 228 L188 486 C188 500 200 508 216 508 L344 508 C360 508 372 500 372 486 L384 228 L398 148 L324 148 L280 214 L236 148 L162 148 L176 228 Z'
+
 const BODY_BACK =
   'M176 228 L188 486 C188 500 200 508 216 508 L344 508 C360 508 372 500 372 486 L384 228 L398 148 L318 148 C310 164 250 164 242 148 L162 148 L176 228 Z'
 
@@ -140,7 +143,10 @@ export function TShirtGarment({ viewId, bodyColor, panelColors, construction }: 
         </g>
 
         <g data-garment-part={bodyId} data-panel-color={body.cloth}>
-          <path d={isBack ? BODY_BACK : BODY_FRONT} fill={`url(#${id}-body)`} />
+          <path
+            d={isBack ? BODY_BACK : collarStyle === 'vneck' ? BODY_FRONT_VNECK : BODY_FRONT}
+            fill={`url(#${id}-body)`}
+          />
         </g>
 
         <path d="M180 236 L190 492" fill="none" stroke={body.stitch} strokeWidth="1" opacity="0.22" />
@@ -154,7 +160,7 @@ export function TShirtGarment({ viewId, bodyColor, panelColors, construction }: 
             data-construction-kind="collar"
             data-construction-style={collarStyle}
           >
-            <path d={collarPath} fill={`url(#${id}-collar)`} />
+            <path d={collarPath} fill={collarStyle === 'vneck' ? collar.rib : `url(#${id}-collar)`} />
             <path
               d={
                 collarStyle === 'stand'
@@ -193,7 +199,11 @@ export function TShirtGarment({ viewId, bodyColor, panelColors, construction }: 
           opacity="0.16"
         />
       )}
-      <FabricSheen id={id} materialId={materialId} path={isBack ? BODY_BACK : BODY_FRONT} />
+      <FabricSheen
+        id={id}
+        materialId={materialId}
+        path={isBack ? BODY_BACK : collarStyle === 'vneck' ? BODY_FRONT_VNECK : BODY_FRONT}
+      />
     </g>
   )
 }

@@ -24,8 +24,14 @@ import {
 const FRONT_LEFT =
   'M164 208 L176 508 C176 524 190 534 210 534 L274 534 L274 168 L150 168 L164 208 Z'
 
+const FRONT_LEFT_VNECK =
+  'M164 208 L176 508 C176 524 190 534 210 534 L274 534 L274 200 L230 168 L150 168 L164 208 Z'
+
 const FRONT_RIGHT =
   'M396 208 L384 508 C384 524 370 534 350 534 L286 534 L286 168 L410 168 L396 208 Z'
+
+const FRONT_RIGHT_VNECK =
+  'M396 208 L384 508 C384 524 370 534 350 534 L286 534 L286 200 L330 168 L410 168 L396 208 Z'
 
 const BODY_BACK =
   'M164 208 L176 508 C176 524 190 534 210 534 L350 534 C370 534 384 524 384 508 L396 208 L410 160 L324 160 C316 184 244 184 236 160 L150 160 L164 208 Z'
@@ -171,10 +177,10 @@ export function JacketGarment({ viewId, bodyColor, panelColors, construction }: 
         ) : (
           <>
             <g data-garment-part="front_body_left" data-panel-color={leftBody.cloth}>
-              <path d={FRONT_LEFT} fill={`url(#${id}-body-l)`} />
+              <path d={collarStyle === 'vneck' ? FRONT_LEFT_VNECK : FRONT_LEFT} fill={`url(#${id}-body-l)`} />
             </g>
             <g data-garment-part="front_body_right" data-panel-color={rightBody.cloth}>
-              <path d={FRONT_RIGHT} fill={`url(#${id}-body-r)`} />
+              <path d={collarStyle === 'vneck' ? FRONT_RIGHT_VNECK : FRONT_RIGHT} fill={`url(#${id}-body-r)`} />
             </g>
             {zipperStyle ? (
               <ZipperPart
@@ -188,7 +194,7 @@ export function JacketGarment({ viewId, bodyColor, panelColors, construction }: 
               <PocketSet
                 style={pocket}
                 kind="jacket"
-                fill={leftBody.clothDark}
+                fill={leftBody.detail}
                 stitch={leftBody.stitch}
                 highlight={leftBody.highlight}
               />

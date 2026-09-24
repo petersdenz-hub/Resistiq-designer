@@ -216,7 +216,7 @@ export function HoodieGarment({ viewId, bodyColor, panelColors, construction }: 
         <PocketSet
           style={pocket}
           kind="hoodie"
-          fill={body.clothDark}
+          fill={body.detail}
           stitch={body.stitch}
           highlight={body.highlight}
         />

@@ -111,7 +111,7 @@ export function BottomsGarment({
             <PocketSet
               style={backPocket}
               kind="bottoms-back"
-              fill={left.clothDark}
+              fill={left.detail}
               stitch={left.stitch}
               highlight={left.highlight}
             />
@@ -125,7 +125,7 @@ export function BottomsGarment({
             <PocketSet
               style={frontPocket}
               kind="bottoms-front"
-              fill={left.clothDark}
+              fill={left.detail}
               stitch={left.stitch}
               highlight={left.highlight}
             />
@@ -134,7 +134,7 @@ export function BottomsGarment({
             <PocketSet
               style={cargoPocket}
               kind="cargo"
-              fill={left.clothDark}
+              fill={left.detail}
               stitch={left.stitch}
               highlight={left.highlight}
             />

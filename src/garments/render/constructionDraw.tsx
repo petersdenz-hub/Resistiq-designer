@@ -115,7 +115,8 @@ export function ZipperPart({
       data-construction-style={style}
       data-construction-variant={finish}
     >
-      <path d={`M280 168 V${168 + length}`} fill="none" stroke={tapeFill} strokeWidth="14" strokeLinecap="round" />
+      <path d={`M280 168 V${168 + length}`} fill="none" stroke={tapeFill} strokeWidth="16" strokeLinecap="round" />
+      <path d={`M280 168 V${168 + length}`} fill="none" stroke={tooth} strokeWidth="3" strokeLinecap="round" opacity="0.85" />
       {teeth}
       <rect x="269" y="184" width="22" height="24" rx="3" fill={contrast ? '#c9a36a' : metal} />
       <path d="M280 208 L280 230" fill="none" stroke={metal} strokeWidth="2.2" strokeLinecap="round" />
@@ -254,10 +255,12 @@ export function PocketSet({
         <path
           d="M208 352 C208 338 220 328 236 328 L324 328 C340 328 352 338 352 352 L352 428 C348 446 328 456 304 456 L256 456 C232 456 212 446 208 428 Z"
           fill={fill}
-          opacity="0.62"
+          stroke={stitch}
+          strokeWidth="1.6"
+          opacity="0.82"
         />
-        <path d="M220 350 C220 350 220 430 220 430 M340 350 L340 430" fill="none" stroke={stitch} strokeWidth="1.8" opacity="0.5" />
-        <path d="M236 334 H324" fill="none" stroke={highlight} strokeWidth="1.3" opacity="0.2" />
+        <path d="M220 350 C220 350 220 430 220 430 M340 350 L340 430" fill="none" stroke={stitch} strokeWidth="2" opacity="0.75" />
+        <path d="M236 334 H324" fill="none" stroke={highlight} strokeWidth="1.3" opacity="0.35" />
       </g>
     )
   }
@@ -265,8 +268,8 @@ export function PocketSet({
   if (kind === 'hoodie' && style === 'patch') {
     return (
       <g data-garment-part="patch_pockets" data-construction-kind="pocket" data-construction-style="patch">
-        <path d="M198 358 L254 358 C260 358 264 362 264 368 L264 426 C264 434 256 440 248 440 L204 440 C196 440 190 434 190 426 L190 368 C190 362 194 358 198 358 Z" fill={fill} opacity="0.7" />
-        <path d="M306 358 L362 358 C368 358 372 362 372 368 L372 426 C372 434 364 440 356 440 L312 440 C304 440 298 434 298 426 L298 368 C298 362 302 358 306 358 Z" fill={fill} opacity="0.7" />
+        <path d="M198 358 L254 358 C260 358 264 362 264 368 L264 426 C264 434 256 440 248 440 L204 440 C196 440 190 434 190 426 L190 368 C190 362 194 358 198 358 Z" fill={fill} stroke={stitch} strokeWidth="1.6" opacity="0.85" />
+        <path d="M306 358 L362 358 C368 358 372 362 372 368 L372 426 C372 434 364 440 356 440 L312 440 C304 440 298 434 298 426 L298 368 C298 362 302 358 306 358 Z" fill={fill} stroke={stitch} strokeWidth="1.6" opacity="0.85" />
       </g>
     )
   }
@@ -275,8 +278,8 @@ export function PocketSet({
     if (style === 'patch') {
       return (
         <g data-garment-part="jacket_pockets" data-construction-kind="pocket" data-construction-style="patch">
-          <path d="M176 388 L236 388 C242 388 246 392 246 398 L246 456 C246 464 238 470 230 470 L182 470 C174 470 168 464 168 456 L168 398 C168 392 172 388 176 388 Z" fill={fill} opacity="0.55" />
-          <path d="M324 388 L384 388 C390 388 394 392 394 398 L394 456 C394 464 386 470 378 470 L330 470 C322 470 316 464 316 456 L316 398 C316 392 320 388 324 388 Z" fill={fill} opacity="0.55" />
+          <path d="M176 388 L236 388 C242 388 246 392 246 398 L246 456 C246 464 238 470 230 470 L182 470 C174 470 168 464 168 456 L168 398 C168 392 172 388 176 388 Z" fill={fill} stroke={stitch} strokeWidth="1.6" opacity="0.85" />
+          <path d="M324 388 L384 388 C390 388 394 392 394 398 L394 456 C394 464 386 470 378 470 L330 470 C322 470 316 464 316 456 L316 398 C316 392 320 388 324 388 Z" fill={fill} stroke={stitch} strokeWidth="1.6" opacity="0.85" />
         </g>
       )
     }
@@ -301,9 +304,9 @@ export function PocketSet({
   if (kind === 'cargo') {
     return (
       <g data-garment-part="cargo_pockets" data-construction-kind="pocket" data-construction-style="cargo" data-construction-slot="cargo">
-        <path d="M176 250 L230 250 C236 250 240 254 240 260 L240 330 C240 338 232 344 224 344 L182 344 C174 344 168 338 168 330 L168 260 C168 254 172 250 176 250 Z" fill={fill} opacity="0.55" />
-        <path d="M330 250 L384 250 C390 250 394 254 394 260 L394 330 C394 338 386 344 378 344 L336 344 C328 344 322 338 322 330 L322 260 C322 254 326 250 330 250 Z" fill={fill} opacity="0.55" />
-        <path d="M176 268 H240 M330 268 H394" fill="none" stroke={stitch} strokeWidth="1.2" opacity="0.45" />
+        <path d="M176 250 L230 250 C236 250 240 254 240 260 L240 330 C240 338 232 344 224 344 L182 344 C174 344 168 338 168 330 L168 260 C168 254 172 250 176 250 Z" fill={fill} stroke={stitch} strokeWidth="1.8" opacity="0.88" />
+        <path d="M330 250 L384 250 C390 250 394 254 394 260 L394 330 C394 338 386 344 378 344 L336 344 C328 344 322 338 322 330 L322 260 C322 254 326 250 330 250 Z" fill={fill} stroke={stitch} strokeWidth="1.8" opacity="0.88" />
+        <path d="M176 268 H240 M330 268 H394" fill="none" stroke={stitch} strokeWidth="1.6" opacity="0.7" />
       </g>
     )
   }
