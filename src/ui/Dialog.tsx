@@ -5,9 +5,10 @@ interface DialogProps {
   title: string
   children: ReactNode
   onClose: () => void
+  size?: 'sm' | 'lg'
 }
 
-export function Dialog({ title, children, onClose }: DialogProps) {
+export function Dialog({ title, children, onClose, size = 'sm' }: DialogProps) {
   return (
     <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/55 px-4">
       <button
@@ -16,7 +17,11 @@ export function Dialog({ title, children, onClose }: DialogProps) {
         aria-label="Dismiss"
         onClick={onClose}
       />
-      <div className="relative w-full max-w-sm rounded-xl border border-line bg-panel p-4 shadow-2xl">
+      <div
+        className={`relative w-full rounded-xl border border-line bg-panel p-4 shadow-2xl ${
+          size === 'lg' ? 'max-w-2xl' : 'max-w-sm'
+        }`}
+      >
         <div className="text-[13px] font-medium text-ink">{title}</div>
         <div className="mt-3">{children}</div>
       </div>

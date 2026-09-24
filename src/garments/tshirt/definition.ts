@@ -1,6 +1,8 @@
+import { garmentCapabilities } from '../capabilities'
+import { FRONT_BACK_VIEWS, STANDARD_VIEWBOX } from '../types'
 import type { GarmentDefinition, GarmentPanelDefinition } from '../types'
 
-export const TSHIRT_VIEWBOX = { width: 560, height: 640 }
+export const TSHIRT_VIEWBOX = STANDARD_VIEWBOX
 
 const CHEST_PRINT = {
   id: 'chest_print',
@@ -38,6 +40,7 @@ export const TSHIRT_PANELS: GarmentPanelDefinition[] = [
     id: 'front_body',
     label: 'Front body',
     viewId: 'front',
+    type: 'body',
     local: { width: 200, height: 280 },
     frame: { x: 194, y: 192, width: 172, height: 300 },
     safeArea: CHEST_PRINT,
@@ -46,6 +49,7 @@ export const TSHIRT_PANELS: GarmentPanelDefinition[] = [
     id: 'back_body',
     label: 'Back body',
     viewId: 'back',
+    type: 'body',
     local: { width: 200, height: 300 },
     frame: { x: 194, y: 186, width: 172, height: 310 },
     safeArea: BACK_PRINT,
@@ -54,6 +58,7 @@ export const TSHIRT_PANELS: GarmentPanelDefinition[] = [
     id: 'right_sleeve',
     label: 'Right sleeve',
     viewId: 'front',
+    type: 'sleeve',
     local: { width: 90, height: 90 },
     frame: { x: 68, y: 148, width: 104, height: 84 },
     safeArea: sleevePrint('right_sleeve_print'),
@@ -62,6 +67,7 @@ export const TSHIRT_PANELS: GarmentPanelDefinition[] = [
     id: 'left_sleeve',
     label: 'Left sleeve',
     viewId: 'front',
+    type: 'sleeve',
     local: { width: 90, height: 90 },
     frame: { x: 388, y: 148, width: 104, height: 84 },
     safeArea: sleevePrint('left_sleeve_print'),
@@ -70,6 +76,7 @@ export const TSHIRT_PANELS: GarmentPanelDefinition[] = [
     id: 'collar',
     label: 'Collar',
     viewId: 'front',
+    type: 'collar',
     local: { width: 120, height: 48 },
     frame: { x: 224, y: 140, width: 112, height: 46 },
   },
@@ -77,6 +84,7 @@ export const TSHIRT_PANELS: GarmentPanelDefinition[] = [
     id: 'right_sleeve_back',
     label: 'Right sleeve',
     viewId: 'back',
+    type: 'sleeve',
     local: { width: 90, height: 90 },
     frame: { x: 388, y: 148, width: 104, height: 84 },
     safeArea: sleevePrint('right_sleeve_back_print'),
@@ -85,6 +93,7 @@ export const TSHIRT_PANELS: GarmentPanelDefinition[] = [
     id: 'left_sleeve_back',
     label: 'Left sleeve',
     viewId: 'back',
+    type: 'sleeve',
     local: { width: 90, height: 90 },
     frame: { x: 68, y: 148, width: 104, height: 84 },
     safeArea: sleevePrint('left_sleeve_back_print'),
@@ -93,6 +102,7 @@ export const TSHIRT_PANELS: GarmentPanelDefinition[] = [
     id: 'collar_back',
     label: 'Collar',
     viewId: 'back',
+    type: 'collar',
     local: { width: 120, height: 40 },
     frame: { x: 226, y: 140, width: 108, height: 36 },
   },
@@ -104,12 +114,18 @@ export function tshirtDefaultPanelId(viewId: string): string {
 
 export const tshirtMeta = {
   id: 'tshirt',
+  name: 'T-shirt',
   label: 'T-shirt',
-  views: [
-    { id: 'front', label: 'Front' },
-    { id: 'back', label: 'Back' },
-  ],
+  category: 'tops',
+  views: FRONT_BACK_VIEWS,
   viewBox: TSHIRT_VIEWBOX,
   panels: TSHIRT_PANELS,
+  defaults: { bodyColor: '#e8e4dc' },
+  capabilities: garmentCapabilities({
+    sleeves: true,
+    collar: true,
+    printAreas: true,
+    frontBack: true,
+  }),
   defaultPanelId: tshirtDefaultPanelId,
 } satisfies Omit<GarmentDefinition, 'render'>

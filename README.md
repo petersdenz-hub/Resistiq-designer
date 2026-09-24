@@ -8,12 +8,12 @@ This is **not** the Resistiq webshop. It has its own repository, its own future 
 
 A user can:
 
-1. Create a named design and save it in this browser
+1. Create a named design on a T-shirt, hoodie, jacket, pants, or shorts
 2. See saved designs on a Designs screen
 3. Open a design and keep editing
 4. Preview front/back without editor controls
 5. Duplicate or delete a saved design
-6. Place structured text, graphics, and uploaded images on T-shirt panels
+6. Place structured text, graphics, and uploaded images on garment panels
 7. Switch Front / Back without losing elements
 8. Undo and redo editor changes
 
@@ -21,9 +21,9 @@ Save is explicit. There is no autosave.
 
 The **Design Document** is the source of truth. The canvas is only a picture of that document. Designs are not saved as one flattened image.
 
-Elements are stored on **garment panels** (front body, back body, sleeves, collar). Their position is relative to that panel, not to the browser window. That is how the same design can later map to other sizes and production documents.
+Elements are stored on **garment panels**. Their position is relative to that panel, not to the browser window. Garment structure (hood, zipper, cuffs, waistband) is not a design element.
 
-Each major panel has a **safe area** (chest print, back print, sleeve print). It is visible while editing and is not part of the garment.
+Each major panel has a **safe area**. It is visible while editing and is not part of the garment.
 
 ## How to run
 
@@ -47,7 +47,7 @@ npm run preview
 - Saved designs in this browser (Design Document library in localStorage, image files in IndexedDB)
 - Designs dashboard: open, duplicate, delete
 - Preview (not an export)
-- One garment type: T-shirt, with front and back
+- Garment registry: T-shirt, hoodie, jacket, pants, shorts (front and back)
 - Structured design elements (graphic, text, image, and logo)
 - Undo / redo
 - Zoom
@@ -69,7 +69,7 @@ A library can still be added later if we hit a real limit.
 
 ## Planned later (not built)
 
-- Other garments (hoodie, jacket, pants, shorts, leggings, ski/snowboard)
+- More garments (leggings, ski/snowboard) and garment details (pockets, materials, lining)
 - Materials
 - Durable save (this project’s own Supabase, when we decide to)
 - Export
@@ -86,7 +86,7 @@ src/
   designs/       Saved-design dashboard
   preview/       Editor-free garment preview
   design/        Design Document types and in-memory editing
-  garments/      Garment definitions and renderers (T-shirt first)
+  garments/      Garment registry, definitions, and renderers
   canvas/        SVG stage, selection, transform
   persistence/   Local design repository + asset store (replaceable later)
   export/        Future export pipelines

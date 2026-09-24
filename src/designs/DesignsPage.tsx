@@ -1,4 +1,4 @@
-import { createDesign, deleteDesign, duplicateDesign, getDesign, listDesigns } from '@/persistence/designRepository'
+import { deleteDesign, duplicateDesign, getDesign, listDesigns } from '@/persistence/designRepository'
 import type { SavedDesignSummary } from '@/persistence/designRepository'
 import type { DesignDocument } from '@/design/types'
 import { getGarment } from '@/garments/registry'
@@ -7,9 +7,10 @@ import { useState } from 'react'
 
 interface DesignsPageProps {
   onOpen: (document: DesignDocument) => void
+  onRequestNew: () => void
 }
 
-export function DesignsPage({ onOpen }: DesignsPageProps) {
+export function DesignsPage({ onOpen, onRequestNew }: DesignsPageProps) {
   const [designs, setDesigns] = useState(listDesigns)
   const [pendingDelete, setPendingDelete] = useState<SavedDesignSummary | null>(null)
 
@@ -29,7 +30,7 @@ export function DesignsPage({ onOpen }: DesignsPageProps) {
             <div className="text-[10px] uppercase tracking-[0.16em] text-mute">Designs</div>
           </div>
         </div>
-        <Button variant="accent" onClick={() => onOpen(createDesign())}>
+        <Button variant="accent" onClick={onRequestNew}>
           New design
         </Button>
       </header>
@@ -39,9 +40,9 @@ export function DesignsPage({ onOpen }: DesignsPageProps) {
           <div className="mx-auto flex max-w-md flex-col items-center pt-24 text-center">
             <div className="text-[16px] font-medium">No designs yet</div>
             <p className="mt-2 text-[13px] leading-5 text-mute">
-              Create a T-shirt, add text or a logo, then save it. Designs stay in this browser for now.
+              Choose a garment, add text or a logo, then save it. Designs stay in this browser for now.
             </p>
-            <Button className="mt-5" variant="accent" onClick={() => onOpen(createDesign())}>
+            <Button className="mt-5" variant="accent" onClick={onRequestNew}>
               Create your first design
             </Button>
           </div>

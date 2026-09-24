@@ -1,7 +1,8 @@
 import { ACCEPTED_IMAGE_ACCEPT } from '@/design/ingestImage'
 import { getElementsInView, getPanelById, getPanelsInView } from '@/design/selectors'
 import { useDesign } from '@/design/useDesign'
-import { AVAILABLE_GARMENTS, PLANNED_GARMENT_LABELS } from '@/garments/registry'
+import { getGarment } from '@/garments/registry'
+import { GARMENT_CATEGORY_LABELS } from '@/garments/types'
 import {
   Button,
   ColorPicker,
@@ -82,16 +83,19 @@ function Placeholder({ text }: { text: string }) {
 function GarmentPanel() {
   const { document, setActivePanel } = useDesign()
   const viewPanels = getPanelsInView(document, document.activeView)
+  const garment = getGarment(document.garmentType)
 
   return (
     <div className="space-y-4">
       <div className="w-full rounded-lg border border-accent/40 bg-accent/10 px-3 py-2.5">
-        <div className="text-[12px] font-medium text-ink">
-          {AVAILABLE_GARMENTS.find((garment) => garment.id === document.garmentType)?.label ??
-            'T-shirt'}
+        <div className="text-[12px] font-medium text-ink">{garment.name}</div>
+        <div className="mt-0.5 text-[11px] text-mute">
+          {GARMENT_CATEGORY_LABELS[garment.category]} · this design
         </div>
-        <div className="mt-0.5 text-[11px] text-mute">Current garment</div>
       </div>
+      <p className="text-[12px] leading-5 text-mute">
+        Create a new design to use a different garment. This one stays a {garment.name.toLowerCase()}.
+      </p>
       <div>
         <div className="mb-2 text-[10px] font-medium uppercase tracking-[0.14em] text-mute">
           Panels on this view
@@ -121,18 +125,6 @@ function GarmentPanel() {
           })}
         </ul>
       </div>
-      <div>
-        <div className="mb-2 text-[10px] font-medium uppercase tracking-[0.14em] text-mute">
-          Later garments
-        </div>
-        <ul className="space-y-1.5 text-[12px] text-mute">
-          {PLANNED_GARMENT_LABELS.map((label) => (
-            <li key={label} className="rounded-md border border-line/70 px-3 py-1.5">
-              {label}
-            </li>
-          ))}
-        </ul>
-      </div>
     </div>
   )
 }
@@ -149,7 +141,7 @@ function ColorsPanel() {
   return (
     <div className="space-y-3">
       <p className="text-[12px] leading-5 text-mute">
-        Garment color is stored on the Design Document. It is not baked into the artwork.
+        Body color is stored on the Design Document. Later garments can add panel and trim colors without changing this structure.
       </p>
       <ColorPicker
         label="Garment color"

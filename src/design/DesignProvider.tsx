@@ -1,4 +1,5 @@
 import { persistAsset } from '@/persistence/assetCache'
+import { normalizeDocument } from '@/persistence/validateDocument'
 import { createId } from './ids'
 import { useCallback, useLayoutEffect, useMemo, useReducer, useRef, type ReactNode } from 'react'
 import { DesignContext, type DesignContextValue, type HistoryMode } from './context'
@@ -78,7 +79,7 @@ function reducer(state: DesignState, action: DesignAction): DesignState {
     case 'hydrate':
       return {
         ...state,
-        document: action.document,
+        document: normalizeDocument(action.document),
       }
     case 'commitGesture':
       if (action.previous.updatedAt === state.document.updatedAt) {
@@ -141,7 +142,7 @@ export function DesignProvider({
   initialDocument?: DesignDocument
 }) {
   const [state, dispatch] = useReducer(reducer, undefined, () => ({
-    document: initialDocument ?? createNewDesign('tshirt'),
+    document: normalizeDocument(initialDocument ?? createNewDesign('tshirt')),
     selectedElementId: null,
     past: [],
     future: [],
