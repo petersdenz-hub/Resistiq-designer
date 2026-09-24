@@ -1,8 +1,12 @@
 import { getBodyColor, getElementsInView } from '@/design/selectors'
 import { useDesign } from '@/design/useDesign'
 import { getGarment } from '@/garments/registry'
+import { getPanelsForView } from '@/garments/coordinates'
+import { GarmentRenderer } from '@/garments/render/GarmentRenderer'
+import { PanelGuides } from '@/garments/render/PanelGuides'
 import { useRef } from 'react'
 import { DesignElements } from './DesignElements'
+import { toCanvasElement } from './project'
 import { TransformControls } from './TransformControls'
 import { applyPreview, useElementGesture } from './useElementGesture'
 
@@ -17,13 +21,19 @@ export function StageViewport({ zoom }: StageViewportProps) {
     selectedElement,
     selectedElementId,
     selectElement,
+    setActivePanel,
     updateElementById,
     commitGesture,
   } = useDesign()
 
   const garment = getGarment(document.garmentType)
-  const printArea = garment.printArea[document.activeView]
-  const elements = getElementsInView(document, document.activeView)
+  const viewPanels = getPanelsForView(garment, document.activeView)
+  const elements = getElementsInView(document, document.activeView).map((element) =>
+    toCanvasElement(document, element),
+  )
+  const selectedDisplay = selectedElement
+    ? toCanvasElement(document, selectedElement)
+    : null
   const gesture = useElementGesture(svgRef, {
     document,
     updateElementById,
@@ -53,24 +63,20 @@ export function StageViewport({ zoom }: StageViewportProps) {
         onPointerDown={() => selectElement(null)}
       />
 
-      {garment.render({
-        viewId: document.activeView,
-        bodyColor: getBodyColor(document),
-      })}
+      <GarmentRenderer
+        garmentType={document.garmentType}
+        viewId={document.activeView}
+        bodyColor={getBodyColor(document)}
+      />
 
-      {printArea ? (
-        <rect
-          x={printArea.x}
-          y={printArea.y}
-          width={printArea.width}
-          height={printArea.height}
-          fill="none"
-          stroke="rgba(238,240,244,0.22)"
-          strokeDasharray="5 4"
-          strokeWidth="1"
-          pointerEvents="none"
-        />
-      ) : null}
+      <PanelGuides
+        panels={viewPanels}
+        activePanelId={document.activePanelId}
+        onSelectPanel={(panelId) => {
+          selectElement(null)
+          setActivePanel(panelId)
+        }}
+      />
 
       <DesignElements
         elements={elements.map((element) => applyPreview(element, gesture.preview))}
@@ -79,14 +85,14 @@ export function StageViewport({ zoom }: StageViewportProps) {
         onMoveStart={gesture.startMove}
       />
 
-      {selectedElement && selectedElement.viewId === document.activeView ? (
+      {selectedDisplay && viewPanels.some((panel) => panel.id === selectedDisplay.panelId) ? (
         <TransformControls
-          element={applyPreview(selectedElement, gesture.preview)}
+          element={applyPreview(selectedDisplay, gesture.preview)}
           zoom={zoom}
           onResizeStart={(handle, event) =>
-            gesture.startResize(selectedElement.id, handle, event)
+            gesture.startResize(selectedDisplay.id, handle, event)
           }
-          onRotateStart={(event) => gesture.startRotate(selectedElement.id, event)}
+          onRotateStart={(event) => gesture.startRotate(selectedDisplay.id, event)}
         />
       ) : null}
     </svg>

@@ -16,6 +16,13 @@ export interface DesignView {
   label: string
 }
 
+/** A designable area on the garment (body, sleeve, collar, …). */
+export interface DesignPanel {
+  id: string
+  label: string
+  viewId: string
+}
+
 export interface DesignColor {
   id: string
   role: string
@@ -31,8 +38,14 @@ export interface DesignMaterial {
 export interface DesignElementBase {
   id: string
   type: DesignElementType
-  /** Which garment panel this element belongs to (front, back, later sleeves, …). */
+  /** Panel this element is placed on (front_body, left_sleeve, …). */
+  panelId: string
+  /** View that shows this panel. Denormalized from the panel for fast filtering. */
   viewId: string
+  /**
+   * Position and size in the panel's local design units, not browser pixels.
+   * The garment renderer maps these onto the current artwork.
+   */
   x: number
   y: number
   width: number
@@ -82,7 +95,9 @@ export interface DesignDocument {
   status: DesignStatus
   garmentType: string
   activeView: string
+  activePanelId: string
   views: DesignView[]
+  panels: DesignPanel[]
   colors: DesignColor[]
   materials: DesignMaterial[]
   elements: DesignElement[]
