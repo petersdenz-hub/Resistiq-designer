@@ -10,6 +10,8 @@ export {
 } from './coordinates'
 export { garmentCapabilities } from './capabilities'
 export { defaultConstructionFor } from './constructionDefaults'
+export { constructionControlsFor, editableConstructionKinds } from './constructionOptions'
+export { MATERIAL_CATALOG, getCatalogMaterial } from './materialCatalog'
 export { GarmentPicker } from './GarmentPicker'
 export {
   AVAILABLE_GARMENTS,

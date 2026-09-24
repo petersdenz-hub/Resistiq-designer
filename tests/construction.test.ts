@@ -68,7 +68,7 @@ describe('Phase 7B.1 construction foundation', () => {
     const expected = {
       tshirt: ['collar', 'hem'],
       hoodie: ['hood', 'pocket', 'cuff', 'hem'],
-      jacket: ['collar', 'zipper'],
+      jacket: ['collar', 'zipper', 'cuff', 'hem'],
       pants: ['pocket', 'waistband', 'hem'],
       shorts: ['pocket', 'waistband', 'hem'],
     }

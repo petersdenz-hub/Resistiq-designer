@@ -1,5 +1,7 @@
 import type { GarmentRenderProps } from '../types'
-import { clothFor } from '../render/cloth'
+import { clothFor, clothShades } from '../render/cloth'
+import { FabricFinish, FabricSheen, HemBand, PocketSet } from '../render/constructionDraw'
+import { constructionStyle, cuffStyle, fabricFilter, pocketStyle } from '../render/constructionState'
 
 /**
  * Fashion-flat hoodie. Hood, body, sleeves, and cuffs are separate parts.
@@ -29,10 +31,7 @@ const RIGHT_CUFF =
 const LEFT_CUFF =
   'M526 360 C532 360 534 368 532 378 L520 404 C516 412 504 412 496 404 L482 378 C480 368 488 360 498 360 Z'
 
-const POCKET =
-  'M206 348 C206 340 214 334 224 334 L336 334 C346 334 354 340 354 348 L354 430 C354 440 344 448 332 448 L228 448 C216 448 206 440 206 430 Z'
-
-export function HoodieGarment({ viewId, bodyColor, panelColors }: GarmentRenderProps) {
+export function HoodieGarment({ viewId, bodyColor, panelColors, construction }: GarmentRenderProps) {
   const isBack = viewId === 'back'
   const bodyId = isBack ? 'back_body' : 'front_body'
   const hoodId = isBack ? 'hood_back' : 'hood'
@@ -47,6 +46,12 @@ export function HoodieGarment({ viewId, bodyColor, panelColors }: GarmentRenderP
   const cuffRight = clothFor(bodyColor, panelColors, cuffRightId)
   const cuffLeft = clothFor(bodyColor, panelColors, cuffLeftId)
   const id = `hoodie-${viewId}`
+  const hoodStyle = construction ? constructionStyle(construction, 'hood') : 'pullover'
+  const pocket = construction ? pocketStyle(construction) : 'kangaroo'
+  const cuffs = construction ? cuffStyle(construction) : 'rib'
+  const hemStyle = construction ? constructionStyle(construction, 'hem') : 'rib'
+  const materialId = construction?.materialId
+  const zipper = clothShades(bodyColor)
 
   return (
     <g pointerEvents="none">
@@ -72,8 +77,9 @@ export function HoodieGarment({ viewId, bodyColor, panelColors }: GarmentRenderP
           <feDropShadow dx="0" dy="8" stdDeviation="8" floodColor="#000" floodOpacity="0.22" />
         </filter>
       </defs>
+      <FabricFinish id={id} materialId={materialId} />
 
-      <g filter={`url(#${id}-soft)`}>
+      <g filter={fabricFilter(id, materialId) ?? `url(#${id}-soft)`}>
         <g data-garment-part={rightId} data-panel-color={right.cloth}>
           <path d={RIGHT_SLEEVE} fill={`url(#${id}-sleeve-r)`} />
         </g>
@@ -81,47 +87,99 @@ export function HoodieGarment({ viewId, bodyColor, panelColors }: GarmentRenderP
           <path d={LEFT_SLEEVE} fill={`url(#${id}-sleeve-l)`} />
         </g>
 
-        <g data-garment-part={hoodId} data-panel-color={hood.cloth}>
-          <path d={isBack ? HOOD_BACK : HOOD_SHELL} fill={`url(#${id}-hood)`} />
-          {isBack ? (
-            <path d="M280 82 L280 190" fill="none" stroke={hood.stitch} strokeWidth="1.6" opacity="0.4" />
-          ) : (
-            <>
-              <path d={HOOD_LINING} fill={hood.tape} />
-              <path
-                d="M230 192 C240 164 320 164 330 192"
-                fill="none"
-                stroke={hood.highlight}
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                opacity="0.3"
-              />
-              <path d="M250 204 L238 248" fill="none" stroke={hood.stitch} strokeWidth="2.2" strokeLinecap="round" />
-              <path d="M310 204 L322 248" fill="none" stroke={hood.stitch} strokeWidth="2.2" strokeLinecap="round" />
-              <circle cx="238" cy="250" r="3" fill={hood.clothDark} />
-              <circle cx="322" cy="250" r="3" fill={hood.clothDark} />
-            </>
-          )}
-        </g>
+        {hoodStyle ? (
+          <g
+            data-garment-part={hoodId}
+            data-panel-color={hood.cloth}
+            data-construction-kind="hood"
+            data-construction-style={hoodStyle}
+          >
+            <path d={isBack ? HOOD_BACK : HOOD_SHELL} fill={`url(#${id}-hood)`} />
+            {isBack ? (
+              <path d="M280 82 L280 190" fill="none" stroke={hood.stitch} strokeWidth="1.6" opacity="0.4" />
+            ) : (
+              <>
+                <path d={HOOD_LINING} fill={hood.tape} />
+                <path
+                  d="M230 192 C240 164 320 164 330 192"
+                  fill="none"
+                  stroke={hood.highlight}
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  opacity="0.3"
+                />
+                {hoodStyle === 'zip' ? (
+                  <g data-garment-part="hood_zipper">
+                    <rect x="276" y="188" width="8" height="52" rx="1.5" fill={zipper.tape} />
+                    <rect x="274" y="196" width="12" height="14" rx="2" fill={zipper.metal} />
+                  </g>
+                ) : (
+                  <>
+                    <path d="M250 204 L238 248" fill="none" stroke={hood.stitch} strokeWidth="2.2" strokeLinecap="round" />
+                    <path d="M310 204 L322 248" fill="none" stroke={hood.stitch} strokeWidth="2.2" strokeLinecap="round" />
+                    <circle cx="238" cy="250" r="3" fill={hood.clothDark} />
+                    <circle cx="322" cy="250" r="3" fill={hood.clothDark} />
+                  </>
+                )}
+              </>
+            )}
+          </g>
+        ) : (
+          <g data-garment-part={hoodId} data-construction-kind="hood" data-construction-style="none">
+            <path
+              d={isBack ? 'M236 184 C250 206 310 206 324 184' : 'M232 184 C248 214 312 214 328 184'}
+              fill="none"
+              stroke={body.rib}
+              strokeWidth="8"
+              strokeLinecap="round"
+              opacity="0.45"
+            />
+          </g>
+        )}
 
         <g data-garment-part={bodyId} data-panel-color={body.cloth}>
           <path d={isBack ? BODY_BACK : BODY_FRONT} fill={`url(#${id}-body)`} />
         </g>
 
-        <g data-garment-part={cuffRightId} data-panel-color={cuffRight.cloth}>
-          <path d={RIGHT_CUFF} fill={cuffRight.rib} />
-          <path d="M40 380 H70" fill="none" stroke={cuffRight.stitch} strokeWidth="1.6" opacity="0.4" />
-        </g>
-        <g data-garment-part={cuffLeftId} data-panel-color={cuffLeft.cloth}>
-          <path d={LEFT_CUFF} fill={cuffLeft.rib} />
-          <path d="M490 380 H520" fill="none" stroke={cuffLeft.stitch} strokeWidth="1.6" opacity="0.4" />
-        </g>
+        {cuffs ? (
+          <>
+            <g
+              data-garment-part={cuffRightId}
+              data-panel-color={cuffRight.cloth}
+              data-construction-kind="cuff"
+              data-construction-style={cuffs}
+            >
+              <path d={RIGHT_CUFF} fill={cuffs === 'rib' ? cuffRight.rib : cuffRight.clothDeep} />
+              <path
+                d="M40 380 H70"
+                fill="none"
+                stroke={cuffRight.stitch}
+                strokeWidth={cuffs === 'rib' ? 1.6 : 2.4}
+                opacity="0.4"
+              />
+            </g>
+            <g
+              data-garment-part={cuffLeftId}
+              data-panel-color={cuffLeft.cloth}
+              data-construction-kind="cuff"
+              data-construction-style={cuffs}
+            >
+              <path d={LEFT_CUFF} fill={cuffs === 'rib' ? cuffLeft.rib : cuffLeft.clothDeep} />
+              <path
+                d="M490 380 H520"
+                fill="none"
+                stroke={cuffLeft.stitch}
+                strokeWidth={cuffs === 'rib' ? 1.6 : 2.4}
+                opacity="0.4"
+              />
+            </g>
+          </>
+        ) : null}
       </g>
 
       <path d="M172 230 L182 516" fill="none" stroke={body.stitch} strokeWidth="1" opacity="0.2" />
       <path d="M388 230 L378 516" fill="none" stroke={body.stitch} strokeWidth="1" opacity="0.2" />
-      <path d="M214 534 H346" fill="none" stroke={body.rib} strokeWidth="10" strokeLinecap="round" opacity="0.55" />
-      <path d="M214 528 H346" fill="none" stroke={body.highlight} strokeWidth="1.2" strokeLinecap="round" opacity="0.22" />
+      {hemStyle ? <HemBand style={hemStyle} y={534} left={214} right={346} color={body} /> : null}
 
       {isBack ? (
         <path
@@ -131,13 +189,16 @@ export function HoodieGarment({ viewId, bodyColor, panelColors }: GarmentRenderP
           strokeWidth="1.6"
           opacity="0.22"
         />
-      ) : (
-        <g data-garment-part="kangaroo_pocket">
-          <path d={POCKET} fill={body.clothDark} opacity="0.62" />
-          <path d="M218 348 L218 434 M342 348 L342 434" fill="none" stroke={body.stitch} strokeWidth="1.8" opacity="0.5" />
-          <path d="M224 340 H336" fill="none" stroke={body.highlight} strokeWidth="1.3" opacity="0.2" />
-        </g>
-      )}
+      ) : pocket ? (
+        <PocketSet
+          style={pocket}
+          kind="hoodie"
+          fill={body.clothDark}
+          stitch={body.stitch}
+          highlight={body.highlight}
+        />
+      ) : null}
+      <FabricSheen id={id} materialId={materialId} path={isBack ? BODY_BACK : BODY_FRONT} />
     </g>
   )
 }

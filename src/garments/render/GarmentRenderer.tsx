@@ -14,7 +14,11 @@ export function GarmentRenderer({
 }: GarmentRenderProps & { garmentType: string }) {
   const garment = getGarment(garmentType)
   return (
-    <g data-garment-type={garment.id} data-garment-view={viewId}>
+    <g
+      data-garment-type={garment.id}
+      data-garment-view={viewId}
+      data-fabric={construction?.materialId ?? ''}
+    >
       {garment.render({ viewId, bodyColor, panelColors, construction })}
     </g>
   )

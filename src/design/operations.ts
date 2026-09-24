@@ -7,6 +7,10 @@ import {
   setConstructionPart as writeSetConstructionPart,
   upsertMaterial as writeUpsertMaterial,
 } from './construction'
+import {
+  setConstructionStyle as writeSetConstructionStyle,
+  setGarmentMaterial as writeSetGarmentMaterial,
+} from './constructionEdits'
 import { createId } from './ids'
 import { DEFAULT_TEXT_FONT } from './typography'
 import type {
@@ -146,6 +150,21 @@ export function upsertMaterial(
   material: DesignMaterial,
 ): DesignDocument {
   return writeUpsertMaterial(document, material)
+}
+
+export function setConstructionStyle(
+  document: DesignDocument,
+  kind: ConstructionKind,
+  style: string,
+): DesignDocument {
+  return writeSetConstructionStyle(document, kind, style)
+}
+
+export function setGarmentMaterial(
+  document: DesignDocument,
+  materialId: string,
+): DesignDocument {
+  return writeSetGarmentMaterial(document, materialId)
 }
 
 export function addElement(

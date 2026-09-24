@@ -28,6 +28,8 @@ export interface DesignContextValue {
   setConstructionPart: (part: DesignConstructionPart, history?: HistoryMode) => void
   clearConstructionPart: (kind: ConstructionKind, partId?: string, history?: HistoryMode) => void
   upsertMaterial: (material: DesignMaterial, history?: HistoryMode) => void
+  setConstructionStyle: (kind: ConstructionKind, style: string, history?: HistoryMode) => void
+  setGarmentMaterial: (materialId: string, history?: HistoryMode) => void
   addGraphic: () => void
   addText: () => void
   addImageFromFile: (file: File, role?: 'image' | 'logo') => Promise<string | null>
