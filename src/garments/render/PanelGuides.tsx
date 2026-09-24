@@ -7,6 +7,8 @@ interface PanelGuidesProps {
   safeAreas: DesignSafeArea[]
   activePanelId: string
   showSafeAreas: boolean
+  /** Panel highlight is selection when no design element is selected. */
+  selectionKind?: 'panel' | 'element'
   onSelectPanel: (panelId: string) => void
 }
 
@@ -15,28 +17,40 @@ export function PanelGuides({
   safeAreas,
   activePanelId,
   showSafeAreas,
+  selectionKind = 'panel',
   onSelectPanel,
 }: PanelGuidesProps) {
   return (
     <g data-editor-chrome="true">
       {panels.map((panel) => {
         const active = panel.id === activePanelId
+        const panelSelected = active && selectionKind === 'panel'
         const safe = showSafeAreas
           ? (safeAreas.find((area) => area.panelId === panel.id) ?? null)
           : null
         const safeCanvas = safe ? localRectToCanvas(panel, safe) : null
 
         return (
-          <g key={panel.id}>
+          <g
+            key={panel.id}
+            data-panel-guide={panel.id}
+            data-panel-selected={panelSelected ? 'true' : 'false'}
+          >
             <rect
               x={panel.frame.x}
               y={panel.frame.y}
               width={panel.frame.width}
               height={panel.frame.height}
-              fill={active ? 'rgba(201,163,106,0.08)' : 'rgba(238,240,244,0.03)'}
-              stroke={active ? 'rgba(201,163,106,0.9)' : 'rgba(238,240,244,0.55)'}
-              strokeDasharray={active ? '0' : '4 3'}
-              strokeWidth={active ? 1.6 : 1.15}
+              fill={
+                panelSelected
+                  ? 'rgba(201,163,106,0.12)'
+                  : active
+                    ? 'rgba(201,163,106,0.06)'
+                    : 'rgba(238,240,244,0.03)'
+              }
+              stroke={panelSelected ? 'rgba(201,163,106,1)' : active ? 'rgba(201,163,106,0.7)' : 'rgba(238,240,244,0.55)'}
+              strokeDasharray={panelSelected ? '0' : '4 3'}
+              strokeWidth={panelSelected ? 2 : active ? 1.4 : 1.15}
               rx="3"
               onPointerDown={(event) => {
                 event.stopPropagation()
@@ -47,12 +61,12 @@ export function PanelGuides({
             <text
               x={panel.frame.x + 6}
               y={panel.frame.y + 13}
-              fill={active ? '#c9a36a' : 'rgba(238,240,244,0.72)'}
+              fill={panelSelected || active ? '#c9a36a' : 'rgba(238,240,244,0.72)'}
               fontSize="9.5"
               fontFamily="IBM Plex Sans, sans-serif"
               pointerEvents="none"
             >
-              {panel.label}
+              {panelSelected ? `Panel · ${panel.label}` : panel.label}
             </text>
             {safe && safeCanvas ? (
               <g pointerEvents="none">

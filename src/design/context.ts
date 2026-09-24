@@ -14,6 +14,7 @@ export interface DesignContextValue {
   setActivePanel: (panelId: string) => void
   renameDesign: (name: string) => void
   setBodyColor: (value: string, history?: HistoryMode) => void
+  setPanelColor: (panelId: string, value: string, history?: HistoryMode) => void
   addGraphic: () => void
   addText: () => void
   addImageFromFile: (file: File, role?: 'image' | 'logo') => Promise<string | null>

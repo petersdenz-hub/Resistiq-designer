@@ -60,6 +60,8 @@ export interface GarmentDefaults {
 export interface GarmentRenderProps {
   viewId: string
   bodyColor: string
+  /** Optional per-panel overrides. Missing ids use bodyColor. */
+  panelColors?: Record<string, string>
 }
 
 export interface GarmentDefinition {

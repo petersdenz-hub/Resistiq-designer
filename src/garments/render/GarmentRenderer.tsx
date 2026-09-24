@@ -9,11 +9,12 @@ export function GarmentRenderer({
   garmentType,
   viewId,
   bodyColor,
+  panelColors,
 }: GarmentRenderProps & { garmentType: string }) {
   const garment = getGarment(garmentType)
   return (
     <g data-garment-type={garment.id} data-garment-view={viewId}>
-      {garment.render({ viewId, bodyColor })}
+      {garment.render({ viewId, bodyColor, panelColors })}
     </g>
   )
 }

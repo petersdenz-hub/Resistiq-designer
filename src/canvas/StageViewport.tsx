@@ -1,5 +1,5 @@
 import { isLockedElement } from '@/design/types'
-import { getBodyColor, getElementsInView, getSafeAreasInView } from '@/design/selectors'
+import { getBodyColor, getElementsInView, getPanelColorMap, getSafeAreasInView } from '@/design/selectors'
 import { useDesign } from '@/design/useDesign'
 import { getGarment } from '@/garments/registry'
 import { getPanelsForView } from '@/garments/coordinates'
@@ -70,6 +70,7 @@ export function StageViewport({ zoom, showSafeAreas }: StageViewportProps) {
         garmentType={document.garmentType}
         viewId={document.activeView}
         bodyColor={getBodyColor(document)}
+        panelColors={getPanelColorMap(document)}
       />
 
       <PanelGuides
@@ -77,8 +78,8 @@ export function StageViewport({ zoom, showSafeAreas }: StageViewportProps) {
         safeAreas={getSafeAreasInView(document, document.activeView)}
         activePanelId={document.activePanelId}
         showSafeAreas={showSafeAreas}
+        selectionKind={selectedElementId ? 'element' : 'panel'}
         onSelectPanel={(panelId) => {
-          selectElement(null)
           setActivePanel(panelId)
         }}
       />

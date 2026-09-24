@@ -1,5 +1,5 @@
 import { FONT_WEIGHTS, TEXT_ALIGNS, TEXT_FONT_FAMILIES } from '@/design/typography'
-import { getPanelById } from '@/design/selectors'
+import { getPanelById, getPanelColor } from '@/design/selectors'
 import {
   isGraphicElement,
   isLockedElement,
@@ -24,13 +24,52 @@ export function PropertiesPanel() {
         </div>
       </div>
       <div className="flex-1 overflow-y-auto px-4 py-4">
-        {selectedElement ? <SelectedProperties /> : (
-          <p className="text-[12px] leading-5 text-mute">
-            Select an element on the garment to edit position, size, rotation, and style.
-          </p>
-        )}
+        {selectedElement ? <SelectedProperties /> : <SelectedPanelProperties />}
       </div>
     </aside>
+  )
+}
+
+function SelectedPanelProperties() {
+  const { document, setPanelColor, commitGesture } = useDesign()
+  const panel = getPanelById(document, document.activePanelId)
+  const originRef = useRef(document)
+  const viewLabel =
+    document.views.find((view) => view.id === panel?.viewId)?.label ?? panel?.viewId ?? '—'
+  const color = panel ? getPanelColor(document, panel.id) : null
+
+  if (!panel || !color) {
+    return (
+      <p className="text-[12px] leading-5 text-mute">
+        Select a garment panel to change its color. Design elements stay separate.
+      </p>
+    )
+  }
+
+  return (
+    <div className="space-y-4" data-properties-kind="panel">
+      <div>
+        <div className="text-[12px] font-medium text-ink">Panel</div>
+        <div className="mt-1 text-[11px] text-mute">{panel.label}</div>
+      </div>
+      <p className="text-[11px] leading-4 text-mute">
+        This is garment structure, not a design element. Color is stored on the Design Document.
+      </p>
+      <div className="rounded-md border border-line px-3 py-2 text-[12px]">
+        <div className="text-[10px] uppercase tracking-[0.14em] text-mute">View</div>
+        <div className="mt-0.5 text-ink">{viewLabel}</div>
+      </div>
+      <ColorPicker
+        label="Panel color"
+        value={color}
+        onCommit={(value) => setPanelColor(panel.id, value)}
+        onLiveStart={() => {
+          originRef.current = document
+        }}
+        onLiveChange={(value) => setPanelColor(panel.id, value, 'replace')}
+        onLiveEnd={() => commitGesture(originRef.current)}
+      />
+    </div>
   )
 }
 
@@ -47,7 +86,7 @@ function SelectedProperties() {
   const minSize = garmentPanel ? minLocalSize(garmentPanel) : 12
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-properties-kind="element">
       <div>
         <div className="text-[12px] font-medium capitalize text-ink">{selectedElement.type}</div>
         <div className="mt-1 text-[11px] text-mute">{panel?.label ?? selectedElement.panelId}</div>

@@ -12,3 +12,19 @@ export function clothShades(bodyColor: string) {
     metal: shadeHex(bodyColor, -0.45),
   }
 }
+
+export function clothFor(
+  bodyColor: string,
+  panelColors: Record<string, string> | undefined,
+  panelId: string,
+) {
+  return clothShades(panelColors?.[panelId] ?? bodyColor)
+}
+
+export function resolvedPanelColor(
+  bodyColor: string,
+  panelColors: Record<string, string> | undefined,
+  panelId: string,
+) {
+  return panelColors?.[panelId] ?? bodyColor
+}
