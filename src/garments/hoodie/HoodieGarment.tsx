@@ -1,7 +1,13 @@
 import type { GarmentRenderProps } from '../types'
 import { clothFor, clothShades } from '../render/cloth'
 import { FabricFinish, FabricSheen, HemBand, PocketSet } from '../render/constructionDraw'
-import { constructionStyle, cuffStyle, fabricFilter, pocketStyle } from '../render/constructionState'
+import {
+  constructionStyle,
+  constructionVariant,
+  cuffStyle,
+  fabricFilter,
+  pocketStyle,
+} from '../render/constructionState'
 
 /**
  * Fashion-flat hoodie. Hood, body, sleeves, and cuffs are separate parts.
@@ -16,9 +22,6 @@ const BODY_BACK =
 
 const HOOD_SHELL =
   'M168 188 C156 64 404 64 392 188 L352 204 C344 96 216 96 208 204 Z'
-
-const HOOD_LINING =
-  'M222 190 C232 108 328 108 338 190 C314 224 246 224 222 190 Z'
 
 const HOOD_BACK =
   'M168 188 C156 64 404 64 392 188 L348 202 C340 100 220 100 212 202 Z'
@@ -47,11 +50,14 @@ export function HoodieGarment({ viewId, bodyColor, panelColors, construction }: 
   const cuffLeft = clothFor(bodyColor, panelColors, cuffLeftId)
   const id = `hoodie-${viewId}`
   const hoodStyle = construction ? constructionStyle(construction, 'hood') : 'pullover'
-  const pocket = construction ? pocketStyle(construction) : 'kangaroo'
+  const hoodOpening = construction ? constructionVariant(construction, 'hood', 'standard') : 'standard'
+  const drawstring = construction ? constructionStyle(construction, 'drawstring') : 'cord'
+  const pocket = construction ? pocketStyle(construction, 'body', 'hoodie') : 'kangaroo'
   const cuffs = construction ? cuffStyle(construction) : 'rib'
   const hemStyle = construction ? constructionStyle(construction, 'hem') : 'rib'
   const materialId = construction?.materialId
   const zipper = clothShades(bodyColor)
+  const opening = hoodOpening === 'tight' ? 14 : hoodOpening === 'wide' ? -12 : 0
 
   return (
     <g pointerEvents="none">
@@ -93,15 +99,19 @@ export function HoodieGarment({ viewId, bodyColor, panelColors, construction }: 
             data-panel-color={hood.cloth}
             data-construction-kind="hood"
             data-construction-style={hoodStyle}
+            data-construction-variant={hoodOpening}
           >
             <path d={isBack ? HOOD_BACK : HOOD_SHELL} fill={`url(#${id}-hood)`} />
             {isBack ? (
               <path d="M280 82 L280 190" fill="none" stroke={hood.stitch} strokeWidth="1.6" opacity="0.4" />
             ) : (
               <>
-                <path d={HOOD_LINING} fill={hood.tape} />
                 <path
-                  d="M230 192 C240 164 320 164 330 192"
+                  d={`M${222 + opening} 190 C${232 + opening} 108 ${328 - opening} 108 ${338 - opening} 190 C${314 - opening} 224 ${246 + opening} 224 ${222 + opening} 190 Z`}
+                  fill={hood.tape}
+                />
+                <path
+                  d={`M${230 + opening} 192 C${240 + opening} 164 ${320 - opening} 164 ${330 - opening} 192`}
                   fill="none"
                   stroke={hood.highlight}
                   strokeWidth="1.8"
@@ -113,14 +123,27 @@ export function HoodieGarment({ viewId, bodyColor, panelColors, construction }: 
                     <rect x="276" y="188" width="8" height="52" rx="1.5" fill={zipper.tape} />
                     <rect x="274" y="196" width="12" height="14" rx="2" fill={zipper.metal} />
                   </g>
-                ) : (
-                  <>
-                    <path d="M250 204 L238 248" fill="none" stroke={hood.stitch} strokeWidth="2.2" strokeLinecap="round" />
-                    <path d="M310 204 L322 248" fill="none" stroke={hood.stitch} strokeWidth="2.2" strokeLinecap="round" />
-                    <circle cx="238" cy="250" r="3" fill={hood.clothDark} />
-                    <circle cx="322" cy="250" r="3" fill={hood.clothDark} />
-                  </>
-                )}
+                ) : null}
+                {drawstring ? (
+                  <g data-construction-kind="drawstring" data-construction-style={drawstring}>
+                    <path
+                      d={`M${250 + opening} 204 L${238 + opening} 248`}
+                      fill="none"
+                      stroke={hood.stitch}
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d={`M${310 - opening} 204 L${322 - opening} 248`}
+                      fill="none"
+                      stroke={hood.stitch}
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                    />
+                    <circle cx={238 + opening} cy="250" r="3" fill={hood.clothDark} />
+                    <circle cx={322 - opening} cy="250" r="3" fill={hood.clothDark} />
+                  </g>
+                ) : null}
               </>
             )}
           </g>
@@ -193,7 +216,7 @@ export function HoodieGarment({ viewId, bodyColor, panelColors, construction }: 
         <PocketSet
           style={pocket}
           kind="hoodie"
-          fill={body.clothDark}
+          fill={body.detail}
           stitch={body.stitch}
           highlight={body.highlight}
         />

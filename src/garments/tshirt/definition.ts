@@ -125,6 +125,7 @@ export const tshirtMeta = {
     sleeves: true,
     collar: true,
     hem: true,
+    cuffs: true,
     printAreas: true,
     frontBack: true,
   }),

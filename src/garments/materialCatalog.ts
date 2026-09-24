@@ -14,33 +14,33 @@ export interface CatalogMaterial extends DesignMaterial {
  * the renderer can show.
  */
 export const MATERIAL_CATALOG: CatalogMaterial[] = [
-  { id: 'cotton', name: 'Cotton', family: 'cotton', finish: 'matte', grain: 0.08, sheen: 0.04 },
+  { id: 'cotton', name: 'Cotton', family: 'cotton', finish: 'matte', grain: 0.09, sheen: 0.03 },
   {
     id: 'heavy_cotton',
     name: 'Heavy Cotton',
     family: 'cotton',
     finish: 'dense',
-    grain: 0.14,
-    sheen: 0.02,
+    grain: 0.16,
+    sheen: 0.015,
   },
   {
     id: 'polyester',
     name: 'Polyester',
     family: 'other',
     finish: 'smooth',
-    grain: 0.03,
-    sheen: 0.12,
+    grain: 0.025,
+    sheen: 0.15,
   },
-  { id: 'nylon', name: 'Nylon', family: 'nylon', finish: 'sheen', grain: 0.02, sheen: 0.2 },
+  { id: 'nylon', name: 'Nylon', family: 'nylon', finish: 'sheen', grain: 0.015, sheen: 0.26 },
   {
     id: 'softshell',
     name: 'Softshell',
     family: 'nylon',
     finish: 'technical',
-    grain: 0.06,
-    sheen: 0.16,
+    grain: 0.07,
+    sheen: 0.19,
   },
-  { id: 'fleece', name: 'Fleece', family: 'fleece', finish: 'napped', grain: 0.18, sheen: 0.06 },
+  { id: 'fleece', name: 'Fleece', family: 'fleece', finish: 'napped', grain: 0.22, sheen: 0.05 },
 ]
 
 export function getCatalogMaterial(id: string | undefined | null): CatalogMaterial | null {

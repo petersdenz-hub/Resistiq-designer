@@ -17,6 +17,7 @@ export {
   setColorValue,
   setConstructionPart,
   setConstructionStyle,
+  setConstructionVariant,
   setGarmentMaterial,
   setPanelColor,
   setDesignName,
@@ -29,7 +30,7 @@ export {
   resolveConstruction,
   sanitizeConstruction,
 } from './construction'
-export { styleOf } from './constructionEdits'
+export { styleOf, variantOf } from './constructionEdits'
 export {
   getBodyColor,
   getConstruction,
@@ -58,7 +59,10 @@ export {
   CONSTRUCTION_KINDS,
   CUFF_STYLES,
   HEM_STYLES,
+  HOOD_OPENINGS,
   HOOD_STYLES,
+  POCKET_SLOTS,
+  ZIPPER_FINISHES,
   MATERIAL_FAMILIES,
   POCKET_STYLES,
   WAISTBAND_STYLES,

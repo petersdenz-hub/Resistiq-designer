@@ -2,12 +2,14 @@ import { defaultConstructionFor } from '@/garments/constructionDefaults'
 import {
   CONSTRUCTION_KINDS,
   type ConstructionKind,
+  type DesignBeltLoop,
   type DesignButton,
   type DesignCollar,
   type DesignConstruction,
   type DesignConstructionPart,
   type DesignCuff,
   type DesignDocument,
+  type DesignDrawstring,
   type DesignHem,
   type DesignHood,
   type DesignMaterial,
@@ -26,6 +28,8 @@ export interface ResolvedConstruction {
   waistband: DesignWaistband | null
   hem: DesignHem | null
   hood: DesignHood | null
+  drawstring: DesignDrawstring | null
+  beltLoops: DesignBeltLoop | null
 }
 
 const LIST_KINDS = new Set<ConstructionKind>(['pocket', 'button', 'cuff'])
@@ -40,6 +44,8 @@ export function emptyConstruction(): DesignConstruction {
     waistband: null,
     hem: null,
     hood: null,
+    drawstring: null,
+    beltLoops: null,
   }
 }
 
@@ -55,17 +61,19 @@ export function resolveConstruction(document: DesignDocument): ResolvedConstruct
   return {
     materialId: stored?.materialId ?? defaults.materialId,
     zipper: pickSingular(stored, defaults, 'zipper'),
-    pockets: pickList(stored, defaults, 'pockets'),
     buttons: pickList(stored, defaults, 'buttons'),
     cuffs: pickList(stored, defaults, 'cuffs'),
     collar: pickSingular(stored, defaults, 'collar'),
     waistband: pickSingular(stored, defaults, 'waistband'),
     hem: pickSingular(stored, defaults, 'hem'),
     hood: pickSingular(stored, defaults, 'hood'),
+    drawstring: pickSingular(stored, defaults, 'drawstring'),
+    beltLoops: pickSingular(stored, defaults, 'beltLoops'),
+    pockets: pickPockets(stored, defaults, document.garmentType),
   }
 }
 
-function pickSingular<K extends 'zipper' | 'collar' | 'waistband' | 'hem' | 'hood'>(
+function pickSingular<K extends 'zipper' | 'collar' | 'waistband' | 'hem' | 'hood' | 'drawstring' | 'beltLoops'>(
   stored: DesignConstruction | undefined,
   defaults: DesignConstruction,
   key: K,
@@ -76,7 +84,7 @@ function pickSingular<K extends 'zipper' | 'collar' | 'waistband' | 'hem' | 'hoo
   return stored[key] ?? null
 }
 
-function pickList<K extends 'pockets' | 'buttons' | 'cuffs'>(
+function pickList<K extends 'buttons' | 'cuffs'>(
   stored: DesignConstruction | undefined,
   defaults: DesignConstruction,
   key: K,
@@ -85,6 +93,36 @@ function pickList<K extends 'pockets' | 'buttons' | 'cuffs'>(
     return defaults[key] ?? []
   }
   return stored[key] ?? []
+}
+
+export function pocketSlot(part: DesignConstructionPart, garmentType: string): string {
+  if (part.slot) {
+    return part.slot
+  }
+  if (garmentType === 'pants' || garmentType === 'shorts') {
+    return 'back'
+  }
+  return 'body'
+}
+
+/** Stored pocket slots override defaults; missing slots keep garment defaults. */
+function pickPockets(
+  stored: DesignConstruction | undefined,
+  defaults: DesignConstruction,
+  garmentType: string,
+): DesignPocket[] {
+  if (!stored || !Object.prototype.hasOwnProperty.call(stored, 'pockets')) {
+    return defaults.pockets ?? []
+  }
+  const written = stored.pockets ?? []
+  if (written.length === 0) {
+    return []
+  }
+  const overridden = new Set(written.map((part) => pocketSlot(part, garmentType)))
+  const kept = (defaults.pockets ?? []).filter(
+    (part) => !overridden.has(pocketSlot(part, garmentType)),
+  )
+  return [...kept, ...written]
 }
 
 export function sanitizeConstruction(value: unknown): DesignConstruction | undefined {
@@ -110,6 +148,8 @@ export function sanitizeConstruction(value: unknown): DesignConstruction | undef
   assignSingular(next, raw, 'waistband', 'waistband')
   assignSingular(next, raw, 'hem', 'hem')
   assignSingular(next, raw, 'hood', 'hood')
+  assignSingular(next, raw, 'drawstring', 'drawstring')
+  assignSingular(next, raw, 'beltLoops', 'belt_loop')
 
   return next
 }
@@ -117,7 +157,7 @@ export function sanitizeConstruction(value: unknown): DesignConstruction | undef
 function assignSingular(
   target: DesignConstruction,
   raw: Record<string, unknown>,
-  key: 'zipper' | 'collar' | 'waistband' | 'hem' | 'hood',
+  key: 'zipper' | 'collar' | 'waistband' | 'hem' | 'hood' | 'drawstring' | 'beltLoops',
   kind: ConstructionKind,
 ) {
   if (!Object.prototype.hasOwnProperty.call(raw, key)) {
@@ -182,6 +222,12 @@ function sanitizePart(value: unknown, expectedKind: ConstructionKind): DesignCon
   if (typeof raw.materialId === 'string' && raw.materialId.length > 0) {
     part.materialId = raw.materialId
   }
+  if (typeof raw.variant === 'string' && raw.variant.length > 0) {
+    part.variant = raw.variant
+  }
+  if (typeof raw.slot === 'string' && raw.slot.length > 0) {
+    part.slot = raw.slot
+  }
   return part
 }
 
@@ -225,9 +271,10 @@ export function setConstructionPart(
     })
   }
 
+  const key = part.kind === 'belt_loop' ? 'beltLoops' : part.kind
   return touch({
     ...document,
-    construction: { ...current, [part.kind]: part },
+    construction: { ...current, [key]: part },
   })
 }
 
@@ -248,9 +295,10 @@ export function clearConstructionPart(
     })
   }
 
+  const key = kind === 'belt_loop' ? 'beltLoops' : kind
   return touch({
     ...document,
-    construction: { ...current, [kind]: null },
+    construction: { ...current, [key]: null },
   })
 }
 
@@ -282,5 +330,7 @@ export function constructionKindsOf(resolved: ResolvedConstruction): Constructio
   if (resolved.cuffs.length) kinds.push('cuff')
   if (resolved.waistband) kinds.push('waistband')
   if (resolved.hem) kinds.push('hem')
+  if (resolved.drawstring) kinds.push('drawstring')
+  if (resolved.beltLoops) kinds.push('belt_loop')
   return kinds
 }

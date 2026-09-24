@@ -9,6 +9,7 @@ import {
 } from './construction'
 import {
   setConstructionStyle as writeSetConstructionStyle,
+  setConstructionVariant as writeSetConstructionVariant,
   setGarmentMaterial as writeSetGarmentMaterial,
 } from './constructionEdits'
 import { createId } from './ids'
@@ -156,8 +157,17 @@ export function setConstructionStyle(
   document: DesignDocument,
   kind: ConstructionKind,
   style: string,
+  slot?: string,
 ): DesignDocument {
-  return writeSetConstructionStyle(document, kind, style)
+  return writeSetConstructionStyle(document, kind, style, slot)
+}
+
+export function setConstructionVariant(
+  document: DesignDocument,
+  kind: 'zipper' | 'hood',
+  variant: string,
+): DesignDocument {
+  return writeSetConstructionVariant(document, kind, variant)
 }
 
 export function setGarmentMaterial(

@@ -1,7 +1,7 @@
 import type { GarmentRenderProps } from '../types'
 import { clothFor } from '../render/cloth'
 import { FabricFinish, FabricSheen, HemBand } from '../render/constructionDraw'
-import { constructionStyle, fabricFilter } from '../render/constructionState'
+import { constructionStyle, cuffStyle, fabricFilter } from '../render/constructionState'
 
 /**
  * Fashion-flat T-shirt. Body, sleeves, and collar are separate parts so
@@ -12,6 +12,9 @@ import { constructionStyle, fabricFilter } from '../render/constructionState'
 
 const BODY_FRONT =
   'M176 228 L188 486 C188 500 200 508 216 508 L344 508 C360 508 372 500 372 486 L384 228 L398 148 L324 148 C314 184 246 184 236 148 L162 148 L176 228 Z'
+
+const BODY_FRONT_VNECK =
+  'M176 228 L188 486 C188 500 200 508 216 508 L344 508 C360 508 372 500 372 486 L384 228 L398 148 L324 148 L280 214 L236 148 L162 148 L176 228 Z'
 
 const BODY_BACK =
   'M176 228 L188 486 C188 500 200 508 216 508 L344 508 C360 508 372 500 372 486 L384 228 L398 148 L318 148 C310 164 250 164 242 148 L162 148 L176 228 Z'
@@ -40,6 +43,12 @@ const COLLAR_STAND_FRONT =
 const COLLAR_STAND_BACK =
   'M224 126 L240 164 L320 164 L336 126 C324 116 236 116 224 126 Z'
 
+const COLLAR_VNECK_FRONT =
+  'M228 146 L280 208 L332 146 L324 148 L280 196 L236 148 Z'
+
+const COLLAR_VNECK_BACK =
+  'M234 146 C244 166 316 166 326 146 L318 148 C310 164 250 164 242 148 Z'
+
 export function TShirtGarment({ viewId, bodyColor, panelColors, construction }: GarmentRenderProps) {
   const isBack = viewId === 'back'
   const bodyId = isBack ? 'back_body' : 'front_body'
@@ -55,6 +64,7 @@ export function TShirtGarment({ viewId, bodyColor, panelColors, construction }: 
     ? constructionStyle(construction, 'collar')
     : 'crew'
   const hemStyle = construction ? constructionStyle(construction, 'hem') : 'coverstitch'
+  const sleeveHem = construction ? cuffStyle(construction) : 'coverstitch'
   const materialId = construction?.materialId
   const collarPath =
     collarStyle === 'stand'
@@ -65,9 +75,13 @@ export function TShirtGarment({ viewId, bodyColor, panelColors, construction }: 
         ? isBack
           ? COLLAR_RIB_BACK
           : COLLAR_RIB_FRONT
-        : isBack
-          ? COLLAR_CREW_BACK
-          : COLLAR_CREW_FRONT
+        : collarStyle === 'vneck'
+          ? isBack
+            ? COLLAR_VNECK_BACK
+            : COLLAR_VNECK_FRONT
+          : isBack
+            ? COLLAR_CREW_BACK
+            : COLLAR_CREW_FRONT
 
   return (
     <g pointerEvents="none">
@@ -98,30 +112,41 @@ export function TShirtGarment({ viewId, bodyColor, panelColors, construction }: 
       <g filter={fabricFilter(id, materialId) ?? `url(#${id}-soft)`}>
         <g data-garment-part={rightId} data-panel-color={right.cloth}>
           <path d={RIGHT_SLEEVE} fill={`url(#${id}-sleeve-r)`} />
-          <path
-            d="M72 226 L170 224"
-            fill="none"
-            stroke={right.stitch}
-            strokeWidth="2"
-            strokeLinecap="round"
-            opacity="0.5"
-          />
+          {sleeveHem ? (
+            <path
+              d="M72 226 L170 224"
+              fill="none"
+              stroke={sleeveHem === 'rib' ? right.rib : right.stitch}
+              strokeWidth={sleeveHem === 'rib' ? 5 : sleeveHem === 'raw' ? 1.1 : 2}
+              strokeLinecap="round"
+              opacity="0.5"
+              data-construction-kind="cuff"
+              data-construction-style={sleeveHem}
+            />
+          ) : null}
         </g>
 
         <g data-garment-part={leftId} data-panel-color={left.cloth}>
           <path d={LEFT_SLEEVE} fill={`url(#${id}-sleeve-l)`} />
-          <path
-            d="M390 224 L488 226"
-            fill="none"
-            stroke={left.stitch}
-            strokeWidth="2"
-            strokeLinecap="round"
-            opacity="0.5"
-          />
+          {sleeveHem ? (
+            <path
+              d="M390 224 L488 226"
+              fill="none"
+              stroke={sleeveHem === 'rib' ? left.rib : left.stitch}
+              strokeWidth={sleeveHem === 'rib' ? 5 : sleeveHem === 'raw' ? 1.1 : 2}
+              strokeLinecap="round"
+              opacity="0.5"
+              data-construction-kind="cuff"
+              data-construction-style={sleeveHem}
+            />
+          ) : null}
         </g>
 
         <g data-garment-part={bodyId} data-panel-color={body.cloth}>
-          <path d={isBack ? BODY_BACK : BODY_FRONT} fill={`url(#${id}-body)`} />
+          <path
+            d={isBack ? BODY_BACK : collarStyle === 'vneck' ? BODY_FRONT_VNECK : BODY_FRONT}
+            fill={`url(#${id}-body)`}
+          />
         </g>
 
         <path d="M180 236 L190 492" fill="none" stroke={body.stitch} strokeWidth="1" opacity="0.22" />
@@ -135,16 +160,20 @@ export function TShirtGarment({ viewId, bodyColor, panelColors, construction }: 
             data-construction-kind="collar"
             data-construction-style={collarStyle}
           >
-            <path d={collarPath} fill={`url(#${id}-collar)`} />
+            <path d={collarPath} fill={collarStyle === 'vneck' ? collar.rib : `url(#${id}-collar)`} />
             <path
               d={
                 collarStyle === 'stand'
                   ? isBack
                     ? 'M244 146 H316'
                     : 'M230 148 H330'
-                  : isBack
-                    ? 'M244 148 C254 162 306 162 316 148'
-                    : 'M238 148 C250 180 310 180 322 148'
+                  : collarStyle === 'vneck'
+                    ? isBack
+                      ? 'M244 148 C254 162 306 162 316 148'
+                      : 'M238 150 L280 196 L322 150'
+                    : isBack
+                      ? 'M244 148 C254 162 306 162 316 148'
+                      : 'M238 148 C250 180 310 180 322 148'
               }
               fill="none"
               stroke={collar.highlight}
@@ -170,7 +199,11 @@ export function TShirtGarment({ viewId, bodyColor, panelColors, construction }: 
           opacity="0.16"
         />
       )}
-      <FabricSheen id={id} materialId={materialId} path={isBack ? BODY_BACK : BODY_FRONT} />
+      <FabricSheen
+        id={id}
+        materialId={materialId}
+        path={isBack ? BODY_BACK : collarStyle === 'vneck' ? BODY_FRONT_VNECK : BODY_FRONT}
+      />
     </g>
   )
 }

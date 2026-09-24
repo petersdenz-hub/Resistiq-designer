@@ -1,6 +1,6 @@
 import type { GarmentRenderProps } from '../types'
 import { clothFor } from '../render/cloth'
-import { FabricFinish, FabricSheen, HemBand, PocketSet } from '../render/constructionDraw'
+import { BeltLoops, FabricFinish, FabricSheen, HemBand, PocketSet } from '../render/constructionDraw'
 import { constructionStyle, fabricFilter, pocketStyle } from '../render/constructionState'
 import type { BottomsKind } from './definition'
 
@@ -27,7 +27,10 @@ export function BottomsGarment({
   const waist = clothFor(bodyColor, panelColors, waistId)
   const id = `${kind}-${viewId}`
   const waistStyle = construction ? constructionStyle(construction, 'waistband') : 'faced'
-  const pocket = construction ? pocketStyle(construction) : 'patch'
+  const beltLoops = construction ? constructionStyle(construction, 'beltLoops') : null
+  const frontPocket = construction ? pocketStyle(construction, 'front', kind) : 'slash'
+  const backPocket = construction ? pocketStyle(construction, 'back', kind) : 'patch'
+  const cargoPocket = construction ? pocketStyle(construction, 'cargo', kind) : null
   const hemStyle = construction ? constructionStyle(construction, 'hem') : 'coverstitch'
   const materialId = construction?.materialId
   const hemY = long ? 542 : 306
@@ -95,18 +98,20 @@ export function BottomsGarment({
                 opacity="0.3"
               />
             )}
+            {beltLoops ? <BeltLoops color={waist} /> : null}
           </g>
         ) : null}
+        {!waistStyle && beltLoops ? <BeltLoops color={waist} /> : null}
       </g>
 
       {isBack ? (
         <>
           <path d="M216 128 H344" fill="none" stroke={waist.stitch} strokeWidth="1.5" opacity="0.3" />
-          {pocket ? (
+          {backPocket ? (
             <PocketSet
-              style={pocket}
+              style={backPocket}
               kind="bottoms-back"
-              fill={left.clothDark}
+              fill={left.detail}
               stitch={left.stitch}
               highlight={left.highlight}
             />
@@ -116,11 +121,20 @@ export function BottomsGarment({
         <>
           <path d="M280 110 L280 198" fill="none" stroke={waist.stitch} strokeWidth="1.8" opacity="0.45" />
           <path d="M268 140 C274 150 274 176 268 190" fill="none" stroke={left.highlight} strokeWidth="1.3" opacity="0.22" />
-          {pocket ? (
+          {frontPocket ? (
             <PocketSet
-              style={pocket}
+              style={frontPocket}
               kind="bottoms-front"
-              fill={left.clothDark}
+              fill={left.detail}
+              stitch={left.stitch}
+              highlight={left.highlight}
+            />
+          ) : null}
+          {cargoPocket ? (
+            <PocketSet
+              style={cargoPocket}
+              kind="cargo"
+              fill={left.detail}
               stitch={left.stitch}
               highlight={left.highlight}
             />

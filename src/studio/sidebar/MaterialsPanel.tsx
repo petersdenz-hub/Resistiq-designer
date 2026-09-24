@@ -1,15 +1,18 @@
-import { resolveConstruction, styleOf } from '@/design'
+import { resolveConstruction } from '@/design'
 import { useDesign } from '@/design/useDesign'
-import { constructionControlsFor } from '@/garments/constructionOptions'
+import {
+  controlValue,
+  visibleConstructionControls,
+} from '@/garments/constructionOptions'
 import { MATERIAL_CATALOG } from '@/garments/materialCatalog'
 import { getGarment } from '@/garments/registry'
 import { Field } from '@/ui'
 
 export function MaterialsPanel() {
-  const { document, setGarmentMaterial, setConstructionStyle } = useDesign()
+  const { document, setGarmentMaterial, setConstructionStyle, setConstructionVariant } = useDesign()
   const garment = getGarment(document.garmentType)
   const resolved = resolveConstruction(document)
-  const controls = constructionControlsFor(document.garmentType)
+  const controls = visibleConstructionControls(document.garmentType, resolved)
   const materialId = document.construction?.materialId
   const source = document.construction ? 'document' : 'default'
 
@@ -51,12 +54,13 @@ export function MaterialsPanel() {
           Construction
         </div>
         {controls.map((control) => {
-          const value = styleOf(resolved, control.kind)
+          const value = controlValue(resolved, control)
           return (
-            <Field key={control.kind} label={control.label}>
+            <Field key={control.id} label={control.label}>
               <div
                 className="flex flex-wrap gap-1"
-                data-construction-control={control.kind}
+                data-construction-control={control.id}
+                data-construction-control-kind={control.kind}
                 data-construction-value={value}
               >
                 {control.options.map((option) => {
@@ -65,9 +69,18 @@ export function MaterialsPanel() {
                     <button
                       key={option.value}
                       type="button"
-                      data-construction-option={`${control.kind}:${option.value}`}
+                      data-construction-option={`${control.id}:${option.value}`}
                       aria-pressed={selected}
-                      onClick={() => setConstructionStyle(control.kind, option.value)}
+                      onClick={() => {
+                        if (
+                          control.field === 'variant' &&
+                          (control.kind === 'zipper' || control.kind === 'hood')
+                        ) {
+                          setConstructionVariant(control.kind, option.value)
+                          return
+                        }
+                        setConstructionStyle(control.kind, option.value, 'record', control.slot)
+                      }}
                       className={`h-7 rounded-md border px-2 text-[11px] ${
                         selected
                           ? 'border-accent/50 bg-accent/10 text-ink'

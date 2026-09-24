@@ -9,7 +9,7 @@ import {
 } from '@/design'
 import { DESIGN_ELEMENT_TYPES } from '@/design/types'
 import { getPanelColor } from '@/design/selectors'
-import { editableConstructionKinds } from '@/garments/constructionOptions'
+import { editableConstructionControlIds, editableConstructionKinds } from '@/garments/constructionOptions'
 import { MATERIAL_CATALOG } from '@/garments/materialCatalog'
 import { isDesignDocument, normalizeDocument } from '@/persistence/validateDocument'
 import { describe, expect, it } from 'vitest'
@@ -97,16 +97,33 @@ describe('Phase 7B.2 construction editor', () => {
   })
 
   it('exposes the right construction controls per garment', () => {
-    expect(editableConstructionKinds('tshirt')).toEqual(['collar', 'hem'])
-    expect(editableConstructionKinds('hoodie')).toEqual(['hood', 'pocket', 'cuff', 'hem'])
+    expect(editableConstructionKinds('tshirt')).toEqual(['collar', 'hem', 'cuff'])
+    expect(editableConstructionKinds('hoodie')).toEqual([
+      'hood',
+      'drawstring',
+      'pocket',
+      'cuff',
+      'hem',
+    ])
     expect(editableConstructionKinds('jacket')).toEqual([
       'collar',
+      'hood',
       'zipper',
       'pocket',
       'cuff',
       'hem',
     ])
-    expect(editableConstructionKinds('pants')).toEqual(['waistband', 'pocket', 'hem'])
-    expect(editableConstructionKinds('shorts')).toEqual(['waistband', 'pocket', 'hem'])
+    expect(editableConstructionKinds('pants')).toEqual(['waistband', 'belt_loop', 'pocket', 'hem'])
+    expect(editableConstructionKinds('shorts')).toEqual(['waistband', 'belt_loop', 'pocket', 'hem'])
+    expect(editableConstructionControlIds('tshirt')).toEqual(['collar', 'hem', 'cuff'])
+    expect(editableConstructionControlIds('pants')).toEqual([
+      'waistband',
+      'belt_loop',
+      'front_pocket',
+      'back_pocket',
+      'cargo_pocket',
+      'hem',
+    ])
+    expect(editableConstructionControlIds('shorts')).not.toContain('cargo_pocket')
   })
 })

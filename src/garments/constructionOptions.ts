@@ -1,3 +1,5 @@
+import { variantOf, styleOf } from '@/design/constructionEdits'
+import type { ResolvedConstruction } from '@/design/construction'
 import type { ConstructionKind } from '@/design/types'
 import { getGarment } from './registry'
 
@@ -7,14 +9,19 @@ export interface ConstructionStyleOption {
 }
 
 export interface ConstructionControlSpec {
+  id: string
   kind: ConstructionKind
   label: string
   options: ConstructionStyleOption[]
+  slot?: string
+  field?: 'style' | 'variant'
+  requiresKind?: ConstructionKind
 }
 
 const COLLAR_OPTIONS: ConstructionStyleOption[] = [
   { value: 'crew', label: 'Crew' },
   { value: 'rib', label: 'Rib' },
+  { value: 'vneck', label: 'V-neck' },
   { value: 'stand', label: 'Stand' },
   { value: 'none', label: 'None' },
 ]
@@ -25,15 +32,39 @@ const HOOD_OPTIONS: ConstructionStyleOption[] = [
   { value: 'none', label: 'None' },
 ]
 
+const HOOD_OPENING_OPTIONS: ConstructionStyleOption[] = [
+  { value: 'tight', label: 'Tight' },
+  { value: 'standard', label: 'Open' },
+  { value: 'wide', label: 'Wide' },
+]
+
+const DRAWSTRING_OPTIONS: ConstructionStyleOption[] = [
+  { value: 'cord', label: 'On' },
+  { value: 'none', label: 'Off' },
+]
+
 const CUFF_OPTIONS: ConstructionStyleOption[] = [
   { value: 'rib', label: 'Rib' },
   { value: 'hem', label: 'Hem' },
   { value: 'none', label: 'None' },
 ]
 
+const SLEEVE_HEM_OPTIONS: ConstructionStyleOption[] = [
+  { value: 'coverstitch', label: 'Cover' },
+  { value: 'rib', label: 'Rib' },
+  { value: 'raw', label: 'Raw' },
+]
+
 const HEM_OPTIONS: ConstructionStyleOption[] = [
   { value: 'coverstitch', label: 'Cover' },
   { value: 'rib', label: 'Rib' },
+  { value: 'raw', label: 'Raw' },
+  { value: 'none', label: 'None' },
+]
+
+const HOODIE_HEM_OPTIONS: ConstructionStyleOption[] = [
+  { value: 'rib', label: 'Rib' },
+  { value: 'coverstitch', label: 'Hem' },
   { value: 'none', label: 'None' },
 ]
 
@@ -44,10 +75,21 @@ const WAISTBAND_OPTIONS: ConstructionStyleOption[] = [
   { value: 'none', label: 'None' },
 ]
 
+const BELT_LOOP_OPTIONS: ConstructionStyleOption[] = [
+  { value: 'loops', label: 'On' },
+  { value: 'none', label: 'Off' },
+]
+
 const ZIPPER_OPTIONS: ConstructionStyleOption[] = [
   { value: 'center_front', label: 'Full' },
   { value: 'quarter', label: 'Quarter' },
   { value: 'none', label: 'None' },
+]
+
+const ZIPPER_FINISH_OPTIONS: ConstructionStyleOption[] = [
+  { value: 'metal', label: 'Metal' },
+  { value: 'coil', label: 'Coil' },
+  { value: 'contrast', label: 'Contrast' },
 ]
 
 const HOODIE_POCKET_OPTIONS: ConstructionStyleOption[] = [
@@ -63,40 +105,111 @@ const JACKET_POCKET_OPTIONS: ConstructionStyleOption[] = [
   { value: 'none', label: 'None' },
 ]
 
-const BOTTOMS_POCKET_OPTIONS: ConstructionStyleOption[] = [
+const FRONT_POCKET_OPTIONS: ConstructionStyleOption[] = [
+  { value: 'slash', label: 'Slash' },
+  { value: 'welt', label: 'Welt' },
+  { value: 'none', label: 'None' },
+]
+
+const BACK_POCKET_OPTIONS: ConstructionStyleOption[] = [
   { value: 'patch', label: 'Patch' },
   { value: 'welt', label: 'Welt' },
   { value: 'slash', label: 'Slash' },
   { value: 'none', label: 'None' },
 ]
 
+const CARGO_POCKET_OPTIONS: ConstructionStyleOption[] = [
+  { value: 'cargo', label: 'On' },
+  { value: 'none', label: 'Off' },
+]
+
 const CONTROLS: Record<string, ConstructionControlSpec[]> = {
   tshirt: [
-    { kind: 'collar', label: 'Collar', options: COLLAR_OPTIONS },
-    { kind: 'hem', label: 'Hem', options: HEM_OPTIONS },
+    { id: 'collar', kind: 'collar', label: 'Collar', options: COLLAR_OPTIONS },
+    { id: 'hem', kind: 'hem', label: 'Hem', options: HEM_OPTIONS },
+    { id: 'cuff', kind: 'cuff', label: 'Sleeve hem', options: SLEEVE_HEM_OPTIONS },
   ],
   hoodie: [
-    { kind: 'hood', label: 'Hood', options: HOOD_OPTIONS },
-    { kind: 'pocket', label: 'Pocket', options: HOODIE_POCKET_OPTIONS },
-    { kind: 'cuff', label: 'Cuffs', options: CUFF_OPTIONS },
-    { kind: 'hem', label: 'Hem', options: HEM_OPTIONS },
+    { id: 'hood', kind: 'hood', label: 'Hood', options: HOOD_OPTIONS },
+    {
+      id: 'hood_opening',
+      kind: 'hood',
+      label: 'Hood opening',
+      options: HOOD_OPENING_OPTIONS,
+      field: 'variant',
+      requiresKind: 'hood',
+    },
+    {
+      id: 'drawstring',
+      kind: 'drawstring',
+      label: 'Drawstring',
+      options: DRAWSTRING_OPTIONS,
+      requiresKind: 'hood',
+    },
+    { id: 'pocket', kind: 'pocket', label: 'Pocket', options: HOODIE_POCKET_OPTIONS },
+    { id: 'cuff', kind: 'cuff', label: 'Cuffs', options: CUFF_OPTIONS },
+    { id: 'hem', kind: 'hem', label: 'Waistband / hem', options: HOODIE_HEM_OPTIONS },
   ],
   jacket: [
-    { kind: 'collar', label: 'Collar', options: COLLAR_OPTIONS },
-    { kind: 'zipper', label: 'Zipper', options: ZIPPER_OPTIONS },
-    { kind: 'pocket', label: 'Pockets', options: JACKET_POCKET_OPTIONS },
-    { kind: 'cuff', label: 'Cuffs', options: CUFF_OPTIONS },
-    { kind: 'hem', label: 'Hem', options: HEM_OPTIONS },
+    { id: 'collar', kind: 'collar', label: 'Collar', options: COLLAR_OPTIONS },
+    { id: 'hood', kind: 'hood', label: 'Hood', options: HOOD_OPTIONS },
+    { id: 'zipper', kind: 'zipper', label: 'Zipper', options: ZIPPER_OPTIONS },
+    {
+      id: 'zipper_finish',
+      kind: 'zipper',
+      label: 'Zipper style',
+      options: ZIPPER_FINISH_OPTIONS,
+      field: 'variant',
+      requiresKind: 'zipper',
+    },
+    { id: 'pocket', kind: 'pocket', label: 'Pockets', options: JACKET_POCKET_OPTIONS },
+    { id: 'cuff', kind: 'cuff', label: 'Cuffs', options: CUFF_OPTIONS },
+    { id: 'hem', kind: 'hem', label: 'Hem', options: HEM_OPTIONS },
   ],
   pants: [
-    { kind: 'waistband', label: 'Waistband', options: WAISTBAND_OPTIONS },
-    { kind: 'pocket', label: 'Pockets', options: BOTTOMS_POCKET_OPTIONS },
-    { kind: 'hem', label: 'Hem', options: HEM_OPTIONS },
+    { id: 'waistband', kind: 'waistband', label: 'Waistband', options: WAISTBAND_OPTIONS },
+    { id: 'belt_loop', kind: 'belt_loop', label: 'Belt loops', options: BELT_LOOP_OPTIONS },
+    {
+      id: 'front_pocket',
+      kind: 'pocket',
+      label: 'Front pockets',
+      options: FRONT_POCKET_OPTIONS,
+      slot: 'front',
+    },
+    {
+      id: 'back_pocket',
+      kind: 'pocket',
+      label: 'Back pockets',
+      options: BACK_POCKET_OPTIONS,
+      slot: 'back',
+    },
+    {
+      id: 'cargo_pocket',
+      kind: 'pocket',
+      label: 'Cargo pockets',
+      options: CARGO_POCKET_OPTIONS,
+      slot: 'cargo',
+    },
+    { id: 'hem', kind: 'hem', label: 'Hem', options: HEM_OPTIONS },
   ],
   shorts: [
-    { kind: 'waistband', label: 'Waistband', options: WAISTBAND_OPTIONS },
-    { kind: 'pocket', label: 'Pockets', options: BOTTOMS_POCKET_OPTIONS },
-    { kind: 'hem', label: 'Hem', options: HEM_OPTIONS },
+    { id: 'waistband', kind: 'waistband', label: 'Waistband', options: WAISTBAND_OPTIONS },
+    { id: 'belt_loop', kind: 'belt_loop', label: 'Belt loops', options: BELT_LOOP_OPTIONS },
+    {
+      id: 'front_pocket',
+      kind: 'pocket',
+      label: 'Front pockets',
+      options: FRONT_POCKET_OPTIONS,
+      slot: 'front',
+    },
+    {
+      id: 'back_pocket',
+      kind: 'pocket',
+      label: 'Back pockets',
+      options: BACK_POCKET_OPTIONS,
+      slot: 'back',
+    },
+    { id: 'hem', kind: 'hem', label: 'Hem', options: HEM_OPTIONS },
   ],
 }
 
@@ -108,6 +221,8 @@ const CAPABILITY_KIND: Partial<Record<ConstructionKind, keyof ReturnType<typeof 
   cuff: 'cuffs',
   waistband: 'waistband',
   hem: 'hem',
+  drawstring: 'hood',
+  belt_loop: 'waistband',
 }
 
 function capabilityFlags(garmentType: string) {
@@ -124,6 +239,34 @@ export function constructionControlsFor(garmentType: string): ConstructionContro
   })
 }
 
+export function visibleConstructionControls(
+  garmentType: string,
+  resolved: ResolvedConstruction,
+): ConstructionControlSpec[] {
+  return constructionControlsFor(garmentType).filter((control) => {
+    if (!control.requiresKind) {
+      return true
+    }
+    return styleOf(resolved, control.requiresKind) !== 'none'
+  })
+}
+
 export function editableConstructionKinds(garmentType: string): ConstructionKind[] {
-  return constructionControlsFor(garmentType).map((control) => control.kind)
+  return [...new Set(constructionControlsFor(garmentType).map((control) => control.kind))]
+}
+
+export function editableConstructionControlIds(garmentType: string): string[] {
+  return constructionControlsFor(garmentType).map((control) => control.id)
+}
+
+export function controlValue(
+  resolved: ResolvedConstruction,
+  control: ConstructionControlSpec,
+): string {
+  if (control.field === 'variant') {
+    if (control.kind === 'zipper' || control.kind === 'hood') {
+      return variantOf(resolved, control.kind, control.kind === 'hood' ? 'standard' : 'metal')
+    }
+  }
+  return styleOf(resolved, control.kind, control.slot)
 }
