@@ -1,3 +1,4 @@
+export { applyPreview, type DragPreview } from './useElementGesture'
 export { StageViewport } from './StageViewport'
 export {
   clientToSvgPoint,

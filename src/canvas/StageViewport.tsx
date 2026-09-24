@@ -4,7 +4,7 @@ import { getGarment } from '@/garments/registry'
 import { useRef } from 'react'
 import { DesignElements } from './DesignElements'
 import { TransformControls } from './TransformControls'
-import { useElementGesture } from './useElementGesture'
+import { applyPreview, useElementGesture } from './useElementGesture'
 
 interface StageViewportProps {
   zoom: number
@@ -73,7 +73,7 @@ export function StageViewport({ zoom }: StageViewportProps) {
       ) : null}
 
       <DesignElements
-        elements={elements}
+        elements={elements.map((element) => applyPreview(element, gesture.preview))}
         selectedElementId={selectedElementId}
         onSelect={selectElement}
         onMoveStart={gesture.startMove}
@@ -81,7 +81,7 @@ export function StageViewport({ zoom }: StageViewportProps) {
 
       {selectedElement && selectedElement.viewId === document.activeView ? (
         <TransformControls
-          element={selectedElement}
+          element={applyPreview(selectedElement, gesture.preview)}
           zoom={zoom}
           onResizeStart={(handle, event) =>
             gesture.startResize(selectedElement.id, handle, event)
