@@ -26,6 +26,8 @@ export interface DesignPanel {
   id: string
   label: string
   viewId: string
+  /** Structural role copied from the garment definition. Optional on older documents. */
+  type?: string
 }
 
 /**
@@ -45,6 +47,11 @@ export interface DesignSafeArea {
 
 export interface DesignColor {
   id: string
+  /**
+   * Color slot on the garment. `body` is implemented now.
+   * `panel` and `trim` are reserved so later garments can color parts
+   * without changing the Design Document shape.
+   */
   role: string
   value: string
 }

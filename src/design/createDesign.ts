@@ -20,6 +20,7 @@ export function createNewDesign(garmentType = 'tshirt'): DesignDocument {
       id: panel.id,
       label: panel.label,
       viewId: panel.viewId,
+      type: panel.type,
     })),
     safeAreas: garment.panels.flatMap((panel) =>
       panel.safeArea
@@ -36,7 +37,7 @@ export function createNewDesign(garmentType = 'tshirt'): DesignDocument {
           ]
         : [],
     ),
-    colors: [{ id: 'body', role: 'body', value: '#e8e4dc' }],
+    colors: [{ id: 'body', role: 'body', value: garment.defaults.bodyColor }],
     materials: [],
     elements: [],
     createdAt: now,

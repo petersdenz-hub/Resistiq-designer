@@ -8,13 +8,30 @@ export {
   panelToCanvas,
   toDisplayElement,
 } from './coordinates'
-export { AVAILABLE_GARMENTS, getGarment, PLANNED_GARMENT_LABELS, registerGarment } from './registry'
+export { garmentCapabilities } from './capabilities'
+export { GarmentPicker } from './GarmentPicker'
+export {
+  AVAILABLE_GARMENTS,
+  getGarment,
+  hasGarment,
+  PLANNED_GARMENT_LABELS,
+  registerGarment,
+  resolveGarmentType,
+} from './registry'
 export { GarmentRenderer } from './render/GarmentRenderer'
 export { PanelGuides } from './render/PanelGuides'
+export { hoodieGarment } from './hoodie'
+export { jacketGarment } from './jacket'
+export { pantsGarment } from './pants'
+export { shortsGarment } from './shorts'
 export { tshirtGarment } from './tshirt'
+export type { GarmentCapabilities } from './capabilities'
 export type {
+  GarmentCategory,
+  GarmentDefaults,
   GarmentDefinition,
   GarmentPanelDefinition,
+  GarmentPanelType,
   GarmentRect,
   GarmentRenderProps,
   GarmentSafeAreaDefinition,

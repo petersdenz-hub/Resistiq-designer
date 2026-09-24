@@ -11,6 +11,7 @@ export {
 export type { SavedDesign, SavedDesignSummary } from './designRepository'
 export { loadLocalDocument, saveLocalDocument } from './localDocumentStore'
 export { localAssetStore } from './localAssetStore'
+export { isDesignDocument, normalizeDocument } from './validateDocument'
 export { MemoryDesignStore } from './memoryStore'
 export { useAsset } from './useAsset'
 export type { AssetStore, DesignAsset, DesignStore } from './types'

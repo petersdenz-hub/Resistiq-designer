@@ -4,7 +4,8 @@ import { isPlacedImage } from '@/design/types'
 import type { DesignDocument } from '@/design/types'
 import { forgetAsset } from './assetCache'
 import { localAssetStore } from './localAssetStore'
-import { isDesignDocument } from './validateDocument'
+import { resolveGarmentType } from '@/garments/registry'
+import { isDesignDocument, normalizeDocument } from './validateDocument'
 
 const LIBRARY_KEY = 'resistq-designer:v1:library'
 const LEGACY_DRAFT_KEY = 'resistq-designer:v1:document'
@@ -50,6 +51,7 @@ export function saveDesign(
   const existing = getDesign(document.id)
   const nextDocument: DesignDocument = {
     ...structuredClone(document),
+    garmentType: resolveGarmentType(document.garmentType),
     updatedAt: now,
     createdAt: existing?.document.createdAt ?? document.createdAt,
   }
@@ -166,7 +168,9 @@ function readLibrary(): LibraryFile {
       return { designs: [] }
     }
     return {
-      designs: (parsed as LibraryFile).designs.filter((design) => isSavedDesign(design)),
+      designs: (parsed as LibraryFile).designs
+        .filter((design) => isSavedDesign(design))
+        .map(hydrateSavedDesign),
     }
   } catch {
     return { designs: [] }
@@ -181,6 +185,15 @@ function writeLibrary(library: LibraryFile) {
     localStorage.setItem(LIBRARY_KEY, JSON.stringify(library))
   } catch {
     // Quota or private-mode failures must not break the editor.
+  }
+}
+
+function hydrateSavedDesign(design: SavedDesign): SavedDesign {
+  const document = normalizeDocument(design.document)
+  return {
+    ...design,
+    garmentType: resolveGarmentType(design.garmentType || document.garmentType),
+    document,
   }
 }
 

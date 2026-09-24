@@ -2,8 +2,8 @@ import { getGarment } from '../registry'
 import type { GarmentRenderProps } from '../types'
 
 /**
- * Single entry for drawing a garment. The editor should not import T-shirt
- * internals. Add hoodie/jacket/pants later by registering a definition.
+ * Single entry for drawing a garment. The editor asks the registry what
+ * garment this is, then that definition supplies its renderer.
  */
 export function GarmentRenderer({
   garmentType,
@@ -11,5 +11,9 @@ export function GarmentRenderer({
   bodyColor,
 }: GarmentRenderProps & { garmentType: string }) {
   const garment = getGarment(garmentType)
-  return <>{garment.render({ viewId, bodyColor })}</>
+  return (
+    <g data-garment-type={garment.id} data-garment-view={viewId}>
+      {garment.render({ viewId, bodyColor })}
+    </g>
+  )
 }
