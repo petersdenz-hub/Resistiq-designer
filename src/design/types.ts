@@ -60,10 +60,85 @@ export interface DesignColor {
   value: string
 }
 
+export const MATERIAL_FAMILIES = [
+  'cotton',
+  'fleece',
+  'french_terry',
+  'nylon',
+  'denim',
+  'rib',
+  'other',
+] as const
+export type MaterialFamily = (typeof MATERIAL_FAMILIES)[number]
+
 export interface DesignMaterial {
   id: string
   name: string
   finish?: string
+  /** Optional on older documents. */
+  family?: string
+}
+
+/**
+ * Garment construction / details. Not a design element and not a panel.
+ * Optional on older documents — missing data uses garment defaults at read time.
+ */
+export const CONSTRUCTION_KINDS = [
+  'zipper',
+  'pocket',
+  'button',
+  'cuff',
+  'collar',
+  'waistband',
+  'hem',
+  'hood',
+] as const
+export type ConstructionKind = (typeof CONSTRUCTION_KINDS)[number]
+
+export const ZIPPER_STYLES = ['center_front', 'quarter'] as const
+export const POCKET_STYLES = ['kangaroo', 'patch', 'welt', 'slash'] as const
+export const BUTTON_STYLES = ['snap', 'button'] as const
+export const CUFF_STYLES = ['rib', 'hem'] as const
+export const COLLAR_STYLES = ['crew', 'rib', 'stand'] as const
+export const WAISTBAND_STYLES = ['elastic', 'rib', 'faced'] as const
+export const HEM_STYLES = ['coverstitch', 'rib'] as const
+export const HOOD_STYLES = ['pullover', 'zip'] as const
+
+export interface DesignConstructionPart {
+  id: string
+  kind: ConstructionKind
+  /** Style variant. Unknown values stay stored and fall back at render time later. */
+  style: string
+  /** Missing means garment default visibility. */
+  present?: boolean
+  /** Panel this structure belongs to, if any. Not an element placement. */
+  panelId?: string
+  /** Optional trim-like color for this part. */
+  color?: string
+  /** Optional fabric from document.materials. */
+  materialId?: string
+}
+
+export type DesignZipper = DesignConstructionPart & { kind: 'zipper' }
+export type DesignPocket = DesignConstructionPart & { kind: 'pocket' }
+export type DesignButton = DesignConstructionPart & { kind: 'button' }
+export type DesignCuff = DesignConstructionPart & { kind: 'cuff' }
+export type DesignCollar = DesignConstructionPart & { kind: 'collar' }
+export type DesignWaistband = DesignConstructionPart & { kind: 'waistband' }
+export type DesignHem = DesignConstructionPart & { kind: 'hem' }
+export type DesignHood = DesignConstructionPart & { kind: 'hood' }
+
+export interface DesignConstruction {
+  /** Garment-wide fabric from document.materials. */
+  materialId?: string
+  zipper?: DesignZipper | null
+  pockets?: DesignPocket[]
+  buttons?: DesignButton[]
+  cuffs?: DesignCuff[]
+  collar?: DesignCollar | null
+  waistband?: DesignWaistband | null
+  hem?: DesignHem | null
+  hood?: DesignHood | null
 }
 
 export interface DesignElementBase {
@@ -144,6 +219,11 @@ export interface DesignDocument {
   safeAreas: DesignSafeArea[]
   colors: DesignColor[]
   materials: DesignMaterial[]
+  /**
+   * Structured garment details. Older documents omit this field.
+   * Do not treat missing construction as an error.
+   */
+  construction?: DesignConstruction
   elements: DesignElement[]
   createdAt: string
   updatedAt: string

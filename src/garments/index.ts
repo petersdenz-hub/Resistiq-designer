@@ -9,6 +9,7 @@ export {
   toDisplayElement,
 } from './coordinates'
 export { garmentCapabilities } from './capabilities'
+export { defaultConstructionFor } from './constructionDefaults'
 export { GarmentPicker } from './GarmentPicker'
 export {
   AVAILABLE_GARMENTS,

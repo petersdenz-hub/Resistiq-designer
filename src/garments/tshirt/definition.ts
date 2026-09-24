@@ -124,6 +124,7 @@ export const tshirtMeta = {
   capabilities: garmentCapabilities({
     sleeves: true,
     collar: true,
+    hem: true,
     printAreas: true,
     frontBack: true,
   }),

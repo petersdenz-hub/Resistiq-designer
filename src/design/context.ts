@@ -1,5 +1,14 @@
 import { createContext } from 'react'
-import type { DesignDocument, DesignElement, DesignElementPatch, LayerDirection } from './types'
+import type {
+  ConstructionKind,
+  DesignConstruction,
+  DesignConstructionPart,
+  DesignDocument,
+  DesignElement,
+  DesignElementPatch,
+  DesignMaterial,
+  LayerDirection,
+} from './types'
 
 export type HistoryMode = 'record' | 'replace'
 
@@ -15,6 +24,10 @@ export interface DesignContextValue {
   renameDesign: (name: string) => void
   setBodyColor: (value: string, history?: HistoryMode) => void
   setPanelColor: (panelId: string, value: string, history?: HistoryMode) => void
+  patchConstruction: (patch: DesignConstruction, history?: HistoryMode) => void
+  setConstructionPart: (part: DesignConstructionPart, history?: HistoryMode) => void
+  clearConstructionPart: (kind: ConstructionKind, partId?: string, history?: HistoryMode) => void
+  upsertMaterial: (material: DesignMaterial, history?: HistoryMode) => void
   addGraphic: () => void
   addText: () => void
   addImageFromFile: (file: File, role?: 'image' | 'logo') => Promise<string | null>

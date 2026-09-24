@@ -88,6 +88,9 @@ export function createBottomsMeta(kind: BottomsKind): Omit<GarmentDefinition, 'r
     defaults: { bodyColor: long ? '#2a3140' : '#4a5568' },
     capabilities: garmentCapabilities({
       legs: true,
+      waistband: true,
+      hem: true,
+      pockets: true,
       printAreas: true,
       frontBack: true,
     }),

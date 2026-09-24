@@ -1,3 +1,8 @@
+import {
+  getStoredConstruction,
+  resolveConstruction,
+  type ResolvedConstruction,
+} from './construction'
 import type { DesignDocument, DesignElement, DesignPanel, DesignSafeArea } from './types'
 
 export function getBodyColor(document: DesignDocument): string {
@@ -69,4 +74,12 @@ export function getElementById(
     return null
   }
   return document.elements.find((element) => element.id === elementId) ?? null
+}
+
+export function getConstruction(document: DesignDocument) {
+  return getStoredConstruction(document)
+}
+
+export function getResolvedConstruction(document: DesignDocument): ResolvedConstruction {
+  return resolveConstruction(document)
 }

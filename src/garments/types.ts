@@ -1,3 +1,4 @@
+import type { ResolvedConstruction } from '@/design/construction'
 import type { ReactNode } from 'react'
 import type { GarmentCapabilities } from './capabilities'
 
@@ -62,6 +63,11 @@ export interface GarmentRenderProps {
   bodyColor: string
   /** Optional per-panel overrides. Missing ids use bodyColor. */
   panelColors?: Record<string, string>
+  /**
+   * Resolved construction from the Design Document.
+   * 7B.1 stores this; renderers still use the current hardcoded flats.
+   */
+  construction?: ResolvedConstruction
 }
 
 export interface GarmentDefinition {
