@@ -6,6 +6,7 @@ import type {
   ConstructionKind,
   DesignConstructionPart,
   DesignDocument,
+  DesignPocket,
 } from './types'
 
 const LIST_KIND_KEY = {
@@ -102,7 +103,7 @@ function setPocketStyle(document: DesignDocument, style: string, slot?: string):
       return patchConstruction(document, { pockets: [] })
     }
     return patchConstruction(document, {
-      pockets: constructionPartsForStyle(document.garmentType, 'pocket', style),
+      pockets: constructionPartsForStyle(document.garmentType, 'pocket', style) as DesignPocket[],
     })
   }
 
@@ -123,7 +124,10 @@ function setPocketStyle(document: DesignDocument, style: string, slot?: string):
     })
   }
   return patchConstruction(document, {
-    pockets: [...remaining, ...constructionPartsForStyle(document.garmentType, 'pocket', style, slot)],
+    pockets: [
+      ...remaining,
+      ...(constructionPartsForStyle(document.garmentType, 'pocket', style, slot) as DesignPocket[]),
+    ],
   })
 }
 
