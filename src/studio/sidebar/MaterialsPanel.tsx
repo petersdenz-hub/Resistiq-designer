@@ -60,7 +60,7 @@ export function MaterialsPanel() {
               <div
                 className="flex flex-wrap gap-1"
                 data-construction-control={control.id}
-                data-construction-kind={control.kind}
+                data-construction-control-kind={control.kind}
                 data-construction-value={value}
               >
                 {control.options.map((option) => {
