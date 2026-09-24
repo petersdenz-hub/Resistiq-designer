@@ -1,0 +1,41 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --color-studio: #0b0d11;
+  --color-panel: #12151c;
+  --color-panel-hover: #181c25;
+  --color-canvas: #1b1f28;
+  --color-line: #2a3040;
+  --color-ink: #eef0f4;
+  --color-mute: #8b93a7;
+  --color-accent: #c9a36a;
+  --color-accent-ink: #1a1408;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-studio);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+input,
+textarea {
+  user-select: text;
+}
+
+button,
+input,
+textarea {
+  font-family: inherit;
+}
