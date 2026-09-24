@@ -1,6 +1,7 @@
 import { useDesign } from '@/design/useDesign'
 import { PreviewOverlay } from '@/preview/PreviewOverlay'
 import { useEffect, useState } from 'react'
+import { CanvasEditorProvider } from './canvas-editor'
 import { CanvasStage } from './canvas-stage/CanvasStage'
 import { PropertiesPanel } from './properties/PropertiesPanel'
 import { Sidebar } from './sidebar/Sidebar'
@@ -12,7 +13,8 @@ interface StudioProps {
 }
 
 export function Studio({ onClose, onNew }: StudioProps) {
-  const { document, undo, redo, removeSelected, selectedElementId } = useDesign()
+  const { document, undo, redo, removeSelected, selectedElementId, selectedObjectId, duplicateSelectedObject } =
+    useDesign()
   const [previewing, setPreviewing] = useState(false)
 
   useEffect(() => {
@@ -42,7 +44,13 @@ export function Studio({ onClose, onNew }: StudioProps) {
         return
       }
 
-      if (!typing && selectedElementId && (event.key === 'Delete' || event.key === 'Backspace')) {
+      if (modifier && key === 'd' && selectedObjectId) {
+        event.preventDefault()
+        duplicateSelectedObject()
+        return
+      }
+
+      if (!typing && (selectedElementId || selectedObjectId) && (event.key === 'Delete' || event.key === 'Backspace')) {
         event.preventDefault()
         removeSelected()
       }
@@ -50,9 +58,10 @@ export function Studio({ onClose, onNew }: StudioProps) {
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [redo, removeSelected, selectedElementId, undo])
+  }, [duplicateSelectedObject, redo, removeSelected, selectedElementId, selectedObjectId, undo])
 
   return (
+    <CanvasEditorProvider>
     <div className="relative flex h-full min-h-0 flex-col bg-studio text-ink">
       <Topbar onClose={onClose} onNew={onNew} onPreview={() => setPreviewing(true)} />
       <div className="flex min-h-0 flex-1">
@@ -64,5 +73,6 @@ export function Studio({ onClose, onNew }: StudioProps) {
         <PreviewOverlay document={document} onClose={() => setPreviewing(false)} />
       ) : null}
     </div>
+    </CanvasEditorProvider>
   )
 }

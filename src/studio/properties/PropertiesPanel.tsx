@@ -1,4 +1,5 @@
 import { FONT_WEIGHTS, TEXT_ALIGNS, TEXT_FONT_FAMILIES } from '@/design/typography'
+import { PLACEMENT_ZONE_LABELS } from '@/design/designObjects'
 import { getPanelById, getPanelColor } from '@/design/selectors'
 import {
   isGraphicElement,
@@ -14,7 +15,7 @@ import { Button, ColorPicker, Field, NumberField, SegmentedControl } from '@/ui'
 import { useRef, useState } from 'react'
 
 export function PropertiesPanel() {
-  const { selectedElement } = useDesign()
+  const { selectedElement, selectedObject } = useDesign()
 
   return (
     <aside className="flex w-64 shrink-0 flex-col border-l border-line bg-panel">
@@ -24,7 +25,13 @@ export function PropertiesPanel() {
         </div>
       </div>
       <div className="flex-1 overflow-y-auto px-4 py-4">
-        {selectedElement ? <SelectedProperties /> : <SelectedPanelProperties />}
+        {selectedObject ? (
+          <SelectedObjectProperties />
+        ) : selectedElement ? (
+          <SelectedProperties />
+        ) : (
+          <SelectedPanelProperties />
+        )}
       </div>
     </aside>
   )
@@ -69,6 +76,146 @@ function SelectedPanelProperties() {
         onLiveChange={(value) => setPanelColor(panel.id, value, 'replace')}
         onLiveEnd={() => commitGesture(originRef.current)}
       />
+    </div>
+  )
+}
+
+function SelectedObjectProperties() {
+  const { selectedObject, updateSelectedObject, moveSelectedObjectLayer, removeSelected } = useDesign()
+  if (!selectedObject) {
+    return null
+  }
+
+  return (
+    <div className="space-y-4" data-properties-kind="design-object">
+      <div>
+        <div className="text-[12px] font-medium capitalize text-ink">{selectedObject.type}</div>
+        <div className="mt-1 text-[11px] text-mute">{PLACEMENT_ZONE_LABELS[selectedObject.zone]}</div>
+      </div>
+      <p className="text-[11px] leading-4 text-mute">
+        This is a design object on the canvas, not garment construction.
+      </p>
+
+      {selectedObject.type === 'text' ? (
+        <div className="space-y-2">
+          <Field label="Content">
+            <textarea
+              value={selectedObject.content}
+              disabled={selectedObject.locked}
+              onChange={(event) => updateSelectedObject({ content: event.target.value })}
+              className="min-h-16 w-full rounded-md border border-line bg-studio px-2 py-1.5 text-[12px] text-ink outline-none focus:border-accent/50"
+            />
+          </Field>
+          <Field label="Font">
+            <select
+              value={selectedObject.fontFamily}
+              disabled={selectedObject.locked}
+              onChange={(event) => updateSelectedObject({ fontFamily: event.target.value })}
+              className="h-8 w-full rounded-md border border-line bg-studio px-2 text-[12px] text-ink"
+            >
+              {TEXT_FONT_FAMILIES.map((font) => (
+                <option key={font.id} value={font.id}>
+                  {font.label}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <LiveNumber
+            label="Size"
+            value={selectedObject.fontSize}
+            min={8}
+            disabled={selectedObject.locked}
+            onCommit={(value) => updateSelectedObject({ fontSize: value })}
+          />
+          <SegmentedControl
+            value={String(selectedObject.fontWeight)}
+            options={FONT_WEIGHTS.map((weight) => ({ value: String(weight), label: String(weight) }))}
+            onChange={(value) =>
+              updateSelectedObject({ fontWeight: Number(value) as (typeof FONT_WEIGHTS)[number] })
+            }
+          />
+          <SegmentedControl
+            value={selectedObject.textAlign}
+            options={TEXT_ALIGNS.map((align) => ({ value: align, label: align }))}
+            onChange={(value) => updateSelectedObject({ textAlign: value })}
+          />
+          <ColorPicker
+            label="Color"
+            value={selectedObject.color}
+            onCommit={(value) => updateSelectedObject({ color: value })}
+          />
+        </div>
+      ) : null}
+
+      {selectedObject.type === 'shape' ? (
+        <div className="space-y-2">
+          <ColorPicker
+            label="Fill"
+            value={selectedObject.fill}
+            onCommit={(value) => updateSelectedObject({ fill: value })}
+          />
+          <ColorPicker
+            label="Border"
+            value={selectedObject.stroke}
+            onCommit={(value) => updateSelectedObject({ stroke: value })}
+          />
+          <LiveNumber
+            label="Border width"
+            value={selectedObject.strokeWidth}
+            min={0}
+            disabled={selectedObject.locked}
+            onCommit={(value) => updateSelectedObject({ strokeWidth: value })}
+          />
+        </div>
+      ) : null}
+
+      <div className="grid grid-cols-2 gap-2">
+        <LiveNumber
+          label="X"
+          value={selectedObject.x}
+          disabled={selectedObject.locked}
+          onCommit={(value) => updateSelectedObject({ x: value })}
+        />
+        <LiveNumber
+          label="Y"
+          value={selectedObject.y}
+          disabled={selectedObject.locked}
+          onCommit={(value) => updateSelectedObject({ y: value })}
+        />
+        <LiveNumber
+          label="W"
+          value={selectedObject.width}
+          min={8}
+          disabled={selectedObject.locked}
+          onCommit={(value) => updateSelectedObject({ width: value })}
+        />
+        <LiveNumber
+          label="H"
+          value={selectedObject.height}
+          min={8}
+          disabled={selectedObject.locked}
+          onCommit={(value) => updateSelectedObject({ height: value })}
+        />
+      </div>
+      <LiveNumber
+        label="Rotation"
+        value={Number(selectedObject.rotation.toFixed(1))}
+        digits={1}
+        disabled={selectedObject.locked}
+        onCommit={(value) => updateSelectedObject({ rotation: value })}
+      />
+      <LiveNumber
+        label="Opacity"
+        value={selectedObject.opacity}
+        min={0}
+        digits={2}
+        disabled={selectedObject.locked}
+        onCommit={(value) => updateSelectedObject({ opacity: Math.min(1, value) })}
+      />
+      <LayerButtons onMove={moveSelectedObjectLayer} />
+      <Button className="w-full" onClick={removeSelected}>
+        Remove object
+      </Button>
     </div>
   )
 }

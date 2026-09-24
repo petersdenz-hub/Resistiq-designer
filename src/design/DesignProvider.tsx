@@ -1,5 +1,17 @@
 import { persistAsset } from '@/persistence/assetCache'
 import { normalizeDocument } from '@/persistence/validateDocument'
+import {
+  addDesignObject,
+  createImageObject,
+  createShapeObject,
+  createTextObject,
+  duplicateDesignObject,
+  getDesignObjectById,
+  moveDesignObjectLayer,
+  removeDesignObject,
+  setActiveZone as writeSetActiveZone,
+  updateDesignObject,
+} from './designObjects'
 import { createId } from './ids'
 import { useCallback, useLayoutEffect, useMemo, useReducer, useRef, type ReactNode } from 'react'
 import { DesignContext, type DesignContextValue, type HistoryMode } from './context'
@@ -34,12 +46,14 @@ const HISTORY_LIMIT = 100
 interface DesignState {
   document: DesignDocument
   selectedElementId: string | null
+  selectedObjectId: string | null
   past: DesignDocument[]
   future: DesignDocument[]
 }
 
 type DesignAction =
   | { type: 'select'; elementId: string | null }
+  | { type: 'selectObject'; objectId: string | null }
   | { type: 'setActiveView'; viewId: string }
   | { type: 'setActivePanel'; panelId: string }
   | { type: 'apply'; document: DesignDocument; history: HistoryMode }
@@ -60,24 +74,32 @@ function withHistory(state: DesignState, nextDocument: DesignDocument): DesignSt
 function reducer(state: DesignState, action: DesignAction): DesignState {
   switch (action.type) {
     case 'select':
-      return { ...state, selectedElementId: action.elementId }
+      return { ...state, selectedElementId: action.elementId, selectedObjectId: null }
+    case 'selectObject':
+      return { ...state, selectedObjectId: action.objectId, selectedElementId: null }
     case 'setActiveView': {
       const next = setActiveView(state.document, action.viewId)
       const selected = getElementById(next, state.selectedElementId)
       const selectedPanel = selected
         ? next.panels.find((panel) => panel.id === selected.panelId)
         : null
+      const selectedObject = getDesignObjectById(next, state.selectedObjectId)
       return {
         ...state,
         document: next,
         selectedElementId:
           selected && selectedPanel?.viewId === next.activeView ? selected.id : null,
+        selectedObjectId:
+          selectedObject && selectedObject.zone === (next.activeZone ?? next.activeView)
+            ? selectedObject.id
+            : null,
       }
     }
     case 'setActivePanel':
       return {
         ...state,
         selectedElementId: null,
+        selectedObjectId: null,
         document: setActivePanel(state.document, action.panelId),
       }
     case 'apply':
@@ -108,6 +130,7 @@ function reducer(state: DesignState, action: DesignAction): DesignState {
       return {
         document: restored,
         selectedElementId: keepSelection(restored, state.selectedElementId),
+        selectedObjectId: keepObjectSelection(restored, state.selectedObjectId),
         past: state.past.slice(0, -1),
         future: [state.document, ...state.future],
       }
@@ -121,6 +144,7 @@ function reducer(state: DesignState, action: DesignAction): DesignState {
       return {
         document: restored,
         selectedElementId: keepSelection(restored, state.selectedElementId),
+        selectedObjectId: keepObjectSelection(restored, state.selectedObjectId),
         past: [...state.past, state.document],
         future: rest,
       }
@@ -132,6 +156,10 @@ function keepSelection(document: DesignDocument, selectedElementId: string | nul
   return getElementById(document, selectedElementId)?.id ?? null
 }
 
+function keepObjectSelection(document: DesignDocument, selectedObjectId: string | null) {
+  return getDesignObjectById(document, selectedObjectId)?.id ?? null
+}
+
 function keepEditorChrome(
   snapshot: DesignDocument,
   current: DesignDocument,
@@ -140,6 +168,7 @@ function keepEditorChrome(
     ...snapshot,
     activeView: current.activeView,
     activePanelId: current.activePanelId,
+    activeZone: current.activeZone,
   }
 }
 
@@ -153,6 +182,7 @@ export function DesignProvider({
   const [state, dispatch] = useReducer(reducer, undefined, () => ({
     document: normalizeDocument(initialDocument ?? createNewDesign('tshirt')),
     selectedElementId: null,
+    selectedObjectId: null,
     past: [],
     future: [],
   }))
@@ -171,17 +201,22 @@ export function DesignProvider({
 
   const value = useMemo<DesignContextValue>(() => {
     const selectedElement = getElementById(state.document, state.selectedElementId)
+    const selectedObject = getDesignObjectById(state.document, state.selectedObjectId)
     const current = () => stateRef.current
 
     return {
       document: state.document,
       selectedElementId: state.selectedElementId,
       selectedElement,
+      selectedObjectId: state.selectedObjectId,
+      selectedObject,
       canUndo: state.past.length > 0,
       canRedo: state.future.length > 0,
       selectElement: (elementId) => dispatch({ type: 'select', elementId }),
+      selectObject: (objectId) => dispatch({ type: 'selectObject', objectId }),
       setActiveView: (viewId) => dispatch({ type: 'setActiveView', viewId }),
       setActivePanel: (panelId) => dispatch({ type: 'setActivePanel', panelId }),
+      setActiveZone: (zone) => apply(writeSetActiveZone(current().document, zone)),
       renameDesign: (name) => apply(setDesignName(current().document, name)),
       setBodyColor: (value, history = 'record') =>
         apply(setColorValue(current().document, 'body', value), history),
@@ -212,6 +247,46 @@ export function DesignProvider({
         const element = createTextElement(document, document.activePanelId)
         apply(addElement(document, element))
         dispatch({ type: 'select', elementId: element.id })
+      },
+      addDesignText: () => {
+        const document = current().document
+        const object = createTextObject(document)
+        apply(addDesignObject(document, object))
+        dispatch({ type: 'selectObject', objectId: object.id })
+      },
+      addDesignShape: () => {
+        const document = current().document
+        const object = createShapeObject(document)
+        apply(addDesignObject(document, object))
+        dispatch({ type: 'selectObject', objectId: object.id })
+      },
+      addDesignImageFromFile: async (file) => {
+        try {
+          const ingested = await ingestImageFile(file)
+          const asset = {
+            id: createId(),
+            name: ingested.name,
+            mimeType: ingested.mimeType,
+            kind: ingested.kind,
+            dataUrl: ingested.dataUrl,
+            width: ingested.width,
+            height: ingested.height,
+            createdAt: new Date().toISOString(),
+          }
+          await persistAsset(asset)
+          const document = current().document
+          const object = createImageObject(document, {
+            source: asset.id,
+            fileName: ingested.name,
+            naturalWidth: ingested.width,
+            naturalHeight: ingested.height,
+          })
+          apply(addDesignObject(document, object))
+          dispatch({ type: 'selectObject', objectId: object.id })
+          return null
+        } catch (error) {
+          return ingestImageError(error)
+        }
       },
       addImageFromFile: async (file, role = 'image') => {
         try {
@@ -245,7 +320,12 @@ export function DesignProvider({
         }
       },
       removeSelected: () => {
-        const { document, selectedElementId } = current()
+        const { document, selectedElementId, selectedObjectId } = current()
+        if (selectedObjectId) {
+          apply(removeDesignObject(document, selectedObjectId))
+          dispatch({ type: 'selectObject', objectId: null })
+          return
+        }
         if (!selectedElementId) {
           return
         }
@@ -258,6 +338,24 @@ export function DesignProvider({
           dispatch({ type: 'select', elementId: null })
         }
       },
+      removeObjectById: (objectId) => {
+        apply(removeDesignObject(current().document, objectId))
+        if (current().selectedObjectId === objectId) {
+          dispatch({ type: 'selectObject', objectId: null })
+        }
+      },
+      duplicateSelectedObject: () => {
+        const { document, selectedObjectId } = current()
+        if (!selectedObjectId) {
+          return
+        }
+        const result = duplicateDesignObject(document, selectedObjectId)
+        if (!result) {
+          return
+        }
+        apply(result.document)
+        dispatch({ type: 'selectObject', objectId: result.object.id })
+      },
       updateSelected: (patch, history = 'record') => {
         const { document, selectedElementId } = current()
         if (!selectedElementId) {
@@ -268,12 +366,29 @@ export function DesignProvider({
       updateElementById: (elementId, patch, history = 'record') => {
         apply(updateElement(current().document, elementId, patch), history)
       },
+      updateSelectedObject: (patch, history = 'record') => {
+        const { document, selectedObjectId } = current()
+        if (!selectedObjectId) {
+          return
+        }
+        apply(updateDesignObject(document, selectedObjectId, patch), history)
+      },
+      updateObjectById: (objectId, patch, history = 'record') => {
+        apply(updateDesignObject(current().document, objectId, patch), history)
+      },
       moveSelectedLayer: (direction) => {
         const { document, selectedElementId } = current()
         if (!selectedElementId) {
           return
         }
         apply(moveElementLayer(document, selectedElementId, direction))
+      },
+      moveSelectedObjectLayer: (direction) => {
+        const { document, selectedObjectId } = current()
+        if (!selectedObjectId) {
+          return
+        }
+        apply(moveDesignObjectLayer(document, selectedObjectId, direction))
       },
       commitGesture: (previous) => dispatch({ type: 'commitGesture', previous }),
       hydrateDocument: (document) => dispatch({ type: 'hydrate', document }),

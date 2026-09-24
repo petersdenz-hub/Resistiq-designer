@@ -3,6 +3,12 @@ import {
   resolveConstruction,
   type ResolvedConstruction,
 } from './construction'
+import {
+  getDesignObjectById as readDesignObjectById,
+  getDesignObjects,
+  getDesignObjectsInZone,
+  resolveActiveZone,
+} from './designObjects'
 import type { DesignDocument, DesignElement, DesignPanel, DesignSafeArea } from './types'
 
 export function getBodyColor(document: DesignDocument): string {
@@ -83,3 +89,5 @@ export function getConstruction(document: DesignDocument) {
 export function getResolvedConstruction(document: DesignDocument): ResolvedConstruction {
   return resolveConstruction(document)
 }
+
+export { getDesignObjects, getDesignObjectsInZone, readDesignObjectById as getDesignObjectById, resolveActiveZone }

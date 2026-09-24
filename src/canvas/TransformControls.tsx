@@ -1,4 +1,3 @@
-import type { DesignElement } from '@/design/types'
 import type { PointerEvent as ReactPointerEvent } from 'react'
 import {
   RESIZE_HANDLES,
@@ -7,8 +6,17 @@ import {
   type ResizeHandle,
 } from './geometry'
 
+export interface TransformBox {
+  id: string
+  x: number
+  y: number
+  width: number
+  height: number
+  rotation: number
+}
+
 interface TransformControlsProps {
-  element: DesignElement
+  element: TransformBox
   zoom: number
   onResizeStart: (handle: ResizeHandle, event: ReactPointerEvent<SVGElement>) => void
   onRotateStart: (event: ReactPointerEvent<SVGElement>) => void

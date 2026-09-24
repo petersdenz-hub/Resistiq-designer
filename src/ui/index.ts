@@ -5,6 +5,7 @@ export { GARMENT_COLOR_PRESETS, normalizeHex, shadeHex } from './color'
 export { Field, NumberField } from './Field'
 export { IconButton } from './IconButton'
 export {
+  DesignIcon,
   ImageIcon,
   LayersIcon,
   LogoIcon,
