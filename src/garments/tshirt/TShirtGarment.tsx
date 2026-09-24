@@ -1,5 +1,5 @@
-import { shadeHex } from '@/ui/color'
 import type { GarmentRenderProps } from '../types'
+import { clothFor } from '../render/cloth'
 
 /**
  * Fashion-flat T-shirt. Body, sleeves, and collar are separate parts so
@@ -26,35 +26,37 @@ const COLLAR_FRONT =
 const COLLAR_BACK =
   'M234 146 C244 166 316 166 326 146 L318 148 C310 164 250 164 242 148 Z'
 
-export function TShirtGarment({ viewId, bodyColor }: GarmentRenderProps) {
+export function TShirtGarment({ viewId, bodyColor, panelColors }: GarmentRenderProps) {
   const isBack = viewId === 'back'
-  const cloth = bodyColor
-  const clothDeep = shadeHex(cloth, -0.1)
-  const clothDark = shadeHex(cloth, -0.18)
-  const stitch = shadeHex(cloth, -0.28)
-  const highlight = shadeHex(cloth, 0.12)
-  const rib = shadeHex(cloth, -0.07)
+  const bodyId = isBack ? 'back_body' : 'front_body'
+  const rightId = isBack ? 'right_sleeve_back' : 'right_sleeve'
+  const leftId = isBack ? 'left_sleeve_back' : 'left_sleeve'
+  const collarId = isBack ? 'collar_back' : 'collar'
+  const body = clothFor(bodyColor, panelColors, bodyId)
+  const right = clothFor(bodyColor, panelColors, rightId)
+  const left = clothFor(bodyColor, panelColors, leftId)
+  const collar = clothFor(bodyColor, panelColors, collarId)
   const id = `tshirt-${viewId}`
 
   return (
     <g pointerEvents="none">
       <defs>
         <linearGradient id={`${id}-body`} x1="280" y1="140" x2="280" y2="510" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor={highlight} />
-          <stop offset="0.4" stopColor={cloth} />
-          <stop offset="1" stopColor={clothDeep} />
+          <stop offset="0" stopColor={body.highlight} />
+          <stop offset="0.4" stopColor={body.cloth} />
+          <stop offset="1" stopColor={body.clothDeep} />
         </linearGradient>
         <linearGradient id={`${id}-sleeve-r`} x1="170" y1="148" x2="70" y2="230" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor={cloth} />
-          <stop offset="1" stopColor={clothDark} />
+          <stop offset="0" stopColor={right.cloth} />
+          <stop offset="1" stopColor={right.clothDark} />
         </linearGradient>
         <linearGradient id={`${id}-sleeve-l`} x1="390" y1="148" x2="490" y2="230" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor={cloth} />
-          <stop offset="1" stopColor={clothDark} />
+          <stop offset="0" stopColor={left.cloth} />
+          <stop offset="1" stopColor={left.clothDark} />
         </linearGradient>
         <linearGradient id={`${id}-collar`} x1="280" y1="146" x2="280" y2="188" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor={highlight} />
-          <stop offset="1" stopColor={rib} />
+          <stop offset="0" stopColor={collar.highlight} />
+          <stop offset="1" stopColor={collar.rib} />
         </linearGradient>
         <filter id={`${id}-soft`} x="-8%" y="-4%" width="116%" height="110%">
           <feDropShadow dx="0" dy="8" stdDeviation="8" floodColor="#000" floodOpacity="0.22" />
@@ -62,40 +64,40 @@ export function TShirtGarment({ viewId, bodyColor }: GarmentRenderProps) {
       </defs>
 
       <g filter={`url(#${id}-soft)`}>
-        <g data-garment-part="right_sleeve">
+        <g data-garment-part={rightId} data-panel-color={right.cloth}>
           <path d={RIGHT_SLEEVE} fill={`url(#${id}-sleeve-r)`} />
           <path
             d="M72 226 L170 224"
             fill="none"
-            stroke={stitch}
+            stroke={right.stitch}
             strokeWidth="2"
             strokeLinecap="round"
             opacity="0.5"
           />
         </g>
 
-        <g data-garment-part="left_sleeve">
+        <g data-garment-part={leftId} data-panel-color={left.cloth}>
           <path d={LEFT_SLEEVE} fill={`url(#${id}-sleeve-l)`} />
           <path
             d="M390 224 L488 226"
             fill="none"
-            stroke={stitch}
+            stroke={left.stitch}
             strokeWidth="2"
             strokeLinecap="round"
             opacity="0.5"
           />
         </g>
 
-        <g data-garment-part={isBack ? 'back_body' : 'front_body'}>
+        <g data-garment-part={bodyId} data-panel-color={body.cloth}>
           <path d={isBack ? BODY_BACK : BODY_FRONT} fill={`url(#${id}-body)`} />
         </g>
 
-        <path d="M180 236 L190 492" fill="none" stroke={stitch} strokeWidth="1" opacity="0.22" />
-        <path d="M380 236 L370 492" fill="none" stroke={stitch} strokeWidth="1" opacity="0.22" />
+        <path d="M180 236 L190 492" fill="none" stroke={body.stitch} strokeWidth="1" opacity="0.22" />
+        <path d="M380 236 L370 492" fill="none" stroke={body.stitch} strokeWidth="1" opacity="0.22" />
         <path
           d="M216 500 H344"
           fill="none"
-          stroke={stitch}
+          stroke={body.stitch}
           strokeWidth="2.4"
           strokeLinecap="round"
           opacity="0.5"
@@ -103,13 +105,13 @@ export function TShirtGarment({ viewId, bodyColor }: GarmentRenderProps) {
         <path
           d="M216 492 H344"
           fill="none"
-          stroke={highlight}
+          stroke={body.highlight}
           strokeWidth="1"
           strokeLinecap="round"
           opacity="0.22"
         />
 
-        <g data-garment-part="collar">
+        <g data-garment-part={collarId} data-panel-color={collar.cloth}>
           <path d={isBack ? COLLAR_BACK : COLLAR_FRONT} fill={`url(#${id}-collar)`} />
           <path
             d={
@@ -118,7 +120,7 @@ export function TShirtGarment({ viewId, bodyColor }: GarmentRenderProps) {
                 : 'M238 148 C250 180 310 180 322 148'
             }
             fill="none"
-            stroke={highlight}
+            stroke={collar.highlight}
             strokeWidth="1.6"
             strokeLinecap="round"
             opacity="0.35"
@@ -128,13 +130,13 @@ export function TShirtGarment({ viewId, bodyColor }: GarmentRenderProps) {
 
       {isBack ? (
         <g data-garment-part="neck-tape">
-          <rect x="269" y="158" width="22" height="9" rx="1.2" fill={clothDark} opacity="0.8" />
+          <rect x="269" y="158" width="22" height="9" rx="1.2" fill={body.clothDark} opacity="0.8" />
         </g>
       ) : (
         <path
           d="M168 160 C210 152 350 152 392 160"
           fill="none"
-          stroke={highlight}
+          stroke={body.highlight}
           strokeWidth="1.8"
           strokeLinecap="round"
           opacity="0.16"

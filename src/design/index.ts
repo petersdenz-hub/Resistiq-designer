@@ -13,11 +13,15 @@ export {
   setActivePanel,
   setActiveView,
   setColorValue,
+  setPanelColor,
   setDesignName,
   updateElement,
 } from './operations'
 export {
   getBodyColor,
+  getPanelColor,
+  getPanelColorMap,
+  getTrimColor,
   getElementById,
   getElementsInView,
   getPanelById,
@@ -32,7 +36,9 @@ export {
 } from './typography'
 export type { FontWeight, TextAlign } from './typography'
 export { ACCEPTED_IMAGE_ACCEPT, ingestImageFile } from './ingestImage'
+export { COLOR_ROLES } from './types'
 export type {
+  ColorRole,
   DesignColor,
   DesignDocument,
   DesignElement,

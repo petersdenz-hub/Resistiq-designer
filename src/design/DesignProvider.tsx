@@ -15,6 +15,7 @@ import {
   setActivePanel,
   setActiveView,
   setColorValue,
+  setPanelColor as writePanelColor,
   setDesignName,
   updateElement,
 } from './operations'
@@ -69,6 +70,7 @@ function reducer(state: DesignState, action: DesignAction): DesignState {
     case 'setActivePanel':
       return {
         ...state,
+        selectedElementId: null,
         document: setActivePanel(state.document, action.panelId),
       }
     case 'apply':
@@ -176,6 +178,8 @@ export function DesignProvider({
       renameDesign: (name) => apply(setDesignName(current().document, name)),
       setBodyColor: (value, history = 'record') =>
         apply(setColorValue(current().document, 'body', value), history),
+      setPanelColor: (panelId, value, history = 'record') =>
+        apply(writePanelColor(current().document, panelId, value), history),
       addGraphic: () => {
         const document = current().document
         const element = createGraphicElement(document, document.activePanelId)

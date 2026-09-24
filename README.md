@@ -14,8 +14,9 @@ A user can:
 4. Preview front/back without editor controls
 5. Duplicate or delete a saved design
 6. Place structured text, graphics, and uploaded images on garment panels
-7. Switch Front / Back without losing elements
-8. Undo and redo editor changes
+7. Select a garment panel and give it its own color (falls back to body color)
+8. Switch Front / Back without losing elements
+9. Undo and redo editor changes
 
 Save is explicit. There is no autosave.
 
@@ -48,6 +49,7 @@ npm run preview
 - Designs dashboard: open, duplicate, delete
 - Preview (not an export)
 - Garment registry: T-shirt, hoodie, jacket, pants, shorts (front and back)
+- Per-panel colors on the Design Document (body color is the fallback)
 - Structured design elements (graphic, text, image, and logo)
 - Undo / redo
 - Zoom

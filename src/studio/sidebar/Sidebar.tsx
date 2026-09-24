@@ -141,7 +141,7 @@ function ColorsPanel() {
   return (
     <div className="space-y-3">
       <p className="text-[12px] leading-5 text-mute">
-        Body color is stored on the Design Document. Later garments can add panel and trim colors without changing this structure.
+        Body color is the fallback for any panel without its own color. Select a panel to override it. Trim colors come later.
       </p>
       <ColorPicker
         label="Garment color"

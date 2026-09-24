@@ -86,6 +86,29 @@ export function setColorValue(
   })
 }
 
+export function setPanelColor(
+  document: DesignDocument,
+  panelId: string,
+  value: string,
+): DesignDocument {
+  const index = document.colors.findIndex(
+    (color) => color.role === 'panel' && color.id === panelId,
+  )
+  if (index >= 0) {
+    return touch({
+      ...document,
+      colors: document.colors.map((color, colorIndex) =>
+        colorIndex === index ? { ...color, value } : color,
+      ),
+    })
+  }
+
+  return touch({
+    ...document,
+    colors: [...document.colors, { id: panelId, role: 'panel', value }],
+  })
+}
+
 export function addElement(
   document: DesignDocument,
   element: DesignElement,

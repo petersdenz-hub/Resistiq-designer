@@ -45,12 +45,16 @@ export interface DesignSafeArea {
   height: number
 }
 
+export const COLOR_ROLES = ['body', 'panel', 'trim'] as const
+export type ColorRole = (typeof COLOR_ROLES)[number]
+
 export interface DesignColor {
   id: string
   /**
-   * Color slot on the garment. `body` is implemented now.
-   * `panel` and `trim` are reserved so later garments can color parts
-   * without changing the Design Document shape.
+   * Color slot on the garment.
+   * `body` — garment-wide fallback
+   * `panel` — override for one panel (`id` is the panel id)
+   * `trim` — reserved for later structure colors (zipper tape, rib, …)
    */
   role: string
   value: string

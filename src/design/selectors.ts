@@ -4,6 +4,29 @@ export function getBodyColor(document: DesignDocument): string {
   return document.colors.find((color) => color.role === 'body')?.value ?? '#e8e4dc'
 }
 
+/** Explicit panel overrides only. Missing panels fall back to body color. */
+export function getPanelColorMap(document: DesignDocument): Record<string, string> {
+  const map: Record<string, string> = {}
+  for (const color of document.colors) {
+    if (color.role === 'panel') {
+      map[color.id] = color.value
+    }
+  }
+  return map
+}
+
+export function getPanelColor(document: DesignDocument, panelId: string): string {
+  return getPanelColorMap(document)[panelId] ?? getBodyColor(document)
+}
+
+/** Reserved for later trim/structure colors. Falls back to body. */
+export function getTrimColor(document: DesignDocument, trimId: string): string {
+  return (
+    document.colors.find((color) => color.role === 'trim' && color.id === trimId)?.value ??
+    getBodyColor(document)
+  )
+}
+
 export function getPanelById(
   document: DesignDocument,
   panelId: string,

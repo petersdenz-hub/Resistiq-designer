@@ -1,6 +1,6 @@
 import { DesignElements } from '@/canvas/DesignElements'
 import { toCanvasElement } from '@/canvas/project'
-import { getBodyColor, getElementsInView } from '@/design/selectors'
+import { getBodyColor, getElementsInView, getPanelColorMap } from '@/design/selectors'
 import type { DesignDocument } from '@/design/types'
 import { getGarment } from '@/garments/registry'
 import { GarmentRenderer } from '@/garments/render/GarmentRenderer'
@@ -27,6 +27,7 @@ export function PreviewStage({ document, viewId, zoom = 0.85 }: PreviewStageProp
         garmentType={document.garmentType}
         viewId={viewId}
         bodyColor={getBodyColor(document)}
+        panelColors={getPanelColorMap(document)}
       />
       <DesignElements
         elements={elements}
