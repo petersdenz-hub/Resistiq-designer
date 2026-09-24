@@ -38,10 +38,7 @@ export function TransformControls({
   const top = handleLocalPoint(element, 'n')
 
   return (
-    <g
-      transform={`rotate(${element.rotation} ${center.x} ${center.y})`}
-      pointerEvents="all"
-    >
+    <g transform={`rotate(${element.rotation} ${center.x} ${center.y})`}>
       <rect
         x={element.x}
         y={element.y}
@@ -50,6 +47,7 @@ export function TransformControls({
         fill="none"
         stroke="#c9a36a"
         strokeWidth={stroke}
+        pointerEvents="none"
       />
       <line
         x1={top.x}
@@ -58,6 +56,7 @@ export function TransformControls({
         y2={top.y - rotateOffset}
         stroke="#c9a36a"
         strokeWidth={stroke}
+        pointerEvents="none"
       />
       <circle
         cx={top.x}

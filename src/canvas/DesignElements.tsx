@@ -25,6 +25,7 @@ export function DesignElements({
           style={{ cursor: 'move' }}
           onPointerDown={(event) => {
             event.stopPropagation()
+            event.preventDefault()
             onSelect(element.id)
             onMoveStart(element.id, event)
           }}

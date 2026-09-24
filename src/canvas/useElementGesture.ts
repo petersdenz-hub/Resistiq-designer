@@ -1,5 +1,11 @@
 import type { DesignDocument, DesignElementPatch } from '@/design/types'
-import { useEffect, useRef, type PointerEvent as ReactPointerEvent, type RefObject } from 'react'
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  type PointerEvent as ReactPointerEvent,
+  type RefObject,
+} from 'react'
 import {
   clientToSvgPoint,
   getCenter,
@@ -49,8 +55,7 @@ type Gesture =
 export function useElementGesture(svgRef: RefObject<SVGSVGElement | null>, api: GestureApi) {
   const gestureRef = useRef<Gesture | null>(null)
   const apiRef = useRef(api)
-
-  useEffect(() => {
+  useLayoutEffect(() => {
     apiRef.current = api
   }, [api])
 
@@ -124,30 +129,36 @@ export function useElementGesture(svgRef: RefObject<SVGSVGElement | null>, api: 
   return {
     startMove(elementId: string, event: ReactPointerEvent<SVGElement>) {
       const svg = svgRef.current
-      const element = api.document.elements.find((item) => item.id === elementId)
+      const document = apiRef.current.document
+      const element = document.elements.find((item) => item.id === elementId)
       if (!svg || !element) {
         return
       }
+      event.preventDefault()
+      event.currentTarget.setPointerCapture?.(event.pointerId)
       const pointer = clientToSvgPoint(svg, event.clientX, event.clientY)
       gestureRef.current = {
         kind: 'move',
         elementId,
-        origin: api.document,
+        origin: document,
         startX: pointer.x,
         startY: pointer.y,
         elementX: element.x,
         elementY: element.y,
       }
     },
-    startResize(elementId: string, handle: ResizeHandle, _event: ReactPointerEvent<SVGElement>) {
-      const element = api.document.elements.find((item) => item.id === elementId)
+    startResize(elementId: string, handle: ResizeHandle, event: ReactPointerEvent<SVGElement>) {
+      const document = apiRef.current.document
+      const element = document.elements.find((item) => item.id === elementId)
       if (!element) {
         return
       }
+      event.preventDefault()
+      event.currentTarget.setPointerCapture?.(event.pointerId)
       gestureRef.current = {
         kind: 'resize',
         elementId,
-        origin: api.document,
+        origin: document,
         handle,
         startX: element.x,
         startY: element.y,
@@ -156,11 +167,13 @@ export function useElementGesture(svgRef: RefObject<SVGSVGElement | null>, api: 
         startRotation: element.rotation,
       }
     },
-    startRotate(elementId: string, _event: ReactPointerEvent<SVGElement>) {
+    startRotate(elementId: string, event: ReactPointerEvent<SVGElement>) {
+      event.preventDefault()
+      event.currentTarget.setPointerCapture?.(event.pointerId)
       gestureRef.current = {
         kind: 'rotate',
         elementId,
-        origin: api.document,
+        origin: apiRef.current.document,
       }
     },
   }

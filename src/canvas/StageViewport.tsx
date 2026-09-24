@@ -40,12 +40,17 @@ export function StageViewport({ zoom }: StageViewportProps) {
       height={height}
       viewBox={`0 0 ${garment.viewBox.width} ${garment.viewBox.height}`}
       className="overflow-visible"
-      onPointerDown={() => selectElement(null)}
+      onPointerDown={(event) => {
+        if (event.target === event.currentTarget) {
+          selectElement(null)
+        }
+      }}
     >
       <rect
         width={garment.viewBox.width}
         height={garment.viewBox.height}
         fill="transparent"
+        onPointerDown={() => selectElement(null)}
       />
 
       {garment.render({

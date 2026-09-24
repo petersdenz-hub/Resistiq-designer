@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useReducer, type ReactNode } from 'react'
+import { useCallback, useLayoutEffect, useMemo, useReducer, useRef, type ReactNode } from 'react'
 import { DesignContext, type DesignContextValue, type HistoryMode } from './context'
 import { createNewDesign } from './createDesign'
 import {
@@ -74,9 +74,10 @@ function reducer(state: DesignState, action: DesignAction): DesignState {
       if (!previous) {
         return state
       }
+      const restored = keepActiveView(previous, state.document.activeView)
       return {
-        document: previous,
-        selectedElementId: keepSelection(previous, state.selectedElementId),
+        document: restored,
+        selectedElementId: keepSelection(restored, state.selectedElementId),
         past: state.past.slice(0, -1),
         future: [state.document, ...state.future],
       }
@@ -86,9 +87,10 @@ function reducer(state: DesignState, action: DesignAction): DesignState {
       if (!next) {
         return state
       }
+      const restored = keepActiveView(next, state.document.activeView)
       return {
-        document: next,
-        selectedElementId: keepSelection(next, state.selectedElementId),
+        document: restored,
+        selectedElementId: keepSelection(restored, state.selectedElementId),
         past: [...state.past, state.document],
         future: rest,
       }
@@ -100,6 +102,13 @@ function keepSelection(document: DesignDocument, selectedElementId: string | nul
   return getElementById(document, selectedElementId)?.id ?? null
 }
 
+function keepActiveView(document: DesignDocument, activeView: string): DesignDocument {
+  if (document.activeView === activeView) {
+    return document
+  }
+  return { ...document, activeView }
+}
+
 export function DesignProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, undefined, () => ({
     document: createNewDesign('tshirt'),
@@ -107,6 +116,11 @@ export function DesignProvider({ children }: { children: ReactNode }) {
     past: [],
     future: [],
   }))
+
+  const stateRef = useRef(state)
+  useLayoutEffect(() => {
+    stateRef.current = state
+  }, [state])
 
   const apply = useCallback(
     (document: DesignDocument, history: HistoryMode = 'record') => {
@@ -117,6 +131,7 @@ export function DesignProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<DesignContextValue>(() => {
     const selectedElement = getElementById(state.document, state.selectedElementId)
+    const current = () => stateRef.current
 
     return {
       document: state.document,
@@ -126,45 +141,50 @@ export function DesignProvider({ children }: { children: ReactNode }) {
       canRedo: state.future.length > 0,
       selectElement: (elementId) => dispatch({ type: 'select', elementId }),
       setActiveView: (viewId) => dispatch({ type: 'setActiveView', viewId }),
-      renameDesign: (name) => apply(setDesignName(state.document, name)),
-      setBodyColor: (value) => apply(setColorValue(state.document, 'body', value)),
+      renameDesign: (name) => apply(setDesignName(current().document, name)),
+      setBodyColor: (value) => apply(setColorValue(current().document, 'body', value)),
       addGraphic: () => {
-        const element = createGraphicElement(state.document, state.document.activeView)
-        apply(addElement(state.document, element))
+        const document = current().document
+        const element = createGraphicElement(document, document.activeView)
+        apply(addElement(document, element))
         dispatch({ type: 'select', elementId: element.id })
       },
       addText: () => {
-        const element = createTextElement(state.document, state.document.activeView)
-        apply(addElement(state.document, element))
+        const document = current().document
+        const element = createTextElement(document, document.activeView)
+        apply(addElement(document, element))
         dispatch({ type: 'select', elementId: element.id })
       },
       removeSelected: () => {
-        if (!state.selectedElementId) {
+        const { document, selectedElementId } = current()
+        if (!selectedElementId) {
           return
         }
-        apply(removeElement(state.document, state.selectedElementId))
+        apply(removeElement(document, selectedElementId))
         dispatch({ type: 'select', elementId: null })
       },
       removeElementById: (elementId) => {
-        apply(removeElement(state.document, elementId))
-        if (state.selectedElementId === elementId) {
+        apply(removeElement(current().document, elementId))
+        if (current().selectedElementId === elementId) {
           dispatch({ type: 'select', elementId: null })
         }
       },
       updateSelected: (patch, history = 'record') => {
-        if (!state.selectedElementId) {
+        const { document, selectedElementId } = current()
+        if (!selectedElementId) {
           return
         }
-        apply(updateElement(state.document, state.selectedElementId, patch), history)
+        apply(updateElement(document, selectedElementId, patch), history)
       },
       updateElementById: (elementId, patch, history = 'record') => {
-        apply(updateElement(state.document, elementId, patch), history)
+        apply(updateElement(current().document, elementId, patch), history)
       },
       moveSelectedLayer: (direction) => {
-        if (!state.selectedElementId) {
+        const { document, selectedElementId } = current()
+        if (!selectedElementId) {
           return
         }
-        apply(moveElementLayer(state.document, state.selectedElementId, direction))
+        apply(moveElementLayer(document, selectedElementId, direction))
       },
       commitGesture: (previous) => dispatch({ type: 'commitGesture', previous }),
       undo: () => dispatch({ type: 'undo' }),

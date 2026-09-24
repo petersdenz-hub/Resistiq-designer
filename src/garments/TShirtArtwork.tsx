@@ -18,7 +18,7 @@ export function TShirtArtwork({ viewId, bodyColor }: GarmentRenderProps) {
   const highlight = shadeHex(bodyColor, 0.12)
 
   return (
-    <g>
+    <g pointerEvents="none">
       <defs>
         <linearGradient id="tshirt-body" x1="200" y1="46" x2="200" y2="470" gradientUnits="userSpaceOnUse">
           <stop offset="0" stopColor={highlight} />
