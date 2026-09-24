@@ -6,6 +6,7 @@ export { createId } from './ids'
 export {
   addElement,
   createGraphicElement,
+  createImageElement,
   createTextElement,
   moveElementLayer,
   removeElement,
@@ -30,6 +31,7 @@ export {
   TEXT_FONT_FAMILIES,
 } from './typography'
 export type { FontWeight, TextAlign } from './typography'
+export { ACCEPTED_IMAGE_ACCEPT, ingestImageFile } from './ingestImage'
 export type {
   DesignColor,
   DesignDocument,

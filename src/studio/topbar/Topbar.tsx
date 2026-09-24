@@ -25,7 +25,7 @@ export function Topbar() {
             Resistiq Designer
           </div>
           <div className="text-[10px] uppercase tracking-[0.16em] text-mute">
-            In memory only
+            Local draft
           </div>
         </div>
       </div>

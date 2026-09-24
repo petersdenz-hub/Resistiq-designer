@@ -12,10 +12,11 @@ A user can:
 2. Switch Front / Back without losing elements
 3. Add structured text (content, font, size, weight, italic, color, tracking, align)
 4. Add a vector graphic (position, size, rotation, opacity, color, shape)
-5. Change layer order (forward, backward, front, back)
-6. Place work on a specific panel (body, sleeves, collar) and see its safe / print area
-7. Change garment color with a color picker
-8. Undo and redo those changes
+5. Upload a PNG, JPG, WEBP, or SVG image/logo onto a panel
+6. Change layer order (forward, backward, front, back)
+7. Place work on a specific panel (body, sleeves, collar) and see its safe / print area
+8. Change garment color with a color picker
+9. Undo and redo those changes
 
 The **Design Document** is the source of truth. The canvas is only a picture of that document. Designs are not saved as one flattened image.
 
@@ -42,9 +43,9 @@ npm run preview
 ## What this first version does
 
 - React + TypeScript + Vite + Tailwind CSS
-- In-memory design state (lost on refresh)
+- Local draft in this browser (Design Document in localStorage, image files in IndexedDB)
 - One garment type: T-shirt, with front and back
-- Structured design elements (graphic and text are editable; logo and image types exist but cannot be added yet)
+- Structured design elements (graphic, text, image, and logo)
 - Undo / redo
 - Zoom
 
@@ -66,7 +67,6 @@ A library can still be added later if we hit a real limit.
 ## Planned later (not built)
 
 - Other garments (hoodie, jacket, pants, shorts, leggings, ski/snowboard)
-- Logo and image uploads
 - Materials
 - Durable save (this project’s own Supabase, when we decide to)
 - Preview rendering and export
@@ -83,7 +83,7 @@ src/
   design/        Design Document types and in-memory editing
   garments/      Garment definitions and renderers (T-shirt first)
   canvas/        SVG stage, selection, transform
-  persistence/   Storage adapters (memory now, Supabase later)
+  persistence/   Local draft + asset store (replaceable later)
   export/        Future export pipelines
   ui/            Shared controls
   assets/        Future garment artwork

@@ -96,12 +96,19 @@ export interface TextElement extends DesignElementBase {
 
 export interface ImageElement extends DesignElementBase {
   type: 'image'
+  /** Asset id in the asset store — not a flattened screenshot. */
   source: string
+  fileName: string
+  mimeType: string
+  locked: boolean
 }
 
 export interface LogoElement extends DesignElementBase {
   type: 'logo'
   source: string
+  fileName: string
+  mimeType: string
+  locked: boolean
 }
 
 export type DesignElement = GraphicElement | TextElement | ImageElement | LogoElement
@@ -137,4 +144,22 @@ export function isGraphicElement(element: DesignElement): element is GraphicElem
 
 export function isTextElement(element: DesignElement): element is TextElement {
   return element.type === 'text'
+}
+
+export function isImageElement(element: DesignElement): element is ImageElement {
+  return element.type === 'image'
+}
+
+export function isLogoElement(element: DesignElement): element is LogoElement {
+  return element.type === 'logo'
+}
+
+export function isPlacedImage(
+  element: DesignElement,
+): element is ImageElement | LogoElement {
+  return element.type === 'image' || element.type === 'logo'
+}
+
+export function isLockedElement(element: DesignElement): boolean {
+  return isPlacedImage(element) && element.locked
 }

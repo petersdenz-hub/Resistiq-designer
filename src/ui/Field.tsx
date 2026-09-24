@@ -24,7 +24,7 @@ export function NumberField({
     <Field label={label}>
       <input
         type="number"
-        className="h-8 w-full rounded-md border border-line bg-studio px-2 text-[12px] text-ink outline-none focus:border-accent/50"
+        className="h-8 w-full rounded-md border border-line bg-studio px-2 text-[12px] text-ink outline-none focus:border-accent/50 disabled:opacity-40"
         {...props}
       />
     </Field>

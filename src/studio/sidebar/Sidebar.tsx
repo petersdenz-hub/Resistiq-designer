@@ -1,3 +1,4 @@
+import { ACCEPTED_IMAGE_ACCEPT } from '@/design/ingestImage'
 import { getElementsInView, getPanelById, getPanelsInView } from '@/design/selectors'
 import { useDesign } from '@/design/useDesign'
 import { AVAILABLE_GARMENTS, PLANNED_GARMENT_LABELS } from '@/garments/registry'
@@ -64,8 +65,8 @@ export function Sidebar() {
           {tool === 'garment' ? <GarmentPanel /> : null}
           {tool === 'colors' ? <ColorsPanel /> : null}
           {tool === 'materials' ? <Placeholder text="Materials are not in this first version. They will be stored on the Design Document later." /> : null}
-          {tool === 'logo' ? <Placeholder text="Logo upload is not available yet. The Design Document already has a logo element type." /> : null}
-          {tool === 'image' ? <Placeholder text="Image upload is not available yet. The Design Document already has an image element type." /> : null}
+          {tool === 'logo' ? <UploadPanel role="logo" /> : null}
+          {tool === 'image' ? <UploadPanel role="image" /> : null}
           {tool === 'text' ? <TextPanel /> : null}
           {tool === 'elements' ? <ElementsPanel /> : null}
         </div>
@@ -164,6 +165,53 @@ function ColorsPanel() {
   )
 }
 
+function UploadPanel({ role }: { role: 'image' | 'logo' }) {
+  const { document, addImageFromFile } = useDesign()
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+  const panel = getPanelById(document, document.activePanelId)
+  const label = role === 'logo' ? 'Upload logo' : 'Upload image'
+
+  return (
+    <div className="space-y-3">
+      <p className="text-[12px] leading-5 text-mute">
+        Places a {role} on {panel?.label ?? 'the active panel'}. The file is stored locally in
+        this browser and referenced from the Design Document.
+      </p>
+      <input
+        ref={inputRef}
+        type="file"
+        accept={ACCEPTED_IMAGE_ACCEPT}
+        className="absolute h-px w-px overflow-hidden opacity-0"
+        onChange={(event) => {
+          const file = event.target.files?.[0]
+          event.target.value = ''
+          if (!file) {
+            return
+          }
+          setBusy(true)
+          setError(null)
+          void addImageFromFile(file, role).then((message) => {
+            setBusy(false)
+            setError(message)
+          })
+        }}
+      />
+      <Button
+        variant="accent"
+        className="w-full"
+        disabled={busy}
+        onClick={() => inputRef.current?.click()}
+      >
+        {busy ? 'Uploading…' : label}
+      </Button>
+      <p className="text-[11px] text-mute">PNG, JPG, WEBP, or SVG. Max 8 MB.</p>
+      {error ? <p className="text-[12px] text-accent">{error}</p> : null}
+    </div>
+  )
+}
+
 function TextPanel() {
   const { document, addText } = useDesign()
   const panel = getPanelById(document, document.activePanelId)
@@ -196,7 +244,7 @@ function ElementsPanel() {
       </Button>
       {elements.length === 0 ? (
         <p className="text-[12px] leading-5 text-mute">
-          No elements on this view yet. Choose a panel, then add a graphic or text.
+          No elements on this view yet. Choose a panel, then add a graphic, text, or image.
         </p>
       ) : (
         <ul className="space-y-1.5">
@@ -239,9 +287,16 @@ function ElementsPanel() {
   )
 }
 
-function elementLabel(type: string, element: { type: string; content?: unknown }): string {
+function elementLabel(
+  type: string,
+  element: { type: string; content?: unknown; fileName?: unknown },
+): string {
   if (type === 'text' && 'content' in element && typeof element.content === 'string') {
     const preview = element.content.trim() || 'Text'
+    return preview.length > 22 ? `${preview.slice(0, 22)}…` : preview
+  }
+  if ((type === 'image' || type === 'logo') && typeof element.fileName === 'string') {
+    const preview = element.fileName.trim() || type
     return preview.length > 22 ? `${preview.slice(0, 22)}…` : preview
   }
   return type

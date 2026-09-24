@@ -8,7 +8,9 @@ import type {
   DesignElement,
   DesignElementPatch,
   GraphicElement,
+  ImageElement,
   LayerDirection,
+  LogoElement,
   TextElement,
 } from './types'
 
@@ -186,11 +188,9 @@ function defaultPlacement(
   panelId: string,
   kind: 'graphic' | 'text',
 ) {
-  const garment = getGarment(document.garmentType)
-  const panel = getGarmentPanel(garment, panelId)
   const bounds = getConstraintBounds(document, panelId)
 
-  if (!panel || !bounds) {
+  if (!bounds) {
     return kind === 'text'
       ? { x: 16, y: 80, width: 140, height: 36 }
       : { x: 40, y: 32, width: 64, height: 64 }
@@ -212,6 +212,35 @@ function defaultPlacement(
   return {
     x: bounds.x + (bounds.width - width) / 2,
     y: bounds.y + bounds.height * 0.16,
+    width,
+    height,
+  }
+}
+
+function placeInSafeArea(
+  document: DesignDocument,
+  panelId: string,
+  aspect: number,
+) {
+  const bounds = getConstraintBounds(document, panelId)
+  if (!bounds) {
+    const width = 96
+    const height = width / Math.max(aspect, 0.2)
+    return { x: 24, y: 24, width, height }
+  }
+
+  const maxWidth = bounds.width * 0.72
+  const maxHeight = bounds.height * 0.72
+  let width = maxWidth
+  let height = width / Math.max(aspect, 0.2)
+  if (height > maxHeight) {
+    height = maxHeight
+    width = height * aspect
+  }
+
+  return {
+    x: bounds.x + (bounds.width - width) / 2,
+    y: bounds.y + (bounds.height - height) / 2,
     width,
     height,
   }
@@ -272,4 +301,45 @@ export function createTextElement(document: DesignDocument, panelId?: string): T
     textAlign: 'center',
     letterSpacing: 0,
   }
+}
+
+export function createImageElement(
+  document: DesignDocument,
+  input: {
+    type?: 'image' | 'logo'
+    source: string
+    fileName: string
+    mimeType: string
+    naturalWidth: number
+    naturalHeight: number
+    panelId?: string
+  },
+): ImageElement | LogoElement {
+  const resolvedPanelId = resolvePanelId(document, input.panelId)
+  const panel = getDocumentPanel(document, resolvedPanelId)
+  const box = placeInSafeArea(
+    document,
+    resolvedPanelId,
+    input.naturalWidth / Math.max(input.naturalHeight, 1),
+  )
+  const shared = {
+    id: createId(),
+    panelId: resolvedPanelId,
+    viewId: panel?.viewId ?? document.activeView,
+    x: box.x,
+    y: box.y,
+    width: box.width,
+    height: box.height,
+    rotation: 0,
+    opacity: 1,
+    zIndex: nextZIndex(document),
+    source: input.source,
+    fileName: input.fileName,
+    mimeType: input.mimeType,
+    locked: false,
+  }
+
+  return input.type === 'logo'
+    ? { ...shared, type: 'logo' }
+    : { ...shared, type: 'image' }
 }

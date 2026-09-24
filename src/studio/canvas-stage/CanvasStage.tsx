@@ -24,7 +24,7 @@ export function CanvasStage() {
           <StageViewport zoom={zoom} showSafeAreas={showSafeAreas} />
           {elementCount === 0 ? (
             <p className="pointer-events-none absolute bottom-6 left-1/2 w-[16rem] -translate-x-1/2 text-center text-[12px] leading-5 text-mute">
-              Choose a panel, then add text or a graphic. Both stay structured in the Design Document.
+              Choose a panel, then add text, a graphic, or an image. All stay structured in the Design Document.
             </p>
           ) : null}
         </div>
