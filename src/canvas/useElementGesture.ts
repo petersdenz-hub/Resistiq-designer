@@ -1,6 +1,11 @@
 import type { DesignDocument, DesignElementPatch } from '@/design/types'
 import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject } from 'react'
 import {
+  canvasOffsetToLocal,
+  canvasPatchToLocal,
+  canvasRectOf,
+} from './project'
+import {
   clientToSvgPoint,
   getCenter,
   resizeRect,
@@ -32,8 +37,6 @@ type Gesture =
       origin: DesignDocument
       startX: number
       startY: number
-      elementX: number
-      elementY: number
       lastDx: number
       lastDy: number
     }
@@ -72,6 +75,10 @@ export function useElementGesture(svgRef: RefObject<SVGSVGElement | null>, api: 
       }
 
       const pointer = clientToSvgPoint(svg, event.clientX, event.clientY)
+      const element = apiRef.current.document.elements.find((item) => item.id === gesture.elementId)
+      if (!element) {
+        return
+      }
 
       if (gesture.kind === 'move') {
         gesture.lastDx = pointer.x - gesture.startX
@@ -84,13 +91,8 @@ export function useElementGesture(svgRef: RefObject<SVGSVGElement | null>, api: 
         return
       }
 
-      const element = apiRef.current.document.elements.find((item) => item.id === gesture.elementId)
-      if (!element) {
-        return
-      }
-
       if (gesture.kind === 'resize') {
-        const next = resizeRect(
+        const nextCanvas = resizeRect(
           {
             x: gesture.startX,
             y: gesture.startY,
@@ -101,11 +103,15 @@ export function useElementGesture(svgRef: RefObject<SVGSVGElement | null>, api: 
           gesture.handle,
           pointer,
         )
-        apiRef.current.updateElementById(gesture.elementId, next, 'replace')
+        const local = canvasPatchToLocal(apiRef.current.document, element, nextCanvas)
+        if (local) {
+          apiRef.current.updateElementById(gesture.elementId, local, 'replace')
+        }
         return
       }
 
-      const rotation = rotationFromPointer(getCenter(element), pointer)
+      const canvasRect = canvasRectOf(apiRef.current.document, element)
+      const rotation = rotationFromPointer(getCenter(canvasRect), pointer)
       apiRef.current.updateElementById(
         gesture.elementId,
         { rotation: event.shiftKey ? snapAngle(rotation) : rotation },
@@ -120,15 +126,17 @@ export function useElementGesture(svgRef: RefObject<SVGSVGElement | null>, api: 
       }
 
       if (gesture.kind === 'move') {
-        if (gesture.lastDx !== 0 || gesture.lastDy !== 0) {
-          apiRef.current.updateElementById(
-            gesture.elementId,
-            {
-              x: gesture.elementX + gesture.lastDx,
-              y: gesture.elementY + gesture.lastDy,
-            },
-            'record',
+        const element = apiRef.current.document.elements.find((item) => item.id === gesture.elementId)
+        if (element && (gesture.lastDx !== 0 || gesture.lastDy !== 0)) {
+          const local = canvasOffsetToLocal(
+            apiRef.current.document,
+            element,
+            gesture.lastDx,
+            gesture.lastDy,
           )
+          if (local) {
+            apiRef.current.updateElementById(gesture.elementId, local, 'record')
+          }
         }
         setPreview(null)
       } else {
@@ -165,8 +173,6 @@ export function useElementGesture(svgRef: RefObject<SVGSVGElement | null>, api: 
         origin: document,
         startX: pointer.x,
         startY: pointer.y,
-        elementX: element.x,
-        elementY: element.y,
         lastDx: 0,
         lastDy: 0,
       }
@@ -178,15 +184,16 @@ export function useElementGesture(svgRef: RefObject<SVGSVGElement | null>, api: 
         return
       }
       event.preventDefault()
+      const canvas = canvasRectOf(document, element)
       gestureRef.current = {
         kind: 'resize',
         elementId,
         origin: document,
         handle,
-        startX: element.x,
-        startY: element.y,
-        startWidth: element.width,
-        startHeight: element.height,
+        startX: canvas.x,
+        startY: canvas.y,
+        startWidth: canvas.width,
+        startHeight: canvas.height,
         startRotation: element.rotation,
       }
     },

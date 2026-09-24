@@ -9,7 +9,8 @@ export const AVAILABLE_GARMENTS: GarmentDefinition[] = [tshirtGarment]
 
 /**
  * Future garment types belong in this registry.
- * Do not rewrite the editor to add hoodie, jacket, pants, etc. — add a definition.
+ * Do not rewrite the editor to add hoodie, jacket, pants, etc. — add a definition
+ * and a renderer, then register it here.
  */
 export const PLANNED_GARMENT_LABELS = [
   'Hoodie',

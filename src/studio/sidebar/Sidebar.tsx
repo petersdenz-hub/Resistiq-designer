@@ -1,4 +1,4 @@
-import { getElementsInView } from '@/design/selectors'
+import { getElementsInView, getPanelById, getPanelsInView } from '@/design/selectors'
 import { useDesign } from '@/design/useDesign'
 import { AVAILABLE_GARMENTS, PLANNED_GARMENT_LABELS } from '@/garments/registry'
 import {
@@ -78,7 +78,8 @@ function Placeholder({ text }: { text: string }) {
 }
 
 function GarmentPanel() {
-  const { document } = useDesign()
+  const { document, setActivePanel } = useDesign()
+  const viewPanels = getPanelsInView(document, document.activeView)
 
   return (
     <div className="space-y-4">
@@ -92,6 +93,31 @@ function GarmentPanel() {
         </div>
         <div className="mt-0.5 text-[11px] text-mute">Current garment</div>
       </button>
+      <div>
+        <div className="mb-2 text-[10px] font-medium uppercase tracking-[0.14em] text-mute">
+          Panels on this view
+        </div>
+        <ul className="space-y-1.5">
+          {viewPanels.map((panel) => {
+            const active = panel.id === document.activePanelId
+            return (
+              <li key={panel.id}>
+                <button
+                  type="button"
+                  onClick={() => setActivePanel(panel.id)}
+                  className={`w-full rounded-md border px-3 py-1.5 text-left text-[12px] ${
+                    active
+                      ? 'border-accent/50 bg-accent/10 text-ink'
+                      : 'border-line text-mute hover:text-ink'
+                  }`}
+                >
+                  {panel.label}
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+      </div>
       <div>
         <div className="mb-2 text-[10px] font-medium uppercase tracking-[0.14em] text-mute">
           Later garments
@@ -148,7 +174,7 @@ function TextPanel() {
   return (
     <div className="space-y-3">
       <p className="text-[12px] leading-5 text-mute">
-        Adds a real text element to the active side of the garment. You can move, resize, and rotate it.
+        Adds text to the active panel. You can move, resize, and rotate it.
       </p>
       <Button variant="accent" className="w-full" onClick={addText}>
         Add text
@@ -164,12 +190,15 @@ function ElementsPanel() {
 
   return (
     <div className="space-y-4">
+      <p className="text-[11px] text-mute">
+        Adding to {getPanelById(document, document.activePanelId)?.label ?? 'the active panel'}
+      </p>
       <Button variant="accent" className="w-full" onClick={addGraphic}>
         Add graphic
       </Button>
       {elements.length === 0 ? (
         <p className="text-[12px] leading-5 text-mute">
-          No elements on this side yet. Add a graphic to start the first design.
+          No elements on this view yet. Choose a panel, then add a graphic.
         </p>
       ) : (
         <ul className="space-y-1.5">
@@ -188,6 +217,9 @@ function ElementsPanel() {
                     className="min-w-0 flex-1 text-left text-[12px] text-ink"
                   >
                     <span className="capitalize">{element.type}</span>
+                    <span className="mt-0.5 block text-[10px] text-mute">
+                      {getPanelById(document, element.panelId)?.label ?? element.panelId}
+                    </span>
                   </button>
                   <button
                     type="button"

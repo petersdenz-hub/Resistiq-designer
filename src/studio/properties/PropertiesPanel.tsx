@@ -1,5 +1,8 @@
-import { useDesign } from '@/design/useDesign'
+import { getPanelById } from '@/design/selectors'
 import { isGraphicElement, isTextElement } from '@/design/types'
+import { useDesign } from '@/design/useDesign'
+import { minLocalSize, getGarmentPanel } from '@/garments/coordinates'
+import { getGarment } from '@/garments/registry'
 import { Button, Field, NumberField } from '@/ui'
 import { useRef, useState } from 'react'
 
@@ -25,15 +28,27 @@ export function PropertiesPanel() {
 }
 
 function SelectedProperties() {
-  const { selectedElement, updateSelected, moveSelectedLayer, removeSelected } = useDesign()
+  const { document, selectedElement, updateSelected, moveSelectedLayer, removeSelected } =
+    useDesign()
 
   if (!selectedElement) {
     return null
   }
 
+  const panel = getPanelById(document, selectedElement.panelId)
+  const garmentPanel = getGarmentPanel(getGarment(document.garmentType), selectedElement.panelId)
+  const minSize = garmentPanel ? minLocalSize(garmentPanel) : 12
+
   return (
     <div className="space-y-4">
-      <div className="text-[12px] font-medium capitalize text-ink">{selectedElement.type}</div>
+      <div>
+        <div className="text-[12px] font-medium capitalize text-ink">{selectedElement.type}</div>
+        <div className="mt-1 text-[11px] text-mute">{panel?.label ?? selectedElement.panelId}</div>
+      </div>
+
+      <p className="text-[11px] leading-4 text-mute">
+        Position and size are relative to this panel, not the browser window.
+      </p>
 
       <div className="grid grid-cols-2 gap-2">
         <LiveNumber
@@ -49,13 +64,13 @@ function SelectedProperties() {
         <LiveNumber
           label="W"
           value={selectedElement.width}
-          min={16}
+          min={minSize}
           onCommit={(value) => updateSelected({ width: value })}
         />
         <LiveNumber
           label="H"
           value={selectedElement.height}
-          min={16}
+          min={minSize}
           onCommit={(value) => updateSelected({ height: value })}
         />
       </div>

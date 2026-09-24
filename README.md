@@ -17,6 +17,8 @@ A user can:
 
 The **Design Document** is the source of truth. The canvas is only a picture of that document. Designs are not saved as one flattened image.
 
+Elements are stored on **garment panels** (front body, back body, sleeves, collar). Their position is relative to that panel, not to the browser window. That is how the same design can later map to other sizes and production documents.
+
 ## How to run
 
 ```bash
@@ -75,7 +77,7 @@ src/
   app/           App shell
   studio/        Designer layout (top bar, sidebars, canvas)
   design/        Design Document types and in-memory editing
-  garments/      Garment definitions (T-shirt first)
+  garments/      Garment definitions and renderers (T-shirt first)
   canvas/        SVG stage, selection, transform
   persistence/   Storage adapters (memory now, Supabase later)
   export/        Future export pipelines

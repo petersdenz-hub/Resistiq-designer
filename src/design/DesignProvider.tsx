@@ -7,6 +7,7 @@ import {
   createTextElement,
   moveElementLayer,
   removeElement,
+  setActivePanel,
   setActiveView,
   setColorValue,
   setDesignName,
@@ -27,6 +28,7 @@ interface DesignState {
 type DesignAction =
   | { type: 'select'; elementId: string | null }
   | { type: 'setActiveView'; viewId: string }
+  | { type: 'setActivePanel'; panelId: string }
   | { type: 'apply'; document: DesignDocument; history: HistoryMode }
   | { type: 'commitGesture'; previous: DesignDocument }
   | { type: 'undo' }
@@ -48,13 +50,21 @@ function reducer(state: DesignState, action: DesignAction): DesignState {
     case 'setActiveView': {
       const next = setActiveView(state.document, action.viewId)
       const selected = getElementById(next, state.selectedElementId)
+      const selectedPanel = selected
+        ? next.panels.find((panel) => panel.id === selected.panelId)
+        : null
       return {
         ...state,
         document: next,
         selectedElementId:
-          selected && selected.viewId === next.activeView ? selected.id : null,
+          selected && selectedPanel?.viewId === next.activeView ? selected.id : null,
       }
     }
+    case 'setActivePanel':
+      return {
+        ...state,
+        document: setActivePanel(state.document, action.panelId),
+      }
     case 'apply':
       if (action.history === 'replace') {
         return { ...state, document: action.document }
@@ -74,7 +84,7 @@ function reducer(state: DesignState, action: DesignAction): DesignState {
       if (!previous) {
         return state
       }
-      const restored = keepActiveView(previous, state.document.activeView)
+      const restored = keepEditorChrome(previous, state.document)
       return {
         document: restored,
         selectedElementId: keepSelection(restored, state.selectedElementId),
@@ -87,7 +97,7 @@ function reducer(state: DesignState, action: DesignAction): DesignState {
       if (!next) {
         return state
       }
-      const restored = keepActiveView(next, state.document.activeView)
+      const restored = keepEditorChrome(next, state.document)
       return {
         document: restored,
         selectedElementId: keepSelection(restored, state.selectedElementId),
@@ -102,11 +112,15 @@ function keepSelection(document: DesignDocument, selectedElementId: string | nul
   return getElementById(document, selectedElementId)?.id ?? null
 }
 
-function keepActiveView(document: DesignDocument, activeView: string): DesignDocument {
-  if (document.activeView === activeView) {
-    return document
+function keepEditorChrome(
+  snapshot: DesignDocument,
+  current: DesignDocument,
+): DesignDocument {
+  return {
+    ...snapshot,
+    activeView: current.activeView,
+    activePanelId: current.activePanelId,
   }
-  return { ...document, activeView }
 }
 
 export function DesignProvider({ children }: { children: ReactNode }) {
@@ -141,17 +155,18 @@ export function DesignProvider({ children }: { children: ReactNode }) {
       canRedo: state.future.length > 0,
       selectElement: (elementId) => dispatch({ type: 'select', elementId }),
       setActiveView: (viewId) => dispatch({ type: 'setActiveView', viewId }),
+      setActivePanel: (panelId) => dispatch({ type: 'setActivePanel', panelId }),
       renameDesign: (name) => apply(setDesignName(current().document, name)),
       setBodyColor: (value) => apply(setColorValue(current().document, 'body', value)),
       addGraphic: () => {
         const document = current().document
-        const element = createGraphicElement(document, document.activeView)
+        const element = createGraphicElement(document, document.activePanelId)
         apply(addElement(document, element))
         dispatch({ type: 'select', elementId: element.id })
       },
       addText: () => {
         const document = current().document
-        const element = createTextElement(document, document.activeView)
+        const element = createTextElement(document, document.activePanelId)
         apply(addElement(document, element))
         dispatch({ type: 'select', elementId: element.id })
       },

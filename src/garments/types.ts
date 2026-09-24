@@ -12,6 +12,20 @@ export interface GarmentRect {
   height: number
 }
 
+export interface GarmentPanelDefinition {
+  id: string
+  label: string
+  /** Editor view where this panel can be designed. */
+  viewId: string
+  /**
+   * Canonical design-space size. Elements store x/y/width/height in these units
+   * so a later size or tech-pack mapping does not depend on browser pixels.
+   */
+  local: { width: number; height: number }
+  /** Where this panel sits on the garment viewBox. */
+  frame: GarmentRect
+}
+
 export interface GarmentRenderProps {
   viewId: string
   bodyColor: string
@@ -22,6 +36,7 @@ export interface GarmentDefinition {
   label: string
   views: GarmentViewDefinition[]
   viewBox: { width: number; height: number }
-  printArea: Record<string, GarmentRect>
+  panels: GarmentPanelDefinition[]
+  defaultPanelId: (viewId: string) => string
   render: (props: GarmentRenderProps) => ReactNode
 }

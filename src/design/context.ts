@@ -11,6 +11,7 @@ export interface DesignContextValue {
   canRedo: boolean
   selectElement: (elementId: string | null) => void
   setActiveView: (viewId: string) => void
+  setActivePanel: (panelId: string) => void
   renameDesign: (name: string) => void
   setBodyColor: (value: string) => void
   addGraphic: () => void

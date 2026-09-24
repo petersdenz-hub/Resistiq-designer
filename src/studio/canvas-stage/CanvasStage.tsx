@@ -10,7 +10,7 @@ const ZOOM_STEP = 0.15
 
 export function CanvasStage() {
   const { document, setActiveView } = useDesign()
-  const [zoom, setZoom] = useState(1)
+  const [zoom, setZoom] = useState(0.9)
   const elementCount = getElementsInView(document, document.activeView).length
   const viewLabel = document.views.find((view) => view.id === document.activeView)?.label ?? 'Front'
 

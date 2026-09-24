@@ -8,12 +8,19 @@ export {
   createTextElement,
   moveElementLayer,
   removeElement,
+  setActivePanel,
   setActiveView,
   setColorValue,
   setDesignName,
   updateElement,
 } from './operations'
-export { getBodyColor, getElementById, getElementsInView } from './selectors'
+export {
+  getBodyColor,
+  getElementById,
+  getElementsInView,
+  getPanelById,
+  getPanelsInView,
+} from './selectors'
 export type {
   DesignColor,
   DesignDocument,
@@ -21,6 +28,7 @@ export type {
   DesignElementPatch,
   DesignElementType,
   DesignMaterial,
+  DesignPanel,
   DesignView,
   GraphicElement,
   ImageElement,

@@ -1,4 +1,5 @@
 import { getGarment } from '@/garments/registry'
+import { getGarmentPanel } from '@/garments/coordinates'
 import { createId } from './ids'
 import type {
   DesignDocument,
@@ -19,6 +20,18 @@ export function nextZIndex(document: DesignDocument): number {
   return document.elements.reduce((max, element) => Math.max(max, element.zIndex), 0) + 1
 }
 
+export function getDocumentPanel(document: DesignDocument, panelId: string) {
+  return document.panels.find((panel) => panel.id === panelId) ?? null
+}
+
+export function resolvePanelId(document: DesignDocument, panelId?: string): string {
+  if (panelId && document.panels.some((panel) => panel.id === panelId)) {
+    return panelId
+  }
+  const garment = getGarment(document.garmentType)
+  return garment.defaultPanelId(document.activeView)
+}
+
 export function setDesignName(document: DesignDocument, name: string): DesignDocument {
   return touch({
     ...document,
@@ -30,9 +43,28 @@ export function setActiveView(document: DesignDocument, viewId: string): DesignD
   if (!document.views.some((view) => view.id === viewId)) {
     return document
   }
+  const garment = getGarment(document.garmentType)
+  const panelStillValid = document.panels.some(
+    (panel) => panel.id === document.activePanelId && panel.viewId === viewId,
+  )
   return touch({
     ...document,
     activeView: viewId,
+    activePanelId: panelStillValid
+      ? document.activePanelId
+      : garment.defaultPanelId(viewId),
+  })
+}
+
+export function setActivePanel(document: DesignDocument, panelId: string): DesignDocument {
+  const panel = getDocumentPanel(document, panelId)
+  if (!panel) {
+    return document
+  }
+  return touch({
+    ...document,
+    activePanelId: panelId,
+    activeView: panel.viewId,
   })
 }
 
@@ -90,7 +122,7 @@ export function moveElementLayer(
   }
 
   const siblings = document.elements
-    .filter((element) => element.viewId === current.viewId)
+    .filter((element) => element.panelId === current.panelId)
     .sort((a, b) => a.zIndex - b.zIndex)
 
   const index = siblings.findIndex((element) => element.id === elementId)
@@ -113,52 +145,66 @@ export function moveElementLayer(
   })
 }
 
-function printAreaFor(document: DesignDocument, viewId: string) {
+function defaultPlacement(document: DesignDocument, panelId: string) {
   const garment = getGarment(document.garmentType)
-  const fallbackViewId = garment.views[0]?.id
-  return (
-    garment.printArea[viewId] ??
-    (fallbackViewId ? garment.printArea[fallbackViewId] : undefined) ?? {
-      x: 140,
-      y: 160,
-      width: 120,
-      height: 160,
-    }
-  )
+  const panel = getGarmentPanel(garment, panelId)
+  if (!panel) {
+    return { x: 40, y: 32, width: 64, height: 64 }
+  }
+
+  const width = panel.local.width * 0.34
+  const height = width
+  return {
+    x: (panel.local.width - width) / 2,
+    y: panel.local.height * 0.12,
+    width,
+    height,
+  }
 }
 
 export function createGraphicElement(
   document: DesignDocument,
-  viewId: string,
+  panelId?: string,
 ): GraphicElement {
-  const area = printAreaFor(document, viewId)
+  const resolvedPanelId = resolvePanelId(document, panelId)
+  const panel = getDocumentPanel(document, resolvedPanelId)
+  const box = defaultPlacement(document, resolvedPanelId)
+
   return {
     id: createId(),
     type: 'graphic',
-    viewId,
-    x: area.x + (area.width - 72) / 2,
-    y: area.y + 28,
-    width: 72,
-    height: 72,
+    panelId: resolvedPanelId,
+    viewId: panel?.viewId ?? document.activeView,
+    x: box.x,
+    y: box.y,
+    width: box.width,
+    height: box.height,
     rotation: 0,
     opacity: 1,
     zIndex: nextZIndex(document),
     color: '#1a1a1a',
     shape: 'rect',
-    cornerRadius: 10,
+    cornerRadius: 8,
   }
 }
 
-export function createTextElement(document: DesignDocument, viewId: string): TextElement {
-  const area = printAreaFor(document, viewId)
+export function createTextElement(document: DesignDocument, panelId?: string): TextElement {
+  const resolvedPanelId = resolvePanelId(document, panelId)
+  const panel = getDocumentPanel(document, resolvedPanelId)
+  const garment = getGarment(document.garmentType)
+  const geometry = getGarmentPanel(garment, resolvedPanelId)
+  const width = geometry ? geometry.local.width * 0.72 : 140
+  const height = geometry ? Math.max(28, geometry.local.height * 0.12) : 36
+
   return {
     id: createId(),
     type: 'text',
-    viewId,
-    x: area.x + 8,
-    y: area.y + area.height / 2 - 18,
-    width: area.width - 16,
-    height: 36,
+    panelId: resolvedPanelId,
+    viewId: panel?.viewId ?? document.activeView,
+    x: geometry ? (geometry.local.width - width) / 2 : 16,
+    y: geometry ? geometry.local.height * 0.42 : 80,
+    width,
+    height,
     rotation: 0,
     opacity: 1,
     zIndex: nextZIndex(document),

@@ -1,7 +1,18 @@
-import type { DesignDocument, DesignElement } from './types'
+import type { DesignDocument, DesignElement, DesignPanel } from './types'
 
 export function getBodyColor(document: DesignDocument): string {
   return document.colors.find((color) => color.role === 'body')?.value ?? '#e8e4dc'
+}
+
+export function getPanelById(
+  document: DesignDocument,
+  panelId: string,
+): DesignPanel | null {
+  return document.panels.find((panel) => panel.id === panelId) ?? null
+}
+
+export function getPanelsInView(document: DesignDocument, viewId: string): DesignPanel[] {
+  return document.panels.filter((panel) => panel.viewId === viewId)
 }
 
 export function getElementsInView(
@@ -9,7 +20,10 @@ export function getElementsInView(
   viewId: string,
 ): DesignElement[] {
   return document.elements
-    .filter((element) => element.viewId === viewId)
+    .filter((element) => {
+      const panel = getPanelById(document, element.panelId)
+      return (panel?.viewId ?? element.viewId) === viewId
+    })
     .sort((a, b) => a.zIndex - b.zIndex)
 }
 
