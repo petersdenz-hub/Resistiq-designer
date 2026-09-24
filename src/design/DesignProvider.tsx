@@ -1,9 +1,14 @@
-import { useCallback, useLayoutEffect, useMemo, useReducer, useRef, type ReactNode } from 'react'
+import { persistAsset } from '@/persistence/assetCache'
+import { loadLocalDocument, saveLocalDocument } from '@/persistence/localDocumentStore'
+import { createId } from './ids'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useRef, type ReactNode } from 'react'
 import { DesignContext, type DesignContextValue, type HistoryMode } from './context'
 import { createNewDesign } from './createDesign'
+import { ingestImageError, ingestImageFile } from './ingestImage'
 import {
   addElement,
   createGraphicElement,
+  createImageElement,
   createTextElement,
   moveElementLayer,
   removeElement,
@@ -125,11 +130,15 @@ function keepEditorChrome(
 
 export function DesignProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, undefined, () => ({
-    document: createNewDesign('tshirt'),
+    document: loadLocalDocument() ?? createNewDesign('tshirt'),
     selectedElementId: null,
     past: [],
     future: [],
   }))
+
+  useEffect(() => {
+    saveLocalDocument(state.document)
+  }, [state.document])
 
   const stateRef = useRef(state)
   useLayoutEffect(() => {
@@ -170,6 +179,37 @@ export function DesignProvider({ children }: { children: ReactNode }) {
         const element = createTextElement(document, document.activePanelId)
         apply(addElement(document, element))
         dispatch({ type: 'select', elementId: element.id })
+      },
+      addImageFromFile: async (file, role = 'image') => {
+        try {
+          const ingested = await ingestImageFile(file)
+          const asset = {
+            id: createId(),
+            name: ingested.name,
+            mimeType: ingested.mimeType,
+            kind: ingested.kind,
+            dataUrl: ingested.dataUrl,
+            width: ingested.width,
+            height: ingested.height,
+            createdAt: new Date().toISOString(),
+          }
+          await persistAsset(asset)
+          const document = current().document
+          const element = createImageElement(document, {
+            type: role,
+            source: asset.id,
+            fileName: ingested.name,
+            mimeType: ingested.mimeType,
+            naturalWidth: ingested.width,
+            naturalHeight: ingested.height,
+            panelId: document.activePanelId,
+          })
+          apply(addElement(document, element))
+          dispatch({ type: 'select', elementId: element.id })
+          return null
+        } catch (error) {
+          return ingestImageError(error)
+        }
       },
       removeSelected: () => {
         const { document, selectedElementId } = current()

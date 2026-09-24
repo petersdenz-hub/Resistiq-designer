@@ -1,2 +1,6 @@
+export { hydrateAssets, persistAsset, getCachedAsset } from './assetCache'
+export { loadLocalDocument, saveLocalDocument } from './localDocumentStore'
+export { localAssetStore } from './localAssetStore'
 export { MemoryDesignStore } from './memoryStore'
-export type { DesignStore } from './types'
+export { useAsset } from './useAsset'
+export type { AssetStore, DesignAsset, DesignStore } from './types'

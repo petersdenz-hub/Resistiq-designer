@@ -1,6 +1,12 @@
 import { FONT_WEIGHTS, TEXT_ALIGNS, TEXT_FONT_FAMILIES } from '@/design/typography'
 import { getPanelById } from '@/design/selectors'
-import { isGraphicElement, isTextElement, type LayerDirection } from '@/design/types'
+import {
+  isGraphicElement,
+  isLockedElement,
+  isPlacedImage,
+  isTextElement,
+  type LayerDirection,
+} from '@/design/types'
 import { useDesign } from '@/design/useDesign'
 import { minLocalSize, getGarmentPanel } from '@/garments/coordinates'
 import { getGarment } from '@/garments/registry'
@@ -51,6 +57,8 @@ function SelectedProperties() {
         Position and size are relative to this panel, not the browser window.
       </p>
 
+      {isPlacedImage(selectedElement) ? <ImageMetaFields /> : null}
+
       {isTextElement(selectedElement) ? <TextStyleFields /> : null}
 
       {isGraphicElement(selectedElement) ? <GraphicStyleFields /> : null}
@@ -59,23 +67,27 @@ function SelectedProperties() {
         <LiveNumber
           label="X"
           value={selectedElement.x}
+          disabled={isLockedElement(selectedElement)}
           onCommit={(value) => updateSelected({ x: value })}
         />
         <LiveNumber
           label="Y"
           value={selectedElement.y}
+          disabled={isLockedElement(selectedElement)}
           onCommit={(value) => updateSelected({ y: value })}
         />
         <LiveNumber
           label="W"
           value={selectedElement.width}
           min={minSize}
+          disabled={isLockedElement(selectedElement)}
           onCommit={(value) => updateSelected({ width: value })}
         />
         <LiveNumber
           label="H"
           value={selectedElement.height}
           min={minSize}
+          disabled={isLockedElement(selectedElement)}
           onCommit={(value) => updateSelected({ height: value })}
         />
       </div>
@@ -84,6 +96,7 @@ function SelectedProperties() {
         label="Rotation"
         value={Number(selectedElement.rotation.toFixed(1))}
         digits={1}
+        disabled={isLockedElement(selectedElement)}
         onCommit={(value) => updateSelected({ rotation: value })}
       />
 
@@ -95,6 +108,46 @@ function SelectedProperties() {
         Remove element
       </Button>
     </div>
+  )
+}
+
+function ImageMetaFields() {
+  const { selectedElement, updateSelected } = useDesign()
+
+  if (!selectedElement || !isPlacedImage(selectedElement)) {
+    return null
+  }
+
+  const format = selectedElement.mimeType.includes('svg')
+    ? 'SVG'
+    : selectedElement.mimeType.includes('png')
+      ? 'PNG'
+      : selectedElement.mimeType.includes('webp')
+        ? 'WEBP'
+        : 'JPG'
+
+  return (
+    <>
+      <div>
+        <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">File</div>
+        <div className="mt-1 truncate text-[12px] text-ink" title={selectedElement.fileName}>
+          {selectedElement.fileName}
+        </div>
+        <div className="mt-0.5 text-[11px] text-mute">{format} · stays a separate asset</div>
+      </div>
+      <button
+        type="button"
+        aria-pressed={selectedElement.locked}
+        onClick={() => updateSelected({ locked: !selectedElement.locked })}
+        className={`h-8 w-full rounded-md border text-[12px] ${
+          selectedElement.locked
+            ? 'border-accent/50 bg-accent/10 text-ink'
+            : 'border-line text-mute hover:text-ink'
+        }`}
+      >
+        {selectedElement.locked ? 'Unlock placement' : 'Lock placement'}
+      </button>
+    </>
   )
 }
 
@@ -314,12 +367,14 @@ function LiveNumber({
   value,
   min,
   digits = 0,
+  disabled = false,
   onCommit,
 }: {
   label: string
   value: number
   min?: number
   digits?: number
+  disabled?: boolean
   onCommit: (value: number) => void
 }) {
   const display = digits > 0 ? value.toFixed(digits) : String(Math.round(value))
@@ -333,6 +388,7 @@ function LiveNumber({
     <NumberField
       label={label}
       value={draft.text}
+      disabled={disabled}
       step={digits > 0 ? 0.1 : 1}
       onChange={(event) =>
         setDraft((current) => ({ ...current, text: event.target.value }))

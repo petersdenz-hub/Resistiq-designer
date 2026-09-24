@@ -16,6 +16,7 @@ export interface DesignContextValue {
   setBodyColor: (value: string, history?: HistoryMode) => void
   addGraphic: () => void
   addText: () => void
+  addImageFromFile: (file: File, role?: 'image' | 'logo') => Promise<string | null>
   removeSelected: () => void
   removeElementById: (elementId: string) => void
   updateSelected: (patch: DesignElementPatch, history?: HistoryMode) => void

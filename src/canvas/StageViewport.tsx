@@ -1,3 +1,4 @@
+import { isLockedElement } from '@/design/types'
 import { getBodyColor, getElementsInView, getSafeAreasInView } from '@/design/selectors'
 import { useDesign } from '@/design/useDesign'
 import { getGarment } from '@/garments/registry'
@@ -88,7 +89,9 @@ export function StageViewport({ zoom, showSafeAreas }: StageViewportProps) {
         onMoveStart={gesture.startMove}
       />
 
-      {selectedDisplay && viewPanels.some((panel) => panel.id === selectedDisplay.panelId) ? (
+      {selectedDisplay &&
+      viewPanels.some((panel) => panel.id === selectedDisplay.panelId) &&
+      !isLockedElement(selectedDisplay) ? (
         <TransformControls
           element={applyPreview(selectedDisplay, gesture.preview)}
           zoom={zoom}
@@ -97,6 +100,24 @@ export function StageViewport({ zoom, showSafeAreas }: StageViewportProps) {
           }
           onRotateStart={(event) => gesture.startRotate(selectedDisplay.id, event)}
         />
+      ) : selectedDisplay &&
+        viewPanels.some((panel) => panel.id === selectedDisplay.panelId) &&
+        isLockedElement(selectedDisplay) ? (
+        <g
+          transform={`rotate(${selectedDisplay.rotation} ${selectedDisplay.x + selectedDisplay.width / 2} ${selectedDisplay.y + selectedDisplay.height / 2})`}
+          pointerEvents="none"
+        >
+          <rect
+            x={selectedDisplay.x}
+            y={selectedDisplay.y}
+            width={selectedDisplay.width}
+            height={selectedDisplay.height}
+            fill="none"
+            stroke="#c9a36a"
+            strokeWidth={1.25 / zoom}
+            strokeDasharray={`${4 / zoom} ${3 / zoom}`}
+          />
+        </g>
       ) : null}
     </svg>
   )
