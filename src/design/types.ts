@@ -5,11 +5,16 @@
  * Designs are never stored as a flattened image.
  */
 
+import type { FontWeight, TextAlign } from './typography'
+
 export const DESIGN_ELEMENT_TYPES = ['graphic', 'text', 'image', 'logo'] as const
 export type DesignElementType = (typeof DESIGN_ELEMENT_TYPES)[number]
 
 export const DESIGN_STATUSES = ['draft'] as const
 export type DesignStatus = (typeof DESIGN_STATUSES)[number]
+
+export const LAYER_DIRECTIONS = ['forward', 'backward', 'front', 'back'] as const
+export type LayerDirection = (typeof LAYER_DIRECTIONS)[number]
 
 export interface DesignView {
   id: string
@@ -21,6 +26,21 @@ export interface DesignPanel {
   id: string
   label: string
   viewId: string
+}
+
+/**
+ * Print / placement guide for a panel. Editor-only — never part of the
+ * finished garment artwork.
+ */
+export interface DesignSafeArea {
+  id: string
+  label: string
+  panelId: string
+  /** Position and size in the panel's local design units. */
+  x: number
+  y: number
+  width: number
+  height: number
 }
 
 export interface DesignColor {
@@ -67,6 +87,11 @@ export interface TextElement extends DesignElementBase {
   content: string
   color: string
   fontFamily: string
+  fontSize: number
+  fontWeight: FontWeight
+  italic: boolean
+  textAlign: TextAlign
+  letterSpacing: number
 }
 
 export interface ImageElement extends DesignElementBase {
@@ -98,6 +123,7 @@ export interface DesignDocument {
   activePanelId: string
   views: DesignView[]
   panels: DesignPanel[]
+  safeAreas: DesignSafeArea[]
   colors: DesignColor[]
   materials: DesignMaterial[]
   elements: DesignElement[]

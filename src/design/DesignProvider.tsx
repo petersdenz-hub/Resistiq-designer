@@ -157,7 +157,8 @@ export function DesignProvider({ children }: { children: ReactNode }) {
       setActiveView: (viewId) => dispatch({ type: 'setActiveView', viewId }),
       setActivePanel: (panelId) => dispatch({ type: 'setActivePanel', panelId }),
       renameDesign: (name) => apply(setDesignName(current().document, name)),
-      setBodyColor: (value) => apply(setColorValue(current().document, 'body', value)),
+      setBodyColor: (value, history = 'record') =>
+        apply(setColorValue(current().document, 'body', value), history),
       addGraphic: () => {
         const document = current().document
         const element = createGraphicElement(document, document.activePanelId)

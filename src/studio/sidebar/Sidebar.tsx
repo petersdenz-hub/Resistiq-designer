@@ -3,6 +3,7 @@ import { useDesign } from '@/design/useDesign'
 import { AVAILABLE_GARMENTS, PLANNED_GARMENT_LABELS } from '@/garments/registry'
 import {
   Button,
+  ColorPicker,
   ImageIcon,
   LayersIcon,
   LogoIcon,
@@ -11,7 +12,7 @@ import {
   ShirtIcon,
   TextIcon,
 } from '@/ui'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
 type ToolId = 'garment' | 'colors' | 'materials' | 'logo' | 'image' | 'text' | 'elements'
 
@@ -83,16 +84,13 @@ function GarmentPanel() {
 
   return (
     <div className="space-y-4">
-      <button
-        type="button"
-        className="w-full rounded-lg border border-accent/40 bg-accent/10 px-3 py-2.5 text-left"
-      >
+      <div className="w-full rounded-lg border border-accent/40 bg-accent/10 px-3 py-2.5">
         <div className="text-[12px] font-medium text-ink">
           {AVAILABLE_GARMENTS.find((garment) => garment.id === document.garmentType)?.label ??
             'T-shirt'}
         </div>
         <div className="mt-0.5 text-[11px] text-mute">Current garment</div>
-      </button>
+      </div>
       <div>
         <div className="mb-2 text-[10px] font-medium uppercase tracking-[0.14em] text-mute">
           Panels on this view
@@ -100,18 +98,22 @@ function GarmentPanel() {
         <ul className="space-y-1.5">
           {viewPanels.map((panel) => {
             const active = panel.id === document.activePanelId
+            const safe = document.safeAreas.find((area) => area.panelId === panel.id)
             return (
               <li key={panel.id}>
                 <button
                   type="button"
                   onClick={() => setActivePanel(panel.id)}
-                  className={`w-full rounded-md border px-3 py-1.5 text-left text-[12px] ${
+                  className={`w-full rounded-md border px-3 py-1.5 text-left ${
                     active
                       ? 'border-accent/50 bg-accent/10 text-ink'
                       : 'border-line text-mute hover:text-ink'
                   }`}
                 >
-                  {panel.label}
+                  <span className="block text-[12px]">{panel.label}</span>
+                  {safe ? (
+                    <span className="mt-0.5 block text-[10px] text-mute">{safe.label}</span>
+                  ) : null}
                 </button>
               </li>
             )
@@ -135,8 +137,9 @@ function GarmentPanel() {
 }
 
 function ColorsPanel() {
-  const { document, setBodyColor } = useDesign()
+  const { document, setBodyColor, commitGesture } = useDesign()
   const body = document.colors.find((color) => color.role === 'body')
+  const originRef = useRef(document)
 
   if (!body) {
     return <Placeholder text="This design has no body color yet." />
@@ -144,37 +147,32 @@ function ColorsPanel() {
 
   return (
     <div className="space-y-3">
-      <label className="block">
-        <span className="mb-1.5 block text-[10px] font-medium uppercase tracking-[0.14em] text-mute">
-          Body color
-        </span>
-        <div className="flex items-center gap-2">
-          <input
-            type="color"
-            value={body.value}
-            onChange={(event) => setBodyColor(event.target.value)}
-            className="h-9 w-9 cursor-pointer rounded border border-line bg-studio"
-            aria-label="Body color"
-          />
-          <input
-            value={body.value}
-            onChange={(event) => setBodyColor(event.target.value)}
-            className="h-9 flex-1 rounded-md border border-line bg-studio px-2 font-mono text-[12px] text-ink outline-none focus:border-accent/50"
-            aria-label="Body color hex"
-          />
-        </div>
-      </label>
+      <p className="text-[12px] leading-5 text-mute">
+        Garment color is stored on the Design Document. It is not baked into the artwork.
+      </p>
+      <ColorPicker
+        label="Garment color"
+        value={body.value}
+        onCommit={(value) => setBodyColor(value)}
+        onLiveStart={() => {
+          originRef.current = document
+        }}
+        onLiveChange={(value) => setBodyColor(value, 'replace')}
+        onLiveEnd={() => commitGesture(originRef.current)}
+      />
     </div>
   )
 }
 
 function TextPanel() {
-  const { addText } = useDesign()
+  const { document, addText } = useDesign()
+  const panel = getPanelById(document, document.activePanelId)
 
   return (
     <div className="space-y-3">
       <p className="text-[12px] leading-5 text-mute">
-        Adds text to the active panel. You can move, resize, and rotate it.
+        Adds structured text to {panel?.label ?? 'the active panel'}. Typography stays in the
+        Design Document — it is never converted to an image.
       </p>
       <Button variant="accent" className="w-full" onClick={addText}>
         Add text
@@ -186,7 +184,7 @@ function TextPanel() {
 function ElementsPanel() {
   const { document, selectedElementId, selectElement, addGraphic, removeElementById } =
     useDesign()
-  const elements = getElementsInView(document, document.activeView)
+  const elements = getElementsInView(document, document.activeView, 'stack')
 
   return (
     <div className="space-y-4">
@@ -198,11 +196,11 @@ function ElementsPanel() {
       </Button>
       {elements.length === 0 ? (
         <p className="text-[12px] leading-5 text-mute">
-          No elements on this view yet. Choose a panel, then add a graphic.
+          No elements on this view yet. Choose a panel, then add a graphic or text.
         </p>
       ) : (
         <ul className="space-y-1.5">
-          {elements.map((element) => {
+          {elements.map((element, index) => {
             const selected = element.id === selectedElementId
             return (
               <li key={element.id}>
@@ -211,12 +209,15 @@ function ElementsPanel() {
                     selected ? 'border-accent/50 bg-accent/10' : 'border-line'
                   }`}
                 >
+                  <span className="w-4 shrink-0 text-center font-mono text-[10px] text-mute">
+                    {index + 1}
+                  </span>
                   <button
                     type="button"
                     onClick={() => selectElement(element.id)}
                     className="min-w-0 flex-1 text-left text-[12px] text-ink"
                   >
-                    <span className="capitalize">{element.type}</span>
+                    <span className="capitalize">{elementLabel(element.type, element)}</span>
                     <span className="mt-0.5 block text-[10px] text-mute">
                       {getPanelById(document, element.panelId)?.label ?? element.panelId}
                     </span>
@@ -236,4 +237,12 @@ function ElementsPanel() {
       )}
     </div>
   )
+}
+
+function elementLabel(type: string, element: { type: string; content?: unknown }): string {
+  if (type === 'text' && 'content' in element && typeof element.content === 'string') {
+    const preview = element.content.trim() || 'Text'
+    return preview.length > 22 ? `${preview.slice(0, 22)}…` : preview
+  }
+  return type
 }

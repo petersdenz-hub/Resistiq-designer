@@ -11,6 +11,7 @@ const ZOOM_STEP = 0.15
 export function CanvasStage() {
   const { document, setActiveView } = useDesign()
   const [zoom, setZoom] = useState(0.9)
+  const [showSafeAreas, setShowSafeAreas] = useState(true)
   const elementCount = getElementsInView(document, document.activeView).length
   const viewLabel = document.views.find((view) => view.id === document.activeView)?.label ?? 'Front'
 
@@ -20,18 +21,33 @@ export function CanvasStage() {
 
       <div className="relative flex flex-1 items-center justify-center overflow-auto p-8">
         <div className="relative">
-          <StageViewport zoom={zoom} />
+          <StageViewport zoom={zoom} showSafeAreas={showSafeAreas} />
           {elementCount === 0 ? (
             <p className="pointer-events-none absolute bottom-6 left-1/2 w-[16rem] -translate-x-1/2 text-center text-[12px] leading-5 text-mute">
-              Add a graphic from the left sidebar. It is stored in the Design Document, not as a flattened image.
+              Choose a panel, then add text or a graphic. Both stay structured in the Design Document.
             </p>
           ) : null}
         </div>
       </div>
 
       <div className="relative flex h-14 items-center justify-between border-t border-line bg-panel/90 px-4">
-        <div className="text-[11px] uppercase tracking-[0.14em] text-mute">{viewLabel}</div>
+        <div className="flex items-center gap-3">
+          <div className="text-[11px] uppercase tracking-[0.14em] text-mute">{viewLabel}</div>
+          <button
+            type="button"
+            aria-pressed={showSafeAreas}
+            onClick={() => setShowSafeAreas((value) => !value)}
+            className={`h-7 rounded-md border px-2 text-[11px] ${
+              showSafeAreas
+                ? 'border-accent/40 bg-accent/10 text-ink'
+                : 'border-line text-mute hover:text-ink'
+            }`}
+          >
+            Safe area
+          </button>
+        </div>
         <SegmentedControl
+          className="w-auto shrink-0"
           value={document.activeView}
           options={document.views.map((view) => ({ value: view.id, label: view.label }))}
           onChange={setActiveView}
