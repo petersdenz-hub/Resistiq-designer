@@ -18,6 +18,8 @@ import {
   setActiveView,
   setColorValue,
   setConstructionPart as writeSetConstructionPart,
+  setConstructionStyle as writeSetConstructionStyle,
+  setGarmentMaterial as writeSetGarmentMaterial,
   setPanelColor as writePanelColor,
   setDesignName,
   updateElement,
@@ -192,6 +194,10 @@ export function DesignProvider({
         apply(writeClearConstructionPart(current().document, kind, partId), history),
       upsertMaterial: (material, history = 'record') =>
         apply(writeUpsertMaterial(current().document, material), history),
+      setConstructionStyle: (kind, style, history = 'record') =>
+        apply(writeSetConstructionStyle(current().document, kind, style), history),
+      setGarmentMaterial: (materialId, history = 'record') =>
+        apply(writeSetGarmentMaterial(current().document, materialId), history),
       addGraphic: () => {
         const document = current().document
         const element = createGraphicElement(document, document.activePanelId)

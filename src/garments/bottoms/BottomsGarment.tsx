@@ -1,5 +1,7 @@
 import type { GarmentRenderProps } from '../types'
 import { clothFor } from '../render/cloth'
+import { FabricFinish, FabricSheen, HemBand, PocketSet } from '../render/constructionDraw'
+import { constructionStyle, fabricFilter, pocketStyle } from '../render/constructionState'
 import type { BottomsKind } from './definition'
 
 /**
@@ -11,6 +13,7 @@ export function BottomsGarment({
   viewId,
   bodyColor,
   panelColors,
+  construction,
   kind,
 }: GarmentRenderProps & { kind: BottomsKind }) {
   const isBack = viewId === 'back'
@@ -23,6 +26,11 @@ export function BottomsGarment({
   const right = clothFor(bodyColor, panelColors, rightId)
   const waist = clothFor(bodyColor, panelColors, waistId)
   const id = `${kind}-${viewId}`
+  const waistStyle = construction ? constructionStyle(construction, 'waistband') : 'faced'
+  const pocket = construction ? pocketStyle(construction) : 'patch'
+  const hemStyle = construction ? constructionStyle(construction, 'hem') : 'coverstitch'
+  const materialId = construction?.materialId
+  const hemY = long ? 542 : 306
 
   const leftLeg = long
     ? 'M198 110 C176 168 164 250 172 380 L178 528 C180 552 206 562 230 548 L256 548 L268 260 C272 186 274 136 280 110 Z'
@@ -49,61 +57,84 @@ export function BottomsGarment({
           <feDropShadow dx="0" dy="8" stdDeviation="8" floodColor="#000" floodOpacity="0.22" />
         </filter>
       </defs>
+      <FabricFinish id={id} materialId={materialId} />
 
-      <g filter={`url(#${id}-soft)`}>
+      <g filter={fabricFilter(id, materialId) ?? `url(#${id}-soft)`}>
         <g data-garment-part={leftId} data-panel-color={left.cloth}>
           <path d={leftLeg} fill={`url(#${id}-leg-l)`} />
         </g>
         <g data-garment-part={rightId} data-panel-color={right.cloth}>
           <path d={rightLeg} fill={`url(#${id}-leg-r)`} />
         </g>
-        <g data-garment-part={waistId} data-panel-color={waist.cloth}>
-          <path
-            d="M196 66 C196 58 208 54 222 54 L338 54 C352 54 364 58 364 66 L364 110 L196 110 Z"
-            fill={waist.rib}
-          />
-          <path d="M214 80 H346" fill="none" stroke={waist.stitch} strokeWidth="1.5" opacity="0.4" />
-          <path
-            d="M218 56 V110 M280 56 V110 M342 56 V110"
-            fill="none"
-            stroke={waist.stitch}
-            strokeWidth="1.3"
-            opacity="0.3"
-          />
-        </g>
+        {waistStyle ? (
+          <g
+            data-garment-part={waistId}
+            data-panel-color={waist.cloth}
+            data-construction-kind="waistband"
+            data-construction-style={waistStyle}
+          >
+            <path
+              d="M196 66 C196 58 208 54 222 54 L338 54 C352 54 364 58 364 66 L364 110 L196 110 Z"
+              fill={waistStyle === 'rib' ? waist.rib : waistStyle === 'elastic' ? waist.clothDeep : waist.rib}
+            />
+            <path d="M214 80 H346" fill="none" stroke={waist.stitch} strokeWidth="1.5" opacity="0.4" />
+            {waistStyle === 'elastic' ? (
+              <path
+                d="M206 70 Q220 86 234 70 Q248 86 262 70 Q276 86 290 70 Q304 86 318 70 Q332 86 346 70"
+                fill="none"
+                stroke={waist.highlight}
+                strokeWidth="1.3"
+                opacity="0.45"
+              />
+            ) : (
+              <path
+                d="M218 56 V110 M280 56 V110 M342 56 V110"
+                fill="none"
+                stroke={waist.stitch}
+                strokeWidth="1.3"
+                opacity="0.3"
+              />
+            )}
+          </g>
+        ) : null}
       </g>
 
       {isBack ? (
         <>
           <path d="M216 128 H344" fill="none" stroke={waist.stitch} strokeWidth="1.5" opacity="0.3" />
-          <rect x="206" y="152" width="56" height="64" rx="8" fill="none" stroke={left.clothDark} strokeWidth="2.2" opacity="0.65" />
-          <rect x="298" y="152" width="56" height="64" rx="8" fill="none" stroke={right.clothDark} strokeWidth="2.2" opacity="0.65" />
+          {pocket ? (
+            <PocketSet
+              style={pocket}
+              kind="bottoms-back"
+              fill={left.clothDark}
+              stitch={left.stitch}
+              highlight={left.highlight}
+            />
+          ) : null}
         </>
       ) : (
         <>
           <path d="M280 110 L280 198" fill="none" stroke={waist.stitch} strokeWidth="1.8" opacity="0.45" />
           <path d="M268 140 C274 150 274 176 268 190" fill="none" stroke={left.highlight} strokeWidth="1.3" opacity="0.22" />
-          <path d="M208 126 L242 162 L242 204" fill="none" stroke={left.stitch} strokeWidth="1.4" opacity="0.35" />
-          <path d="M352 126 L318 162 L318 204" fill="none" stroke={right.stitch} strokeWidth="1.4" opacity="0.35" />
+          {pocket ? (
+            <PocketSet
+              style={pocket}
+              kind="bottoms-front"
+              fill={left.clothDark}
+              stitch={left.stitch}
+              highlight={left.highlight}
+            />
+          ) : null}
         </>
       )}
 
-      <path
-        d={long ? 'M204 542 H248' : 'M206 306 H248'}
-        fill="none"
-        stroke={left.rib}
-        strokeWidth="8"
-        strokeLinecap="round"
-        opacity="0.5"
-      />
-      <path
-        d={long ? 'M312 542 H356' : 'M312 306 H354'}
-        fill="none"
-        stroke={right.rib}
-        strokeWidth="8"
-        strokeLinecap="round"
-        opacity="0.5"
-      />
+      {hemStyle ? (
+        <>
+          <HemBand style={hemStyle} y={hemY} left={204} right={248} color={left} />
+          <HemBand style={hemStyle} y={hemY} left={312} right={356} color={right} />
+        </>
+      ) : null}
+      <FabricSheen id={id} materialId={materialId} path={leftLeg} />
     </g>
   )
 }

@@ -16,6 +16,8 @@ export {
   setActiveView,
   setColorValue,
   setConstructionPart,
+  setConstructionStyle,
+  setGarmentMaterial,
   setPanelColor,
   setDesignName,
   updateElement,
@@ -27,6 +29,7 @@ export {
   resolveConstruction,
   sanitizeConstruction,
 } from './construction'
+export { styleOf } from './constructionEdits'
 export {
   getBodyColor,
   getConstruction,
