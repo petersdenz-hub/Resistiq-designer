@@ -23,10 +23,10 @@ const BACK_PRINT = {
 const SLEEVE_PRINT = {
   id: 'sleeve_print',
   label: 'Sleeve print',
-  x: 14,
-  y: 16,
-  width: 62,
-  height: 56,
+  x: 10,
+  y: 12,
+  width: 70,
+  height: 64,
 }
 
 function sleevePrint(id: string): GarmentPanelDefinition['safeArea'] {
