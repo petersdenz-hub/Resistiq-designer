@@ -92,17 +92,22 @@ export const CONSTRUCTION_KINDS = [
   'waistband',
   'hem',
   'hood',
+  'drawstring',
+  'belt_loop',
 ] as const
 export type ConstructionKind = (typeof CONSTRUCTION_KINDS)[number]
 
 export const ZIPPER_STYLES = ['center_front', 'quarter'] as const
-export const POCKET_STYLES = ['kangaroo', 'patch', 'welt', 'slash'] as const
+export const ZIPPER_FINISHES = ['metal', 'coil', 'contrast'] as const
+export const POCKET_STYLES = ['kangaroo', 'patch', 'welt', 'slash', 'cargo'] as const
+export const POCKET_SLOTS = ['body', 'front', 'back', 'cargo'] as const
 export const BUTTON_STYLES = ['snap', 'button'] as const
-export const CUFF_STYLES = ['rib', 'hem'] as const
-export const COLLAR_STYLES = ['crew', 'rib', 'stand'] as const
+export const CUFF_STYLES = ['rib', 'hem', 'raw', 'coverstitch'] as const
+export const COLLAR_STYLES = ['crew', 'rib', 'stand', 'vneck'] as const
 export const WAISTBAND_STYLES = ['elastic', 'rib', 'faced'] as const
-export const HEM_STYLES = ['coverstitch', 'rib'] as const
+export const HEM_STYLES = ['coverstitch', 'rib', 'raw'] as const
 export const HOOD_STYLES = ['pullover', 'zip'] as const
+export const HOOD_OPENINGS = ['standard', 'tight', 'wide'] as const
 
 export interface DesignConstructionPart {
   id: string
@@ -117,6 +122,10 @@ export interface DesignConstructionPart {
   color?: string
   /** Optional fabric from document.materials. */
   materialId?: string
+  /** Secondary finish (zipper metal/coil, hood opening, …). */
+  variant?: string
+  /** Pocket group. Older documents omit this. */
+  slot?: string
 }
 
 export type DesignZipper = DesignConstructionPart & { kind: 'zipper' }
@@ -127,6 +136,8 @@ export type DesignCollar = DesignConstructionPart & { kind: 'collar' }
 export type DesignWaistband = DesignConstructionPart & { kind: 'waistband' }
 export type DesignHem = DesignConstructionPart & { kind: 'hem' }
 export type DesignHood = DesignConstructionPart & { kind: 'hood' }
+export type DesignDrawstring = DesignConstructionPart & { kind: 'drawstring' }
+export type DesignBeltLoop = DesignConstructionPart & { kind: 'belt_loop' }
 
 export interface DesignConstruction {
   /** Garment-wide fabric from document.materials. */
@@ -139,6 +150,8 @@ export interface DesignConstruction {
   waistband?: DesignWaistband | null
   hem?: DesignHem | null
   hood?: DesignHood | null
+  drawstring?: DesignDrawstring | null
+  beltLoops?: DesignBeltLoop | null
 }
 
 export interface DesignElementBase {

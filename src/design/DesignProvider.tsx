@@ -19,6 +19,7 @@ import {
   setColorValue,
   setConstructionPart as writeSetConstructionPart,
   setConstructionStyle as writeSetConstructionStyle,
+  setConstructionVariant as writeSetConstructionVariant,
   setGarmentMaterial as writeSetGarmentMaterial,
   setPanelColor as writePanelColor,
   setDesignName,
@@ -194,8 +195,10 @@ export function DesignProvider({
         apply(writeClearConstructionPart(current().document, kind, partId), history),
       upsertMaterial: (material, history = 'record') =>
         apply(writeUpsertMaterial(current().document, material), history),
-      setConstructionStyle: (kind, style, history = 'record') =>
-        apply(writeSetConstructionStyle(current().document, kind, style), history),
+      setConstructionStyle: (kind, style, history = 'record', slot) =>
+        apply(writeSetConstructionStyle(current().document, kind, style, slot), history),
+      setConstructionVariant: (kind, variant, history = 'record') =>
+        apply(writeSetConstructionVariant(current().document, kind, variant), history),
       setGarmentMaterial: (materialId, history = 'record') =>
         apply(writeSetGarmentMaterial(current().document, materialId), history),
       addGraphic: () => {

@@ -1,7 +1,7 @@
 import type { GarmentRenderProps } from '../types'
 import { clothFor } from '../render/cloth'
 import { FabricFinish, FabricSheen, HemBand } from '../render/constructionDraw'
-import { constructionStyle, fabricFilter } from '../render/constructionState'
+import { constructionStyle, cuffStyle, fabricFilter } from '../render/constructionState'
 
 /**
  * Fashion-flat T-shirt. Body, sleeves, and collar are separate parts so
@@ -40,6 +40,12 @@ const COLLAR_STAND_FRONT =
 const COLLAR_STAND_BACK =
   'M224 126 L240 164 L320 164 L336 126 C324 116 236 116 224 126 Z'
 
+const COLLAR_VNECK_FRONT =
+  'M228 146 L280 208 L332 146 L324 148 L280 196 L236 148 Z'
+
+const COLLAR_VNECK_BACK =
+  'M234 146 C244 166 316 166 326 146 L318 148 C310 164 250 164 242 148 Z'
+
 export function TShirtGarment({ viewId, bodyColor, panelColors, construction }: GarmentRenderProps) {
   const isBack = viewId === 'back'
   const bodyId = isBack ? 'back_body' : 'front_body'
@@ -55,6 +61,7 @@ export function TShirtGarment({ viewId, bodyColor, panelColors, construction }: 
     ? constructionStyle(construction, 'collar')
     : 'crew'
   const hemStyle = construction ? constructionStyle(construction, 'hem') : 'coverstitch'
+  const sleeveHem = construction ? cuffStyle(construction) : 'coverstitch'
   const materialId = construction?.materialId
   const collarPath =
     collarStyle === 'stand'
@@ -65,9 +72,13 @@ export function TShirtGarment({ viewId, bodyColor, panelColors, construction }: 
         ? isBack
           ? COLLAR_RIB_BACK
           : COLLAR_RIB_FRONT
-        : isBack
-          ? COLLAR_CREW_BACK
-          : COLLAR_CREW_FRONT
+        : collarStyle === 'vneck'
+          ? isBack
+            ? COLLAR_VNECK_BACK
+            : COLLAR_VNECK_FRONT
+          : isBack
+            ? COLLAR_CREW_BACK
+            : COLLAR_CREW_FRONT
 
   return (
     <g pointerEvents="none">
@@ -98,26 +109,34 @@ export function TShirtGarment({ viewId, bodyColor, panelColors, construction }: 
       <g filter={fabricFilter(id, materialId) ?? `url(#${id}-soft)`}>
         <g data-garment-part={rightId} data-panel-color={right.cloth}>
           <path d={RIGHT_SLEEVE} fill={`url(#${id}-sleeve-r)`} />
-          <path
-            d="M72 226 L170 224"
-            fill="none"
-            stroke={right.stitch}
-            strokeWidth="2"
-            strokeLinecap="round"
-            opacity="0.5"
-          />
+          {sleeveHem ? (
+            <path
+              d="M72 226 L170 224"
+              fill="none"
+              stroke={sleeveHem === 'rib' ? right.rib : right.stitch}
+              strokeWidth={sleeveHem === 'rib' ? 5 : sleeveHem === 'raw' ? 1.1 : 2}
+              strokeLinecap="round"
+              opacity="0.5"
+              data-construction-kind="cuff"
+              data-construction-style={sleeveHem}
+            />
+          ) : null}
         </g>
 
         <g data-garment-part={leftId} data-panel-color={left.cloth}>
           <path d={LEFT_SLEEVE} fill={`url(#${id}-sleeve-l)`} />
-          <path
-            d="M390 224 L488 226"
-            fill="none"
-            stroke={left.stitch}
-            strokeWidth="2"
-            strokeLinecap="round"
-            opacity="0.5"
-          />
+          {sleeveHem ? (
+            <path
+              d="M390 224 L488 226"
+              fill="none"
+              stroke={sleeveHem === 'rib' ? left.rib : left.stitch}
+              strokeWidth={sleeveHem === 'rib' ? 5 : sleeveHem === 'raw' ? 1.1 : 2}
+              strokeLinecap="round"
+              opacity="0.5"
+              data-construction-kind="cuff"
+              data-construction-style={sleeveHem}
+            />
+          ) : null}
         </g>
 
         <g data-garment-part={bodyId} data-panel-color={body.cloth}>
@@ -142,9 +161,13 @@ export function TShirtGarment({ viewId, bodyColor, panelColors, construction }: 
                   ? isBack
                     ? 'M244 146 H316'
                     : 'M230 148 H330'
-                  : isBack
-                    ? 'M244 148 C254 162 306 162 316 148'
-                    : 'M238 148 C250 180 310 180 322 148'
+                  : collarStyle === 'vneck'
+                    ? isBack
+                      ? 'M244 148 C254 162 306 162 316 148'
+                      : 'M238 150 L280 196 L322 150'
+                    : isBack
+                      ? 'M244 148 C254 162 306 162 316 148'
+                      : 'M238 148 C250 180 310 180 322 148'
               }
               fill="none"
               stroke={collar.highlight}

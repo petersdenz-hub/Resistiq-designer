@@ -4,10 +4,17 @@ import {
   FabricFinish,
   FabricSheen,
   HemBand,
+  JacketHood,
   PocketSet,
   ZipperPart,
 } from '../render/constructionDraw'
-import { constructionStyle, cuffStyle, fabricFilter, pocketStyle } from '../render/constructionState'
+import {
+  constructionStyle,
+  constructionVariant,
+  cuffStyle,
+  fabricFilter,
+  pocketStyle,
+} from '../render/constructionState'
 
 /**
  * Fashion-flat jacket. Front is two body panels plus a zipper.
@@ -44,6 +51,12 @@ const COLLAR_RIB_FRONT =
 const COLLAR_RIB_BACK =
   'M222 136 C236 172 324 172 338 136 L324 164 L236 164 Z'
 
+const COLLAR_VNECK_FRONT =
+  'M226 148 L280 200 L334 148 L324 160 L280 188 L236 160 Z'
+
+const COLLAR_VNECK_BACK =
+  'M232 148 C242 166 318 166 328 148 L320 160 C312 170 248 170 240 160 Z'
+
 export function JacketGarment({ viewId, bodyColor, panelColors, construction }: GarmentRenderProps) {
   const isBack = viewId === 'back'
   const leftBody = clothFor(bodyColor, panelColors, 'front_body_left')
@@ -59,7 +72,10 @@ export function JacketGarment({ viewId, bodyColor, panelColors, construction }: 
   const id = `jacket-${viewId}`
   const collarStyle = construction ? constructionStyle(construction, 'collar') : 'stand'
   const zipperStyle = construction ? constructionStyle(construction, 'zipper') : 'center_front'
-  const pocket = construction ? pocketStyle(construction) : null
+  const zipperFinish = construction ? constructionVariant(construction, 'zipper', 'metal') : 'metal'
+  const hoodStyle = construction ? constructionStyle(construction, 'hood') : null
+  const hoodOpening = construction ? constructionVariant(construction, 'hood', 'standard') : 'standard'
+  const pocket = construction ? pocketStyle(construction, 'body', 'jacket') : null
   const cuffs = construction ? cuffStyle(construction) : 'hem'
   const hemStyle = construction ? constructionStyle(construction, 'hem') : 'coverstitch'
   const materialId = construction?.materialId
@@ -72,9 +88,13 @@ export function JacketGarment({ viewId, bodyColor, panelColors, construction }: 
         ? isBack
           ? COLLAR_RIB_BACK
           : COLLAR_RIB_FRONT
-        : isBack
-          ? COLLAR_STAND_BACK
-          : COLLAR_STAND_FRONT
+        : collarStyle === 'vneck'
+          ? isBack
+            ? COLLAR_VNECK_BACK
+            : COLLAR_VNECK_FRONT
+          : isBack
+            ? COLLAR_STAND_BACK
+            : COLLAR_STAND_FRONT
 
   return (
     <g pointerEvents="none">
@@ -117,12 +137,12 @@ export function JacketGarment({ viewId, bodyColor, panelColors, construction }: 
           <path d={RIGHT_SLEEVE} fill={`url(#${id}-sleeve-r)`} />
           {cuffs ? (
             <path
-              d="M58 318 L170 296"
+              d="M72 330 L178 304"
               fill="none"
               stroke={cuffs === 'rib' ? right.rib : right.clothDeep}
-              strokeWidth={cuffs === 'rib' ? 10 : 7}
+              strokeWidth={cuffs === 'rib' ? 12 : 8}
               strokeLinecap="round"
-              opacity="0.45"
+              opacity="0.5"
               data-construction-kind="cuff"
               data-construction-style={cuffs}
             />
@@ -132,12 +152,12 @@ export function JacketGarment({ viewId, bodyColor, panelColors, construction }: 
           <path d={LEFT_SLEEVE} fill={`url(#${id}-sleeve-l)`} />
           {cuffs ? (
             <path
-              d="M390 296 L502 318"
+              d="M382 304 L488 330"
               fill="none"
               stroke={cuffs === 'rib' ? left.rib : left.clothDeep}
-              strokeWidth={cuffs === 'rib' ? 10 : 7}
+              strokeWidth={cuffs === 'rib' ? 12 : 8}
               strokeLinecap="round"
-              opacity="0.45"
+              opacity="0.5"
               data-construction-kind="cuff"
               data-construction-style={cuffs}
             />
@@ -156,7 +176,14 @@ export function JacketGarment({ viewId, bodyColor, panelColors, construction }: 
             <g data-garment-part="front_body_right" data-panel-color={rightBody.cloth}>
               <path d={FRONT_RIGHT} fill={`url(#${id}-body-r)`} />
             </g>
-            {zipperStyle ? <ZipperPart style={zipperStyle} tape={zipper.tape} metal={zipper.metal} /> : null}
+            {zipperStyle ? (
+              <ZipperPart
+                style={zipperStyle}
+                finish={zipperFinish}
+                tape={zipper.tape}
+                metal={zipper.metal}
+              />
+            ) : null}
             {pocket ? (
               <PocketSet
                 style={pocket}
@@ -169,6 +196,14 @@ export function JacketGarment({ viewId, bodyColor, panelColors, construction }: 
           </>
         )}
 
+        {hoodStyle ? (
+          <JacketHood
+            style={hoodStyle}
+            opening={hoodOpening}
+            color={collar}
+          />
+        ) : null}
+
         {collarStyle ? (
           <g
             data-garment-part={collarId}
@@ -178,10 +213,19 @@ export function JacketGarment({ viewId, bodyColor, panelColors, construction }: 
           >
             <path d={collarPath} fill={`url(#${id}-collar)`} />
             <path
-              d={isBack ? 'M240 146 H320' : 'M226 148 H334'}
+              d={
+                collarStyle === 'vneck'
+                  ? isBack
+                    ? 'M240 148 C250 162 310 162 320 148'
+                    : 'M230 150 L280 188 L330 150'
+                  : isBack
+                    ? 'M240 146 H320'
+                    : 'M226 148 H334'
+              }
               fill="none"
               stroke={collar.highlight}
               strokeWidth={collarStyle === 'rib' ? 2.2 : 1.6}
+              strokeLinecap="round"
               opacity="0.32"
             />
           </g>

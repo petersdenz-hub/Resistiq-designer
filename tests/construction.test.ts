@@ -66,8 +66,8 @@ describe('Phase 7B.1 construction foundation', () => {
 
   it('resolves garment defaults at read time for all five garments', () => {
     const expected = {
-      tshirt: ['collar', 'hem'],
-      hoodie: ['hood', 'pocket', 'cuff', 'hem'],
+      tshirt: ['collar', 'cuff', 'hem'],
+      hoodie: ['hood', 'pocket', 'cuff', 'hem', 'drawstring'],
       jacket: ['collar', 'zipper', 'cuff', 'hem'],
       pants: ['pocket', 'waistband', 'hem'],
       shorts: ['pocket', 'waistband', 'hem'],
@@ -149,6 +149,8 @@ describe('Phase 7B.1 construction foundation', () => {
         defaults.waistband,
         defaults.hem,
         defaults.hood,
+        defaults.drawstring,
+        defaults.beltLoops,
         ...(defaults.pockets ?? []),
         ...(defaults.buttons ?? []),
         ...(defaults.cuffs ?? []),

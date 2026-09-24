@@ -144,6 +144,7 @@ export const jacketMeta = {
     pockets: true,
     cuffs: true,
     hem: true,
+    hood: true,
     printAreas: true,
     frontBack: true,
   }),
