@@ -1,3 +1,4 @@
+import { constructionKindsOf, resolveConstruction } from '@/design/construction'
 import { ACCEPTED_IMAGE_ACCEPT } from '@/design/ingestImage'
 import { getElementsInView, getPanelById, getPanelsInView } from '@/design/selectors'
 import { useDesign } from '@/design/useDesign'
@@ -65,7 +66,7 @@ export function Sidebar() {
         <div className="flex-1 overflow-y-auto px-4 py-4">
           {tool === 'garment' ? <GarmentPanel /> : null}
           {tool === 'colors' ? <ColorsPanel /> : null}
-          {tool === 'materials' ? <Placeholder text="Materials are not in this first version. They will be stored on the Design Document later." /> : null}
+          {tool === 'materials' ? <ConstructionFoundationPanel /> : null}
           {tool === 'logo' ? <UploadPanel role="logo" /> : null}
           {tool === 'image' ? <UploadPanel role="image" /> : null}
           {tool === 'text' ? <TextPanel /> : null}
@@ -78,6 +79,57 @@ export function Sidebar() {
 
 function Placeholder({ text }: { text: string }) {
   return <p className="text-[12px] leading-5 text-mute">{text}</p>
+}
+
+function ConstructionFoundationPanel() {
+  const { document } = useDesign()
+  const garment = getGarment(document.garmentType)
+  const stored = document.construction
+  const resolved = resolveConstruction(document)
+  const kinds = constructionKindsOf(resolved)
+  const source = stored ? 'document' : 'default'
+
+  return (
+    <div className="space-y-3" data-construction-foundation="true" data-construction-source={source}>
+      <p className="text-[12px] leading-5 text-mute">
+        Garment details are stored on the Design Document, not in the renderer. Style editing
+        comes later. This {garment.name.toLowerCase()} still uses its current construction
+        drawing.
+      </p>
+      <div className="rounded-md border border-line px-3 py-2 text-[12px]">
+        <div className="text-[10px] uppercase tracking-[0.14em] text-mute">Source</div>
+        <div className="mt-0.5 text-ink">
+          {stored
+            ? 'This design has construction overrides'
+            : 'Garment defaults — older designs stay compatible'}
+        </div>
+      </div>
+      <div>
+        <div className="mb-2 text-[10px] font-medium uppercase tracking-[0.14em] text-mute">
+          Construction on this garment
+        </div>
+        {kinds.length === 0 ? (
+          <p className="text-[12px] leading-5 text-mute">No construction parts on this garment.</p>
+        ) : (
+          <ul className="space-y-1.5">
+            {kinds.map((kind) => (
+              <li
+                key={kind}
+                data-construction-kind={kind}
+                className="rounded-md border border-line px-3 py-1.5 text-[12px] capitalize text-ink"
+              >
+                {kind}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      <p className="text-[11px] leading-4 text-mute">
+        Materials catalog: {document.materials.length} fabric
+        {document.materials.length === 1 ? '' : 's'}. Assignments come in a later step.
+      </p>
+    </div>
+  )
 }
 
 function GarmentPanel() {

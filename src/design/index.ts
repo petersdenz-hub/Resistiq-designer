@@ -5,22 +5,34 @@ export { useDesign } from './useDesign'
 export { createId } from './ids'
 export {
   addElement,
+  clearConstructionPart,
   createGraphicElement,
   createImageElement,
   createTextElement,
   moveElementLayer,
+  patchConstruction,
   removeElement,
   setActivePanel,
   setActiveView,
   setColorValue,
+  setConstructionPart,
   setPanelColor,
   setDesignName,
   updateElement,
+  upsertMaterial,
 } from './operations'
 export {
+  constructionKindsOf,
+  emptyConstruction,
+  resolveConstruction,
+  sanitizeConstruction,
+} from './construction'
+export {
   getBodyColor,
+  getConstruction,
   getPanelColor,
   getPanelColorMap,
+  getResolvedConstruction,
   getTrimColor,
   getElementById,
   getElementsInView,
@@ -36,10 +48,25 @@ export {
 } from './typography'
 export type { FontWeight, TextAlign } from './typography'
 export { ACCEPTED_IMAGE_ACCEPT, ingestImageFile } from './ingestImage'
-export { COLOR_ROLES } from './types'
+export {
+  BUTTON_STYLES,
+  COLLAR_STYLES,
+  COLOR_ROLES,
+  CONSTRUCTION_KINDS,
+  CUFF_STYLES,
+  HEM_STYLES,
+  HOOD_STYLES,
+  MATERIAL_FAMILIES,
+  POCKET_STYLES,
+  WAISTBAND_STYLES,
+  ZIPPER_STYLES,
+} from './types'
 export type {
   ColorRole,
+  ConstructionKind,
   DesignColor,
+  DesignConstruction,
+  DesignConstructionPart,
   DesignDocument,
   DesignElement,
   DesignElementPatch,
@@ -52,5 +79,6 @@ export type {
   ImageElement,
   LayerDirection,
   LogoElement,
+  MaterialFamily,
   TextElement,
 } from './types'

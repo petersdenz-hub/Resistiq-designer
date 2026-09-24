@@ -171,6 +171,7 @@ export const hoodieMeta = {
     sleeves: true,
     cuffs: true,
     pockets: true,
+    hem: true,
     printAreas: true,
     frontBack: true,
   }),

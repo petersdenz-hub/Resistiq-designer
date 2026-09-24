@@ -1,12 +1,22 @@
 import { getGarment } from '@/garments/registry'
 import { getGarmentPanel } from '@/garments/coordinates'
 import { constrainElementInDocument, getConstraintBounds } from './constraints'
+import {
+  clearConstructionPart as writeClearConstructionPart,
+  patchConstruction as writePatchConstruction,
+  setConstructionPart as writeSetConstructionPart,
+  upsertMaterial as writeUpsertMaterial,
+} from './construction'
 import { createId } from './ids'
 import { DEFAULT_TEXT_FONT } from './typography'
 import type {
+  ConstructionKind,
+  DesignConstruction,
+  DesignConstructionPart,
   DesignDocument,
   DesignElement,
   DesignElementPatch,
+  DesignMaterial,
   GraphicElement,
   ImageElement,
   LayerDirection,
@@ -107,6 +117,35 @@ export function setPanelColor(
     ...document,
     colors: [...document.colors, { id: panelId, role: 'panel', value }],
   })
+}
+
+export function patchConstruction(
+  document: DesignDocument,
+  patch: DesignConstruction,
+): DesignDocument {
+  return writePatchConstruction(document, patch)
+}
+
+export function setConstructionPart(
+  document: DesignDocument,
+  part: DesignConstructionPart,
+): DesignDocument {
+  return writeSetConstructionPart(document, part)
+}
+
+export function clearConstructionPart(
+  document: DesignDocument,
+  kind: ConstructionKind,
+  partId?: string,
+): DesignDocument {
+  return writeClearConstructionPart(document, kind, partId)
+}
+
+export function upsertMaterial(
+  document: DesignDocument,
+  material: DesignMaterial,
+): DesignDocument {
+  return writeUpsertMaterial(document, material)
 }
 
 export function addElement(

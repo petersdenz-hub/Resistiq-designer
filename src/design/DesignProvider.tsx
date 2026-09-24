@@ -7,17 +7,21 @@ import { createNewDesign } from './createDesign'
 import { ingestImageError, ingestImageFile } from './ingestImage'
 import {
   addElement,
+  clearConstructionPart as writeClearConstructionPart,
   createGraphicElement,
   createImageElement,
   createTextElement,
   moveElementLayer,
+  patchConstruction as writePatchConstruction,
   removeElement,
   setActivePanel,
   setActiveView,
   setColorValue,
+  setConstructionPart as writeSetConstructionPart,
   setPanelColor as writePanelColor,
   setDesignName,
   updateElement,
+  upsertMaterial as writeUpsertMaterial,
 } from './operations'
 import { getElementById } from './selectors'
 import type { DesignDocument } from './types'
@@ -180,6 +184,14 @@ export function DesignProvider({
         apply(setColorValue(current().document, 'body', value), history),
       setPanelColor: (panelId, value, history = 'record') =>
         apply(writePanelColor(current().document, panelId, value), history),
+      patchConstruction: (patch, history = 'record') =>
+        apply(writePatchConstruction(current().document, patch), history),
+      setConstructionPart: (part, history = 'record') =>
+        apply(writeSetConstructionPart(current().document, part), history),
+      clearConstructionPart: (kind, partId, history = 'record') =>
+        apply(writeClearConstructionPart(current().document, kind, partId), history),
+      upsertMaterial: (material, history = 'record') =>
+        apply(writeUpsertMaterial(current().document, material), history),
       addGraphic: () => {
         const document = current().document
         const element = createGraphicElement(document, document.activePanelId)

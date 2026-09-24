@@ -16,6 +16,10 @@ export interface GarmentCapabilities {
   frontBack: boolean
   cuffs: boolean
   legs: boolean
+  buttons: boolean
+  waistband: boolean
+  hem: boolean
+  materials: boolean
 }
 
 export const DEFAULT_GARMENT_CAPABILITIES: GarmentCapabilities = {
@@ -28,6 +32,10 @@ export const DEFAULT_GARMENT_CAPABILITIES: GarmentCapabilities = {
   frontBack: true,
   cuffs: false,
   legs: false,
+  buttons: false,
+  waistband: false,
+  hem: false,
+  materials: true,
 }
 
 export function garmentCapabilities(
