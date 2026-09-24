@@ -1,53 +1,63 @@
 import { shadeHex } from '@/ui/color'
 import type { GarmentRenderProps } from '../types'
 
-const BODY =
-  'M172 232 L180 532 C180 548 194 558 214 558 L346 558 C366 558 380 548 380 532 L388 232 L402 132 C368 116 324 104 280 104 C236 104 192 116 158 132 L172 232 Z'
+/**
+ * Fashion-flat T-shirt. Body, sleeves, and collar are separate parts so
+ * panels can sit on real garment structure.
+ *
+ * Coordinates assume viewBox 560×640, center x=280.
+ */
 
-const FRONT_NECK =
-  'M237 104 C248 156 312 156 323 104 C308 98 252 98 237 104 Z'
+const BODY_FRONT =
+  'M176 228 L188 486 C188 500 200 508 216 508 L344 508 C360 508 372 500 372 486 L384 228 L398 148 L324 148 C314 184 246 184 236 148 L162 148 L176 228 Z'
 
-const BACK_NECK =
-  'M237 104 C246 128 314 128 323 104 C308 98 252 98 237 104 Z'
+const BODY_BACK =
+  'M176 228 L188 486 C188 500 200 508 216 508 L344 508 C360 508 372 500 372 486 L384 228 L398 148 L318 148 C310 164 250 164 242 148 L162 148 L176 228 Z'
 
 const RIGHT_SLEEVE =
-  'M158 132 L56 176 C42 192 48 224 70 240 L172 232 C166 200 160 160 158 132 Z'
+  'M162 148 L68 172 L86 230 L176 228 L162 148 Z'
 
 const LEFT_SLEEVE =
-  'M402 132 L504 176 C518 192 512 224 490 240 L388 232 C394 200 400 160 402 132 Z'
+  'M398 148 L492 172 L474 230 L384 228 L398 148 Z'
+
+const COLLAR_FRONT =
+  'M228 146 C240 188 320 188 332 146 L324 148 C314 184 246 184 236 148 Z'
+
+const COLLAR_BACK =
+  'M234 146 C244 166 316 166 326 146 L318 148 C310 164 250 164 242 148 Z'
 
 export function TShirtGarment({ viewId, bodyColor }: GarmentRenderProps) {
   const isBack = viewId === 'back'
   const cloth = bodyColor
   const clothDeep = shadeHex(cloth, -0.1)
-  const clothDark = shadeHex(cloth, -0.2)
-  const stitch = shadeHex(cloth, -0.3)
-  const highlight = shadeHex(cloth, 0.14)
-  const rib = shadeHex(cloth, -0.08)
+  const clothDark = shadeHex(cloth, -0.18)
+  const stitch = shadeHex(cloth, -0.28)
+  const highlight = shadeHex(cloth, 0.12)
+  const rib = shadeHex(cloth, -0.07)
   const id = `tshirt-${viewId}`
 
   return (
     <g pointerEvents="none">
       <defs>
-        <linearGradient id={`${id}-body`} x1="280" y1="100" x2="280" y2="560" gradientUnits="userSpaceOnUse">
+        <linearGradient id={`${id}-body`} x1="280" y1="140" x2="280" y2="510" gradientUnits="userSpaceOnUse">
           <stop offset="0" stopColor={highlight} />
-          <stop offset="0.38" stopColor={cloth} />
+          <stop offset="0.4" stopColor={cloth} />
           <stop offset="1" stopColor={clothDeep} />
         </linearGradient>
-        <linearGradient id={`${id}-sleeve-l`} x1="400" y1="120" x2="500" y2="240" gradientUnits="userSpaceOnUse">
+        <linearGradient id={`${id}-sleeve-r`} x1="170" y1="148" x2="70" y2="230" gradientUnits="userSpaceOnUse">
           <stop offset="0" stopColor={cloth} />
           <stop offset="1" stopColor={clothDark} />
         </linearGradient>
-        <linearGradient id={`${id}-sleeve-r`} x1="160" y1="120" x2="60" y2="240" gradientUnits="userSpaceOnUse">
+        <linearGradient id={`${id}-sleeve-l`} x1="390" y1="148" x2="490" y2="230" gradientUnits="userSpaceOnUse">
           <stop offset="0" stopColor={cloth} />
           <stop offset="1" stopColor={clothDark} />
         </linearGradient>
-        <linearGradient id={`${id}-collar`} x1="280" y1="88" x2="280" y2="164" gradientUnits="userSpaceOnUse">
+        <linearGradient id={`${id}-collar`} x1="280" y1="146" x2="280" y2="188" gradientUnits="userSpaceOnUse">
           <stop offset="0" stopColor={highlight} />
           <stop offset="1" stopColor={rib} />
         </linearGradient>
         <filter id={`${id}-soft`} x="-8%" y="-4%" width="116%" height="110%">
-          <feDropShadow dx="0" dy="10" stdDeviation="10" floodColor="#000" floodOpacity="0.28" />
+          <feDropShadow dx="0" dy="8" stdDeviation="8" floodColor="#000" floodOpacity="0.22" />
         </filter>
       </defs>
 
@@ -55,70 +65,61 @@ export function TShirtGarment({ viewId, bodyColor }: GarmentRenderProps) {
         <g data-garment-part="right_sleeve">
           <path d={RIGHT_SLEEVE} fill={`url(#${id}-sleeve-r)`} />
           <path
-            d="M74 232 L166 226"
+            d="M72 226 L170 224"
             fill="none"
             stroke={stitch}
-            strokeWidth="1.6"
+            strokeWidth="2"
             strokeLinecap="round"
-            opacity="0.55"
+            opacity="0.5"
           />
         </g>
 
         <g data-garment-part="left_sleeve">
           <path d={LEFT_SLEEVE} fill={`url(#${id}-sleeve-l)`} />
           <path
-            d="M394 226 L486 232"
+            d="M390 224 L488 226"
             fill="none"
             stroke={stitch}
-            strokeWidth="1.6"
+            strokeWidth="2"
             strokeLinecap="round"
-            opacity="0.55"
+            opacity="0.5"
           />
         </g>
 
-        <g data-garment-part="front_body" fill={`url(#${id}-body)`} fillRule="evenodd">
-          <path d={`${BODY} ${isBack ? BACK_NECK : FRONT_NECK}`} />
+        <g data-garment-part={isBack ? 'back_body' : 'front_body'}>
+          <path d={isBack ? BODY_BACK : BODY_FRONT} fill={`url(#${id}-body)`} />
         </g>
 
-        <path d="M176 240 L184 536" fill="none" stroke={stitch} strokeWidth="1.1" opacity="0.28" />
-        <path d="M384 240 L376 536" fill="none" stroke={stitch} strokeWidth="1.1" opacity="0.28" />
+        <path d="M180 236 L190 492" fill="none" stroke={stitch} strokeWidth="1" opacity="0.22" />
+        <path d="M380 236 L370 492" fill="none" stroke={stitch} strokeWidth="1" opacity="0.22" />
         <path
-          d="M214 548 H346"
+          d="M216 500 H344"
           fill="none"
           stroke={stitch}
-          strokeWidth="2.2"
+          strokeWidth="2.4"
           strokeLinecap="round"
-          opacity="0.55"
+          opacity="0.5"
         />
         <path
-          d="M214 540 H346"
+          d="M216 492 H344"
           fill="none"
           stroke={highlight}
           strokeWidth="1"
           strokeLinecap="round"
-          opacity="0.25"
+          opacity="0.22"
         />
 
         <g data-garment-part="collar">
+          <path d={isBack ? COLLAR_BACK : COLLAR_FRONT} fill={`url(#${id}-collar)`} />
           <path
-            d={isBack ? BACK_NECK : FRONT_NECK}
-            fill="none"
-            stroke={`url(#${id}-collar)`}
-            strokeWidth="13"
-            strokeLinejoin="round"
-          />
-          <path
-            d={isBack ? BACK_NECK : FRONT_NECK}
-            fill="none"
-            stroke={clothDark}
-            strokeWidth="2.2"
-            opacity="0.4"
-          />
-          <path
-            d={isBack ? 'M242 112 C254 124 306 124 318 112' : 'M240 118 C254 146 306 146 320 118'}
+            d={
+              isBack
+                ? 'M244 148 C254 162 306 162 316 148'
+                : 'M238 148 C250 180 310 180 322 148'
+            }
             fill="none"
             stroke={highlight}
-            strokeWidth="1.8"
+            strokeWidth="1.6"
             strokeLinecap="round"
             opacity="0.35"
           />
@@ -127,17 +128,16 @@ export function TShirtGarment({ viewId, bodyColor }: GarmentRenderProps) {
 
       {isBack ? (
         <g data-garment-part="neck-tape">
-          <rect x="268" y="132" width="24" height="10" rx="1.5" fill={clothDark} opacity="0.75" />
-          <rect x="271" y="134" width="18" height="6" rx="1" fill={rib} opacity="0.9" />
+          <rect x="269" y="158" width="22" height="9" rx="1.2" fill={clothDark} opacity="0.8" />
         </g>
       ) : (
         <path
-          d="M168 148 C210 136 350 136 392 148"
+          d="M168 160 C210 152 350 152 392 160"
           fill="none"
           stroke={highlight}
-          strokeWidth="2"
+          strokeWidth="1.8"
           strokeLinecap="round"
-          opacity="0.18"
+          opacity="0.16"
         />
       )}
     </g>
