@@ -1,5 +1,10 @@
 import { createContext } from 'react'
 import type {
+  DesignObject,
+  DesignObjectPatch,
+  PlacementZone,
+} from './designObjects'
+import type {
   ConstructionKind,
   DesignConstruction,
   DesignConstructionPart,
@@ -16,11 +21,15 @@ export interface DesignContextValue {
   document: DesignDocument
   selectedElementId: string | null
   selectedElement: DesignElement | null
+  selectedObjectId: string | null
+  selectedObject: DesignObject | null
   canUndo: boolean
   canRedo: boolean
   selectElement: (elementId: string | null) => void
+  selectObject: (objectId: string | null) => void
   setActiveView: (viewId: string) => void
   setActivePanel: (panelId: string) => void
+  setActiveZone: (zone: PlacementZone) => void
   renameDesign: (name: string) => void
   setBodyColor: (value: string, history?: HistoryMode) => void
   setPanelColor: (panelId: string, value: string, history?: HistoryMode) => void
@@ -39,15 +48,23 @@ export interface DesignContextValue {
   addGraphic: () => void
   addText: () => void
   addImageFromFile: (file: File, role?: 'image' | 'logo') => Promise<string | null>
+  addDesignText: () => void
+  addDesignShape: () => void
+  addDesignImageFromFile: (file: File) => Promise<string | null>
   removeSelected: () => void
   removeElementById: (elementId: string) => void
+  removeObjectById: (objectId: string) => void
+  duplicateSelectedObject: () => void
   updateSelected: (patch: DesignElementPatch, history?: HistoryMode) => void
   updateElementById: (
     elementId: string,
     patch: DesignElementPatch,
     history?: HistoryMode,
   ) => void
+  updateSelectedObject: (patch: DesignObjectPatch, history?: HistoryMode) => void
+  updateObjectById: (objectId: string, patch: DesignObjectPatch, history?: HistoryMode) => void
   moveSelectedLayer: (direction: LayerDirection) => void
+  moveSelectedObjectLayer: (direction: LayerDirection) => void
   commitGesture: (previous: DesignDocument) => void
   hydrateDocument: (document: DesignDocument) => void
   undo: () => void

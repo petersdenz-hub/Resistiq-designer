@@ -5,6 +5,7 @@
  * Designs are never stored as a flattened image.
  */
 
+import type { DesignObject, PlacementZone } from './designObjects'
 import type { FontWeight, TextAlign } from './typography'
 
 export const DESIGN_ELEMENT_TYPES = ['graphic', 'text', 'image', 'logo'] as const
@@ -238,6 +239,13 @@ export interface DesignDocument {
    */
   construction?: DesignConstruction
   elements: DesignElement[]
+  /**
+   * Canvas design objects. Separate from construction and from panel-relative
+   * elements. Older documents omit this field.
+   */
+  designObjects?: DesignObject[]
+  /** Placement zone used when adding a new design object. */
+  activeZone?: PlacementZone
   createdAt: string
   updatedAt: string
 }

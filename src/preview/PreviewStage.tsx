@@ -1,5 +1,7 @@
 import { DesignElements } from '@/canvas/DesignElements'
+import { DesignObjectLayer } from '@/canvas/DesignObjectLayer'
 import { toCanvasElement } from '@/canvas/project'
+import { defaultZoneForView, getDesignObjectsInZone } from '@/design/designObjects'
 import {
   getBodyColor,
   getElementsInView,
@@ -21,6 +23,7 @@ export function PreviewStage({ document, viewId, zoom = 0.85 }: PreviewStageProp
   const elements = getElementsInView(document, viewId).map((element) =>
     toCanvasElement(document, element),
   )
+  const objects = getDesignObjectsInZone(document, defaultZoneForView(viewId))
 
   return (
     <svg
@@ -39,6 +42,12 @@ export function PreviewStage({ document, viewId, zoom = 0.85 }: PreviewStageProp
         elements={elements}
         selectedElementId={null}
         interactive={false}
+        onSelect={() => undefined}
+        onMoveStart={() => undefined}
+      />
+      <DesignObjectLayer
+        objects={objects}
+        selectedObjectId={null}
         onSelect={() => undefined}
         onMoveStart={() => undefined}
       />

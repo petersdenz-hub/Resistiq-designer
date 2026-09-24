@@ -4,6 +4,37 @@ export { DesignProvider } from './DesignProvider'
 export { useDesign } from './useDesign'
 export { createId } from './ids'
 export {
+  addDesignObject,
+  createImageObject,
+  createShapeObject,
+  createTextObject,
+  DEFAULT_GRID_SIZE,
+  duplicateDesignObject,
+  getDesignObjectById,
+  getDesignObjects,
+  getDesignObjectsInZone,
+  moveDesignObjectLayer,
+  PLACEMENT_ZONE_LABELS,
+  PLACEMENT_ZONES,
+  removeDesignObject,
+  resolveActiveZone,
+  sanitizeDesignObjects,
+  setActiveZone,
+  snapBox,
+  snapValue,
+  updateDesignObject,
+  zonesForGarment,
+} from './designObjects'
+export type {
+  DesignObject,
+  DesignObjectPatch,
+  DesignObjectType,
+  ImageDesignObject,
+  PlacementZone,
+  ShapeDesignObject,
+  TextDesignObject,
+} from './designObjects'
+export {
   addElement,
   clearConstructionPart,
   createGraphicElement,

@@ -73,6 +73,7 @@ export function setActiveView(document: DesignDocument, viewId: string): DesignD
     activePanelId: panelStillValid
       ? document.activePanelId
       : garment.defaultPanelId(viewId),
+    activeZone: viewId === 'back' || viewId === 'front' ? viewId : document.activeZone,
   })
 }
 

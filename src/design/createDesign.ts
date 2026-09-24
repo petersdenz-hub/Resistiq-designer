@@ -40,6 +40,8 @@ export function createNewDesign(garmentType = 'tshirt'): DesignDocument {
     colors: [{ id: 'body', role: 'body', value: garment.defaults.bodyColor }],
     materials: [],
     elements: [],
+    designObjects: [],
+    activeZone: activeView === 'back' ? 'back' : 'front',
     createdAt: now,
     updatedAt: now,
   }

@@ -1,4 +1,5 @@
 import { ACCEPTED_IMAGE_ACCEPT } from '@/design/ingestImage'
+import { DesignPanel } from './DesignPanel'
 import { MaterialsPanel } from './MaterialsPanel'
 import { getElementsInView, getPanelById, getPanelsInView } from '@/design/selectors'
 import { useDesign } from '@/design/useDesign'
@@ -7,6 +8,7 @@ import { GARMENT_CATEGORY_LABELS } from '@/garments/types'
 import {
   Button,
   ColorPicker,
+  DesignIcon,
   ImageIcon,
   LayersIcon,
   LogoIcon,
@@ -17,12 +19,13 @@ import {
 } from '@/ui'
 import { useRef, useState } from 'react'
 
-type ToolId = 'garment' | 'colors' | 'materials' | 'logo' | 'image' | 'text' | 'elements'
+type ToolId = 'garment' | 'colors' | 'materials' | 'design' | 'logo' | 'image' | 'text' | 'elements'
 
 const TOOLS: { id: ToolId; label: string; icon: typeof ShirtIcon }[] = [
   { id: 'garment', label: 'Garment', icon: ShirtIcon },
   { id: 'colors', label: 'Colors', icon: PaletteIcon },
   { id: 'materials', label: 'Materials', icon: MaterialIcon },
+  { id: 'design', label: 'Design', icon: DesignIcon },
   { id: 'logo', label: 'Logo', icon: LogoIcon },
   { id: 'image', label: 'Image', icon: ImageIcon },
   { id: 'text', label: 'Text', icon: TextIcon },
@@ -67,6 +70,7 @@ export function Sidebar() {
           {tool === 'garment' ? <GarmentPanel /> : null}
           {tool === 'colors' ? <ColorsPanel /> : null}
           {tool === 'materials' ? <MaterialsPanel /> : null}
+          {tool === 'design' ? <DesignPanel /> : null}
           {tool === 'logo' ? <UploadPanel role="logo" /> : null}
           {tool === 'image' ? <UploadPanel role="image" /> : null}
           {tool === 'text' ? <TextPanel /> : null}
