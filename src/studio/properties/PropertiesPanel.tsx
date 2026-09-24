@@ -47,7 +47,7 @@ function SelectedPanelProperties() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-properties-kind="panel">
       <div>
         <div className="text-[12px] font-medium text-ink">Panel</div>
         <div className="mt-1 text-[11px] text-mute">{panel.label}</div>
@@ -86,7 +86,7 @@ function SelectedProperties() {
   const minSize = garmentPanel ? minLocalSize(garmentPanel) : 12
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-properties-kind="element">
       <div>
         <div className="text-[12px] font-medium capitalize text-ink">{selectedElement.type}</div>
         <div className="mt-1 text-[11px] text-mute">{panel?.label ?? selectedElement.panelId}</div>
