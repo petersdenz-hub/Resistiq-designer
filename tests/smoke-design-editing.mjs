@@ -111,7 +111,6 @@ async function run() {
     throw new Error('Group did not mark both layers')
   }
 
-  await page.click('[data-action="align"]')
   await page.waitForSelector('[data-align="left"]')
   await page.click('[data-align="left"]')
   await delay(100)
@@ -153,7 +152,8 @@ async function run() {
   if (vite) {
     vite.kill('SIGTERM')
   }
-  console.log('Phase 7B.7 browser smoke passed')
+  console.log('Phase 7B.8 browser smoke passed')
+  process.exit(0)
 }
 
 run().catch((error) => {
