@@ -263,9 +263,11 @@ function defaultBox(
         width = side
         height = side
       }
+      const x = geometry.frame.x + (geometry.frame.width - width) / 2 + cascade
+      const y = geometry.frame.y + (geometry.frame.height - height) / 2 + cascade
       return {
-        x: geometry.frame.x + (geometry.frame.width - width) / 2 + cascade,
-        y: geometry.frame.y + (geometry.frame.height - height) / 2 + cascade,
+        x: Math.min(geometry.frame.x + geometry.frame.width - width, Math.max(geometry.frame.x, x)),
+        y: Math.min(geometry.frame.y + geometry.frame.height - height, Math.max(geometry.frame.y, y)),
         width,
         height,
       }
