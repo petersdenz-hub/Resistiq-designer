@@ -238,7 +238,7 @@ export function PanelGuides({
                 ) : null}
               </g>
             ) : null}
-            {safe && safeCanvas ? (
+            {safe && safeCanvas && silhouettes.length === 0 ? (
               <g pointerEvents="none" data-safe-area={panel.id}>
                 <rect
                   x={safeCanvas.x}

@@ -445,6 +445,14 @@ async function run() {
     if (!clip) {
       throw new Error('Cap artwork is not clipped to the silhouette')
     }
+    const printKind = await page.$('#design-stage [data-printable-area-kind="silhouette"]')
+    if (!printKind) {
+      throw new Error('Cap print area is still a rectangle')
+    }
+    const boxSafe = await page.$('#design-stage [data-safe-area="front_panel"]')
+    if (boxSafe) {
+      throw new Error('Cap still shows a rectangular safe-area box')
+    }
   })
   await switchGarment('tshirt', async () => {
     await page.waitForSelector('[data-zone-option="left-sleeve"]')

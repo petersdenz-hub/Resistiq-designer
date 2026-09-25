@@ -31,8 +31,11 @@ import {
   regionForPanel,
   silhouetteBounds,
 } from '@/garments'
+import { ZoneSurfaceOverlay } from '@/canvas/ZoneSurfaceOverlay'
+import { PanelGuides } from '@/garments/render/PanelGuides'
 import { PreviewStage } from '@/preview/PreviewStage'
 import { normalizeDocument } from '@/persistence/validateDocument'
+import { FRONT_PANEL } from '@/garments/cap/geometry'
 import { describe, expect, it } from 'vitest'
 
 const ORIGINAL_SIX = ['tshirt', 'hoodie', 'sweatshirt', 'jacket', 'pants', 'shorts'] as const
@@ -276,6 +279,33 @@ describe('Phase 11 cap garment', () => {
     expect(document.garmentType).toBe('cap')
     expect(document.designObjects).toEqual(snapshot)
     expect(getDesignObjectById(document, mark.id)?.anchor.panelId).toBe('front_panel')
+  })
+
+  it('draws print and zone guides from the front-panel silhouette, not a rectangle', () => {
+    const document = createNewDesign('cap')
+    const zoneHtml = renderToStaticMarkup(createElement(ZoneSurfaceOverlay, { document, zone: 'front' }))
+    expect(zoneHtml).toContain('data-zone-surface-kind="silhouette"')
+    expect(zoneHtml).toContain(FRONT_PANEL)
+    expect(zoneHtml).not.toMatch(/<rect[\s>]/)
+
+    const garment = getGarment('cap')
+    const guidesHtml = renderToStaticMarkup(
+      createElement(PanelGuides, {
+        garmentType: 'cap',
+        panels: garment.panels.filter((panel) => panel.viewId === 'front'),
+        safeAreas: document.safeAreas,
+        activePanelId: 'front_panel',
+        showPrintArea: true,
+        showSafeAreas: true,
+        showGuides: true,
+        onSelectPanel: () => undefined,
+      }),
+    )
+    expect(guidesHtml).toContain('data-printable-area-kind="silhouette"')
+    expect(guidesHtml).toContain(FRONT_PANEL)
+    expect(guidesHtml).not.toContain('data-safe-area="front_panel"')
+    expect(guidesHtml).not.toContain('SAFE AREA')
+    expect(guidesHtml).not.toContain('data-design-zone="cap-front-print"')
   })
 
   it('reads as a fashion-flat cap: tapered crown, crescent visor, center seam', () => {
