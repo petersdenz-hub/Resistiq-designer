@@ -1,17 +1,26 @@
 import type { DesignSafeArea } from '@/design/types'
 import type { PointerEvent as ReactPointerEvent } from 'react'
 import { localRectToCanvas } from '../coordinates'
-import { isPrintablePanel, localFromPercent, panelDesignBounds, panelDesignZones } from '../model'
+import {
+  isPrintablePanel,
+  localFromPercent,
+  panelBleedBounds,
+  panelDesignBounds,
+  panelDesignZones,
+} from '../model'
 import type { GarmentPanelDefinition } from '../types'
 
 interface PanelGuidesProps {
   panels: GarmentPanelDefinition[]
   safeAreas: DesignSafeArea[]
   activePanelId: string
+  showPrintArea: boolean
   showSafeAreas: boolean
+  showGuides: boolean
   /** Panel highlight is selection when no design element is selected. */
   selectionKind?: 'panel' | 'element'
   onSelectPanel: (panelId: string) => void
+  onSelectZone?: (panelId: string, zoneId: string) => void
   onPanelPointerDown?: (panelId: string, event: ReactPointerEvent<SVGElement>) => void
 }
 
@@ -19,13 +28,16 @@ export function PanelGuides({
   panels,
   safeAreas,
   activePanelId,
+  showPrintArea,
   showSafeAreas,
+  showGuides,
   selectionKind = 'panel',
   onSelectPanel,
+  onSelectZone,
   onPanelPointerDown,
 }: PanelGuidesProps) {
   return (
-    <g data-editor-chrome="true">
+    <g data-editor-chrome="true" data-print-guides={showPrintArea ? 'true' : 'false'} data-safe-guides={showSafeAreas ? 'true' : 'false'} data-panel-guides={showGuides ? 'true' : 'false'}>
       {panels.map((panel) => {
         const active = panel.id === activePanelId
         const panelSelected = active && selectionKind === 'panel'
@@ -34,11 +46,15 @@ export function PanelGuides({
           : null
         const safeCanvas = safe ? localRectToCanvas(panel, safe) : null
         const printable =
-          showSafeAreas && isPrintablePanel(panel)
+          showPrintArea && isPrintablePanel(panel)
             ? localRectToCanvas(panel, localFromPercent(panelDesignBounds(panel), panel.local))
             : null
+        const bleed =
+          showPrintArea && isPrintablePanel(panel)
+            ? localRectToCanvas(panel, localFromPercent(panelBleedBounds(panel), panel.local))
+            : null
         const zones =
-          panelSelected && showSafeAreas
+          (showGuides || panelSelected) && isPrintablePanel(panel)
             ? panelDesignZones(panel).map((zone) => ({
                 ...zone,
                 canvas: localRectToCanvas(panel, localFromPercent(zone.bounds, panel.local)),
@@ -52,44 +68,87 @@ export function PanelGuides({
             data-panel-selected={panelSelected ? 'true' : 'false'}
             data-panel-printable={isPrintablePanel(panel) ? 'true' : 'false'}
           >
-            <rect
-              x={panel.frame.x}
-              y={panel.frame.y}
-              width={panel.frame.width}
-              height={panel.frame.height}
-              fill={
-                panelSelected
-                  ? 'rgba(201,163,106,0.10)'
-                  : active
-                    ? 'rgba(201,163,106,0.05)'
-                    : 'rgba(238,240,244,0.02)'
-              }
-              stroke={panelSelected ? 'rgba(201,163,106,1)' : active ? 'rgba(201,163,106,0.7)' : 'rgba(238,240,244,0.45)'}
-              strokeDasharray={panelSelected ? '0' : '4 3'}
-              strokeWidth={panelSelected ? 2 : active ? 1.4 : 1.1}
-              rx="3"
-              onPointerDown={(event) => {
-                event.stopPropagation()
-                if (onPanelPointerDown) {
-                  onPanelPointerDown(panel.id, event)
-                  return
+            {showGuides || panelSelected || active ? (
+              <rect
+                x={panel.frame.x}
+                y={panel.frame.y}
+                width={panel.frame.width}
+                height={panel.frame.height}
+                fill={
+                  panelSelected
+                    ? 'rgba(201,163,106,0.10)'
+                    : active
+                      ? 'rgba(201,163,106,0.05)'
+                      : 'rgba(238,240,244,0.02)'
                 }
-                onSelectPanel(panel.id)
-              }}
-              style={{ cursor: 'pointer' }}
-            />
-            <text
-              x={panel.frame.x + 6}
-              y={panel.frame.y + 13}
-              fill={panelSelected || active ? '#c9a36a' : 'rgba(238,240,244,0.72)'}
-              fontSize="9.5"
-              fontFamily="IBM Plex Sans, sans-serif"
-              pointerEvents="none"
-            >
-              {panelSelected ? `Panel · ${panel.label}` : panel.label}
-            </text>
-            {printable && (active || panelSelected) ? (
-              <g pointerEvents="none" data-printable-area={panel.id}>
+                stroke={panelSelected ? 'rgba(201,163,106,1)' : active ? 'rgba(201,163,106,0.7)' : 'rgba(238,240,244,0.45)'}
+                strokeDasharray={panelSelected ? '0' : '4 3'}
+                strokeWidth={panelSelected ? 2 : active ? 1.4 : 1.1}
+                rx="3"
+                onPointerDown={(event) => {
+                  event.stopPropagation()
+                  if (onPanelPointerDown) {
+                    onPanelPointerDown(panel.id, event)
+                    return
+                  }
+                  onSelectPanel(panel.id)
+                }}
+                style={{ cursor: 'pointer' }}
+              />
+            ) : (
+              <rect
+                x={panel.frame.x}
+                y={panel.frame.y}
+                width={panel.frame.width}
+                height={panel.frame.height}
+                fill="transparent"
+                onPointerDown={(event) => {
+                  event.stopPropagation()
+                  if (onPanelPointerDown) {
+                    onPanelPointerDown(panel.id, event)
+                    return
+                  }
+                  onSelectPanel(panel.id)
+                }}
+                style={{ cursor: 'pointer' }}
+              />
+            )}
+            {showGuides || panelSelected ? (
+              <text
+                x={panel.frame.x + 6}
+                y={panel.frame.y + 13}
+                fill={panelSelected || active ? '#c9a36a' : 'rgba(238,240,244,0.72)'}
+                fontSize="9.5"
+                fontFamily="IBM Plex Sans, sans-serif"
+                pointerEvents="none"
+              >
+                {panelSelected ? `Panel · ${panel.label}` : panel.label}
+              </text>
+            ) : null}
+            {bleed && (active || panelSelected) ? (
+              <g pointerEvents="none" data-bleed-area={panel.id}>
+                <rect
+                  x={bleed.x}
+                  y={bleed.y}
+                  width={bleed.width}
+                  height={bleed.height}
+                  fill="none"
+                  stroke="rgba(201,163,106,0.28)"
+                  strokeDasharray="1 4"
+                  strokeWidth="0.9"
+                  rx="2"
+                />
+              </g>
+            ) : null}
+            {printable && (active || panelSelected || showPrintArea) ? (
+              <g
+                data-printable-area={panel.id}
+                onPointerDown={(event) => {
+                  event.stopPropagation()
+                  onSelectPanel(panel.id)
+                }}
+                style={{ cursor: 'pointer' }}
+              >
                 <rect
                   x={printable.x}
                   y={printable.y}
@@ -101,13 +160,14 @@ export function PanelGuides({
                   strokeWidth="1.05"
                   rx="2"
                 />
-                {panelSelected ? (
+                {panelSelected || showGuides ? (
                   <text
                     x={printable.x + 5}
                     y={printable.y + Math.min(12, printable.height - 4)}
                     fill="rgba(201,163,106,0.9)"
                     fontSize="8.5"
                     fontFamily="IBM Plex Sans, sans-serif"
+                    pointerEvents="none"
                   >
                     Printable
                   </text>
@@ -139,7 +199,20 @@ export function PanelGuides({
               </g>
             ) : null}
             {zones.map((zone) => (
-              <g key={zone.id} pointerEvents="none" data-design-zone={zone.id}>
+              <g
+                key={zone.id}
+                data-design-zone={zone.id}
+                data-design-zone-name={zone.name}
+                onPointerDown={(event) => {
+                  event.stopPropagation()
+                  if (onSelectZone) {
+                    onSelectZone(panel.id, zone.id)
+                    return
+                  }
+                  onSelectPanel(panel.id)
+                }}
+                style={{ cursor: 'pointer' }}
+              >
                 <rect
                   x={zone.canvas.x}
                   y={zone.canvas.y}
@@ -157,6 +230,7 @@ export function PanelGuides({
                   fill="rgba(186, 198, 224, 0.92)"
                   fontSize="8"
                   fontFamily="IBM Plex Sans, sans-serif"
+                  pointerEvents="none"
                 >
                   {zone.name}
                 </text>

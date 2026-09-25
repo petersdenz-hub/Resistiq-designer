@@ -50,7 +50,7 @@ export function saveDesign(
   const now = new Date().toISOString()
   const existing = getDesign(document.id)
   const nextDocument: DesignDocument = {
-    ...structuredClone(document),
+    ...normalizeDocument(structuredClone(document)),
     garmentType: resolveGarmentType(document.garmentType),
     updatedAt: now,
     createdAt: existing?.document.createdAt ?? document.createdAt,

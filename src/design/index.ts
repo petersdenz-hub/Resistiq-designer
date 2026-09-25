@@ -91,6 +91,7 @@ export {
   zoneForPanel,
 } from './objectPlacement'
 export type { ArtworkPanelBounds, RelativeBox } from './objectPlacement'
+export { objectClipBox, panelPrintBox } from './objectClip'
 export type {
   AnchorSpace,
   DesignObject,
@@ -120,6 +121,7 @@ export {
   setConstructionVariant,
   setGarmentMaterial,
   setPanelColor,
+  setRegionColor,
   setDesignName,
   updateElement,
   upsertMaterial,

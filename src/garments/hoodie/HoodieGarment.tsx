@@ -8,7 +8,7 @@ import {
   fabricFilter,
   pocketStyle,
 } from '../render/constructionState'
-import { FlatPart, FlatShadow, Seam } from '../render/flatStyle'
+import { FlatPart, FlatShadow, Fold, Seam } from '../render/flatStyle'
 
 /**
  * Fashion-flat hoodie. Hood, body, sleeves, and cuffs are separate parts.
@@ -165,6 +165,9 @@ export function HoodieGarment({ viewId, bodyColor, panelColors, construction }: 
         </g>
         <Seam d="M168 224 L152 186" color={body.stitch} width={1.1} opacity={0.3} />
         <Seam d="M392 224 L408 186" color={body.stitch} width={1.1} opacity={0.3} />
+        <Fold d="M188 248 C220 242 340 242 372 248" color={body.highlight} />
+        <Fold d="M70 250 C110 280 148 312 168 326" color={right.highlight} opacity={0.16} />
+        <Fold d="M490 250 C450 280 412 312 392 326" color={left.highlight} opacity={0.16} />
 
         {cuffs ? (
           <>

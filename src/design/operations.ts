@@ -125,6 +125,19 @@ export function setPanelColor(
   })
 }
 
+/** Apply one color to every panel in a garment region. Single document write. */
+export function setRegionColor(
+  document: DesignDocument,
+  panelIds: string[],
+  value: string,
+): DesignDocument {
+  let next = document
+  for (const panelId of panelIds) {
+    next = setPanelColor(next, panelId, value)
+  }
+  return next
+}
+
 export function patchConstruction(
   document: DesignDocument,
   patch: DesignConstruction,

@@ -23,6 +23,7 @@ export function Studio({ onClose, onNew }: StudioProps) {
     selectedObjectIds,
     duplicateSelectedObject,
     selectAllObjects,
+    selectElement,
     selectObjects,
     groupSelectedObjects,
     ungroupSelectedObjects,
@@ -94,6 +95,7 @@ export function Studio({ onClose, onNew }: StudioProps) {
 
       if (!typing && event.key === 'Escape') {
         selectObjects([])
+        selectElement(null)
         return
       }
 
@@ -121,6 +123,7 @@ export function Studio({ onClose, onNew }: StudioProps) {
     redo,
     removeSelected,
     selectAllObjects,
+    selectElement,
     selectObjects,
     selectedElementId,
     selectedObjectId,

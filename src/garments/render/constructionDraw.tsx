@@ -21,7 +21,9 @@ export function FabricFinish({
           baseFrequency={
             material.finish === 'napped'
               ? '0.85'
-              : material.finish === 'dense'
+              : material.finish === 'twill'
+                ? '0.55 0.12'
+                : material.finish === 'dense'
                 ? '0.7'
                 : material.finish === 'technical'
                   ? '0.35'

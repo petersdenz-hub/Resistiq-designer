@@ -15,7 +15,7 @@ import {
   fabricFilter,
   pocketStyle,
 } from '../render/constructionState'
-import { FlatPart, FlatShadow, Seam } from '../render/flatStyle'
+import { FlatPart, FlatShadow, Fold, Seam } from '../render/flatStyle'
 
 /**
  * Fashion-flat outdoor jacket. Front is two body panels plus a zipper.
@@ -252,6 +252,13 @@ export function JacketGarment({ viewId, bodyColor, panelColors, construction }: 
 
       <Seam d="M170 214 L182 516" color={(isBack ? back : leftBody).stitch} width={1} opacity={0.2} />
       <Seam d="M390 214 L378 516" color={(isBack ? back : rightBody).stitch} width={1} opacity={0.2} />
+      <Fold
+        d={isBack ? 'M196 220 C230 214 330 214 364 220' : 'M176 220 C210 214 246 214 268 220'}
+        color={(isBack ? back : leftBody).highlight}
+      />
+      {!isBack ? <Fold d="M292 220 C314 214 350 214 384 220" color={rightBody.highlight} /> : null}
+      <Fold d="M62 230 C96 258 132 286 164 300" color={right.highlight} opacity={0.16} />
+      <Fold d="M498 230 C464 258 428 286 396 300" color={left.highlight} opacity={0.16} />
       {hemStyle ? (
         <HemBand style={hemStyle} y={528} left={208} right={352} color={isBack ? back : leftBody} />
       ) : null}

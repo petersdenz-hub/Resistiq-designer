@@ -2,7 +2,7 @@ import type { GarmentRenderProps } from '../types'
 import { clothFor } from '../render/cloth'
 import { BeltLoops, FabricFinish, FabricSheen, HemBand, PocketSet } from '../render/constructionDraw'
 import { constructionStyle, fabricFilter, pocketStyle } from '../render/constructionState'
-import { FlatPart, FlatShadow, Seam } from '../render/flatStyle'
+import { FlatPart, FlatShadow, Fold, Seam } from '../render/flatStyle'
 import type { BottomsKind } from './definition'
 
 /**
@@ -72,8 +72,15 @@ export function BottomsGarment({
           <>
             <Seam d="M188 330 L248 330" color={left.stitch} width={1} opacity={0.16} />
             <Seam d="M372 330 L312 330" color={right.stitch} width={1} opacity={0.16} />
+            <Fold d="M214 180 C204 260 206 360 216 500" color={left.highlight} opacity={0.12} />
+            <Fold d="M346 180 C356 260 354 360 344 500" color={right.highlight} opacity={0.12} />
           </>
-        ) : null}
+        ) : (
+          <>
+            <Fold d="M214 140 C206 190 210 240 220 286" color={left.highlight} opacity={0.12} />
+            <Fold d="M346 140 C354 190 350 240 340 286" color={right.highlight} opacity={0.12} />
+          </>
+        )}
         {waistStyle ? (
           <g
             data-garment-part={waistId}

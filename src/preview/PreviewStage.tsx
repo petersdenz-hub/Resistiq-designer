@@ -2,6 +2,7 @@ import { DesignElements } from '@/canvas/DesignElements'
 import { DesignObjectLayer } from '@/canvas/DesignObjectLayer'
 import { toCanvasElement } from '@/canvas/project'
 import { defaultZoneForView, getDesignObjectsInZone } from '@/design/designObjects'
+import { objectClipBox } from '@/design/objectClip'
 import { paintDesignObject } from '@/design/objectPlacement'
 import {
   getBodyColor,
@@ -24,8 +25,15 @@ export function PreviewStage({ document, viewId, zoom = 0.85 }: PreviewStageProp
   const elements = getElementsInView(document, viewId).map((element) =>
     toCanvasElement(document, element),
   )
-  const objects = getDesignObjectsInZone(document, defaultZoneForView(viewId)).map((object) =>
-    paintDesignObject(document, object),
+  const sourceObjects = getDesignObjectsInZone(document, defaultZoneForView(viewId))
+  const objects = sourceObjects.map((object) => paintDesignObject(document, object))
+  const clipBoxes = Object.fromEntries(
+    sourceObjects
+      .map((object) => {
+        const box = objectClipBox(document, object)
+        return box ? [object.id, box] : null
+      })
+      .filter((entry): entry is [string, NonNullable<ReturnType<typeof objectClipBox>>] => Boolean(entry)),
   )
 
   const bodyColor = getBodyColor(document)
@@ -42,6 +50,9 @@ export function PreviewStage({ document, viewId, zoom = 0.85 }: PreviewStageProp
       data-preview-seams="true"
       data-preview-artwork={String(objects.length)}
       data-preview-handles="false"
+      data-preview-guides="false"
+      data-preview-print-area="false"
+      data-preview-safe-area="false"
     >
       <GarmentRenderer
         garmentType={document.garmentType}
@@ -61,6 +72,8 @@ export function PreviewStage({ document, viewId, zoom = 0.85 }: PreviewStageProp
       <DesignObjectLayer
         objects={objects}
         selectedObjectId={null}
+        clipEnabled
+        clipBoxes={clipBoxes}
         onSelect={() => undefined}
         onMoveStart={() => undefined}
       />

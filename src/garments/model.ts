@@ -107,9 +107,21 @@ function defaultZonesForPanel(panel: GarmentPanelDefinition): DesignZoneDefiniti
     bounds: print,
   }
 
+  if (panel.type === 'body' && inferPanelSide(panel) === 'left') {
+    return [
+      { id: `${panel.id}-full-front`, name: 'Left front', bounds: { x: 0, y: 0, width: 100, height: 100 } },
+      { id: `${panel.id}-chest`, name: 'Chest', bounds: print },
+    ]
+  }
+  if (panel.type === 'body' && inferPanelSide(panel) === 'right') {
+    return [
+      { id: `${panel.id}-full-front`, name: 'Right front', bounds: { x: 0, y: 0, width: 100, height: 100 } },
+      { id: `${panel.id}-chest`, name: 'Chest', bounds: print },
+    ]
+  }
   if (panel.type === 'body' && inferPanelSide(panel) === 'front') {
     return [
-      { id: `${panel.id}-full-front`, name: 'Full front', bounds: { x: 0, y: 0, width: 100, height: 100 } },
+      { id: `${panel.id}-full-front`, name: 'Front print', bounds: { x: 0, y: 0, width: 100, height: 100 } },
       { id: `${panel.id}-chest`, name: 'Chest', bounds: print },
       {
         id: `${panel.id}-center-front`,
@@ -119,19 +131,56 @@ function defaultZonesForPanel(panel: GarmentPanelDefinition): DesignZoneDefiniti
     ]
   }
   if (panel.type === 'body' && inferPanelSide(panel) === 'back') {
+    const upperHeight = Math.min(print.height, 36)
     return [
-      { id: `${panel.id}-full-back`, name: 'Full back', bounds: { x: 0, y: 0, width: 100, height: 100 } },
+      { id: `${panel.id}-full-back`, name: 'Back print', bounds: { x: 0, y: 0, width: 100, height: 100 } },
       {
         id: `${panel.id}-upper-back`,
         name: 'Upper back',
-        bounds: { x: print.x, y: print.y, width: print.width, height: Math.min(print.height, 45) },
+        bounds: { x: print.x, y: print.y, width: print.width, height: upperHeight },
+      },
+      {
+        id: `${panel.id}-lower-back`,
+        name: 'Lower back',
+        bounds: {
+          x: print.x,
+          y: print.y + upperHeight,
+          width: print.width,
+          height: Math.max(8, print.height - upperHeight),
+        },
       },
     ]
   }
   if (panel.type === 'sleeve') {
+    const side = inferPanelSide(panel)
     return [
-      { id: `${panel.id}-outer`, name: 'Outer sleeve', bounds: { x: 0, y: 0, width: 100, height: 100 } },
+      {
+        id: `${panel.id}-outer`,
+        name: side === 'left' ? 'Left sleeve' : side === 'right' ? 'Right sleeve' : 'Sleeve',
+        bounds: { x: 0, y: 0, width: 100, height: 100 },
+      },
       { id: `${panel.id}-center`, name: 'Sleeve center', bounds: print },
+    ]
+  }
+  if (panel.type === 'leg') {
+    const side = inferPanelSide(panel)
+    const mid = print.y + print.height / 2
+    return [
+      {
+        id: `${panel.id}-full`,
+        name: side === 'left' ? 'Left leg' : side === 'right' ? 'Right leg' : 'Leg',
+        bounds: { x: 0, y: 0, width: 100, height: 100 },
+      },
+      {
+        id: `${panel.id}-upper`,
+        name: 'Upper leg',
+        bounds: { x: print.x, y: print.y, width: print.width, height: print.height / 2 },
+      },
+      {
+        id: `${panel.id}-lower`,
+        name: 'Lower leg',
+        bounds: { x: print.x, y: mid, width: print.width, height: print.height / 2 },
+      },
     ]
   }
 
@@ -140,6 +189,20 @@ function defaultZonesForPanel(panel: GarmentPanelDefinition): DesignZoneDefiniti
 
 export function panelDesignZones(panel: GarmentPanelDefinition): DesignZoneDefinition[] {
   return panel.designZones ?? defaultZonesForPanel(panel)
+}
+
+/** Bleed is a slight expansion of the printable area. Not stored on the document. */
+export function panelBleedBounds(panel: GarmentPanelDefinition): PercentRect {
+  const print = panelDesignBounds(panel)
+  const pad = 5
+  const x = Math.max(0, print.x - pad)
+  const y = Math.max(0, print.y - pad)
+  return {
+    x,
+    y,
+    width: Math.min(100 - x, print.width + pad * 2),
+    height: Math.min(100 - y, print.height + pad * 2),
+  }
 }
 
 export function inferSupportedDesignZones(

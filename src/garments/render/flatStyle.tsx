@@ -33,9 +33,31 @@ export function FlatPart({
 
 export function FlatShadow({ id }: { id: string }) {
   return (
-    <filter id={`${id}-soft`} x="-6%" y="-3%" width="112%" height="108%">
-      <feDropShadow dx="0" dy="5" stdDeviation="5" floodColor="#000" floodOpacity="0.12" />
+    <filter id={`${id}-soft`} x="-8%" y="-4%" width="116%" height="114%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3.5" floodColor="#000" floodOpacity="0.1" />
+      <feDropShadow dx="0" dy="10" stdDeviation="8" floodColor="#000" floodOpacity="0.08" />
     </filter>
+  )
+}
+
+export function Fold({
+  d,
+  color,
+  opacity = 0.14,
+}: {
+  d: string
+  color: string
+  opacity?: number
+}) {
+  return (
+    <path
+      d={d}
+      fill="none"
+      stroke={color}
+      strokeWidth="1.15"
+      strokeLinecap="round"
+      opacity={opacity}
+    />
   )
 }
 
