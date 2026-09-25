@@ -1,11 +1,18 @@
 import { FONT_WEIGHTS, TEXT_ALIGNS, TEXT_FONT_FAMILIES } from '@/design/typography'
 import {
   imageKeepsAlpha,
-  objectDisplayName,
   PLACEMENT_ZONE_LABELS,
   PLACEMENT_ZONES,
 } from '@/design/designObjects'
-import { nudgeDesignObjects, selectionViewBox, updateDesignObjects } from '@/design/objectEditing'
+import {
+  alignDesignObjects,
+  distributeDesignObjects,
+  nudgeDesignObjects,
+  selectionViewBox,
+  updateDesignObjects,
+} from '@/design/objectEditing'
+import { AlignRow, DistributeRow } from '@/studio/EditToolbar'
+import { objectPropertySections } from '@/studio/editorChrome'
 import {
   getArtworkPanelBounds,
   isPanelAnchored,
@@ -26,17 +33,29 @@ import { useDesign } from '@/design/useDesign'
 import { minLocalSize, getGarmentPanel } from '@/garments/coordinates'
 import { getGarment } from '@/garments/registry'
 import { Button, ColorPicker, Field, NumberField, SegmentedControl } from '@/ui'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
-export function PropertiesPanel() {
+export function PropertiesPanel({ onCollapse }: { onCollapse?: () => void }) {
   const { selectedElement, selectedObject, selectedObjectIds } = useDesign()
 
   return (
-    <aside className="flex w-64 shrink-0 flex-col border-l border-line bg-panel">
-      <div className="border-b border-line px-4 py-3">
+    <aside className="flex w-60 shrink-0 flex-col border-l border-line bg-panel" data-properties-panel="true">
+      <div className="flex items-center justify-between border-b border-line px-3 py-3">
         <div className="text-[10px] font-medium uppercase tracking-[0.16em] text-mute">
           Properties
         </div>
+        {onCollapse ? (
+          <button
+            type="button"
+            title="Hide properties"
+            aria-label="Hide properties"
+            data-collapse-properties="true"
+            onClick={onCollapse}
+            className="flex h-6 w-6 items-center justify-center rounded text-mute hover:text-ink"
+          >
+            ›
+          </button>
+        ) : null}
       </div>
       <div className="flex-1 overflow-y-auto px-4 py-4">
         {selectedObjectIds.length > 1 ? (
@@ -106,6 +125,21 @@ function SelectedObjectProperties() {
     setSelectedObjectPanel,
     setSelectedObjectSpace,
   } = useDesign()
+  const selectedId = selectedObject?.id
+  useEffect(() => {
+    const onEdit = (event: Event) => {
+      const id = (event as CustomEvent<string>).detail
+      if (!selectedId || id !== selectedId) {
+        return
+      }
+      const field = window.document.querySelector<HTMLTextAreaElement>('[data-text-content="true"]')
+      field?.focus()
+      field?.select()
+    }
+    window.addEventListener('resistq-edit-text', onEdit)
+    return () => window.removeEventListener('resistq-edit-text', onEdit)
+  }, [selectedId])
+
   if (!selectedObject) {
     return null
   }
@@ -113,29 +147,30 @@ function SelectedObjectProperties() {
   const locked = selectedObject.locked
 
   return (
-    <div className="space-y-4" data-properties-kind="design-object">
-      <div>
-        <div className="text-[12px] font-medium capitalize text-ink">{objectDisplayName(selectedObject)}</div>
-        <div className="mt-1 text-[11px] text-mute">{PLACEMENT_ZONE_LABELS[selectedObject.zone]}</div>
-      </div>
-      <Field label="Name">
-        <input
-          data-object-name="true"
-          value={selectedObject.name ?? ''}
-          onChange={(event) => updateSelectedObject({ name: event.target.value })}
-          className="h-8 w-full rounded-md border border-line bg-studio px-2 text-[12px] text-ink outline-none focus:border-accent/50"
-        />
-      </Field>
-      <p className="text-[11px] leading-4 text-mute">
-        {isPanelAnchored(selectedObject)
-          ? 'This artwork is attached to a garment panel. Position is panel-relative, not screen pixels.'
-          : 'This artwork uses zone space in garment viewBox units. Attach it to a panel to follow that panel.'}
-      </p>
+    <div
+      className="space-y-4"
+      data-properties-kind="design-object"
+      data-property-sections={objectPropertySections(selectedObject.type).join(',')}
+    >
+      <section className="space-y-2" data-properties-section="object">
+        <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Object</div>
+        <Field label="Name">
+          <input
+            data-object-name="true"
+            value={selectedObject.name ?? ''}
+            onChange={(event) => updateSelectedObject({ name: event.target.value })}
+            className="h-8 w-full rounded-md border border-line bg-studio px-2 text-[12px] text-ink outline-none focus:border-accent/50"
+          />
+        </Field>
+        <div className="text-[11px] capitalize text-mute">{selectedObject.type}</div>
+      </section>
 
       {selectedObject.type === 'text' ? (
-        <div className="space-y-2">
+        <div className="space-y-2" data-properties-section="text">
+          <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Text</div>
           <Field label="Content">
             <textarea
+              data-text-content="true"
               value={selectedObject.content}
               disabled={locked}
               onChange={(event) => updateSelectedObject({ content: event.target.value })}
@@ -193,10 +228,16 @@ function SelectedObjectProperties() {
         </div>
       ) : null}
 
-      {selectedObject.type === 'image' ? <ImageObjectFields /> : null}
+      {selectedObject.type === 'image' ? (
+        <section data-properties-section="image">
+          <div className="mb-2 text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Image</div>
+          <ImageObjectFields />
+        </section>
+      ) : null}
 
       {selectedObject.type === 'shape' ? (
-        <div className="space-y-2">
+        <div className="space-y-2" data-properties-section="shape">
+          <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Shape</div>
           <ColorPicker
             label="Fill"
             value={selectedObject.fill}
@@ -217,6 +258,7 @@ function SelectedObjectProperties() {
         </div>
       ) : null}
 
+      <ObjectTransformFields locked={locked} onBox={updateSelectedObject} />
       <ObjectPlacementFields
         locked={locked}
         onZone={setSelectedObjectZone}
@@ -224,38 +266,39 @@ function SelectedObjectProperties() {
         onSpace={setSelectedObjectSpace}
         onBox={updateSelectedObject}
       />
-      <ObjectOpacityField />
 
-      <div className="grid grid-cols-2 gap-2">
-        <button
-          type="button"
-          data-object-visible="true"
-          aria-pressed={selectedObject.visible}
-          onClick={() => updateSelectedObject({ visible: !selectedObject.visible })}
-          className={`h-8 rounded-md border text-[12px] ${
-            selectedObject.visible
-              ? 'border-accent/50 bg-accent/10 text-ink'
-              : 'border-line text-mute hover:text-ink'
-          }`}
-        >
-          {selectedObject.visible ? 'Visible' : 'Hidden'}
-        </button>
-        <button
-          type="button"
-          data-object-locked="true"
-          aria-pressed={selectedObject.locked}
-          onClick={() => updateSelectedObject({ locked: !selectedObject.locked })}
-          className={`h-8 rounded-md border text-[12px] ${
-            selectedObject.locked
-              ? 'border-accent/50 bg-accent/10 text-ink'
-              : 'border-line text-mute hover:text-ink'
-          }`}
-        >
-          {selectedObject.locked ? 'Locked' : 'Unlocked'}
-        </button>
-      </div>
-
-      <LayerButtons onMove={moveSelectedObjectLayer} />
+      <section className="space-y-2" data-properties-section="layer">
+        <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Layer</div>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            data-object-visible="true"
+            aria-pressed={selectedObject.visible}
+            onClick={() => updateSelectedObject({ visible: !selectedObject.visible })}
+            className={`h-8 rounded-md border text-[12px] ${
+              selectedObject.visible
+                ? 'border-accent/50 bg-accent/10 text-ink'
+                : 'border-line text-mute hover:text-ink'
+            }`}
+          >
+            {selectedObject.visible ? 'Visible' : 'Hidden'}
+          </button>
+          <button
+            type="button"
+            data-object-locked="true"
+            aria-pressed={selectedObject.locked}
+            onClick={() => updateSelectedObject({ locked: !selectedObject.locked })}
+            className={`h-8 rounded-md border text-[12px] ${
+              selectedObject.locked
+                ? 'border-accent/50 bg-accent/10 text-ink'
+                : 'border-line text-mute hover:text-ink'
+            }`}
+          >
+            {selectedObject.locked ? 'Locked' : 'Unlocked'}
+          </button>
+        </div>
+        <LayerButtons onMove={moveSelectedObjectLayer} />
+      </section>
       <Button className="w-full" onClick={removeSelected}>
         Remove object
       </Button>
@@ -282,17 +325,31 @@ function MultiObjectProperties() {
   const panel = sharedPanel ? document.panels.find((item) => item.id === sharedPanel) : null
 
   return (
-    <div className="space-y-4" data-properties-kind="multi-object" data-selected-count={selectedObjects.length}>
-      <div>
-        <div className="text-[12px] font-medium text-ink">{selectedObjects.length} objects</div>
+    <div
+      className="space-y-4"
+      data-properties-kind="multi-object"
+      data-selected-count={selectedObjects.length}
+      data-property-sections={objectPropertySections('multi').join(',')}
+    >
+      <section data-properties-section="object">
+        <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Object</div>
+        <div className="mt-1 text-[12px] font-medium text-ink">{selectedObjects.length} objects</div>
         <div className="mt-1 text-[11px] text-mute">
           {sharedZone ? PLACEMENT_ZONE_LABELS[sharedZone] : 'Mixed zones'}
           {panel ? ` · ${panel.label}` : sharedPanel === '' ? '' : ' · mixed panels'}
         </div>
-      </div>
-      <p className="text-[11px] leading-4 text-mute">
-        Shared values only. Mixed fields stay blank so they are not applied as if every object matched.
-      </p>
+      </section>
+      {unlocked.length >= 2 ? (
+        <section className="space-y-2" data-properties-section="align">
+          <AlignRow onAlign={(alignment) => applyDocument(alignDesignObjects(document, selectedObjectIds, alignment))} />
+          {unlocked.length >= 3 ? (
+            <DistributeRow
+              onDistribute={(axis) => applyDocument(distributeDesignObjects(document, selectedObjectIds, axis))}
+            />
+          ) : null}
+        </section>
+      ) : null}
+      <section className="space-y-2" data-properties-section="transform">
       {union ? (
         <div className="grid grid-cols-2 gap-2">
           <LiveNumber
@@ -346,10 +403,13 @@ function MultiObjectProperties() {
           Opacity is mixed.
         </p>
       ) : null}
+      </section>
+      <section data-properties-section="layer">
       <LayerButtons onMove={moveSelectedObjectLayer} />
       <Button className="w-full" onClick={removeSelected}>
         Remove objects
       </Button>
+      </section>
     </div>
   )
 }
@@ -359,6 +419,39 @@ function sharedValue<T>(values: T[]): T | null {
     return null
   }
   return values.every((value) => value === values[0]) ? values[0] : null
+}
+
+function ObjectTransformFields({
+  locked,
+  onBox,
+}: {
+  locked: boolean
+  onBox: (patch: { x?: number; y?: number; width?: number; height?: number; rotation?: number }) => void
+}) {
+  const { selectedObject } = useDesign()
+  if (!selectedObject) {
+    return null
+  }
+
+  return (
+    <section className="space-y-2" data-properties-section="transform">
+      <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Transform</div>
+      <div className="grid grid-cols-2 gap-2">
+        <LiveNumber label="X" value={selectedObject.x} disabled={locked} onCommit={(value) => onBox({ x: value })} />
+        <LiveNumber label="Y" value={selectedObject.y} disabled={locked} onCommit={(value) => onBox({ y: value })} />
+        <LiveNumber label="Width" value={selectedObject.width} min={8} disabled={locked} onCommit={(value) => onBox({ width: value })} />
+        <LiveNumber label="Height" value={selectedObject.height} min={8} disabled={locked} onCommit={(value) => onBox({ height: value })} />
+      </div>
+      <LiveNumber
+        label="Rotation"
+        value={Number(selectedObject.rotation.toFixed(1))}
+        digits={1}
+        disabled={locked}
+        onCommit={(value) => onBox({ rotation: value })}
+      />
+      <ObjectOpacityField />
+    </section>
+  )
 }
 
 function ObjectPlacementFields({
@@ -386,8 +479,7 @@ function ObjectPlacementFields({
   const zonePanels = panelsForZone(document, selectedObject.zone)
 
   return (
-    <div className="space-y-3" data-object-placement="true" data-anchor-space={selectedObject.anchor.space}>
-      <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Placement</div>
+    <div className="space-y-3" data-object-placement="true" data-properties-section="placement" data-anchor-space={selectedObject.anchor.space}>
       <Field label="Zone">
         <select
           data-object-zone="true"
@@ -436,66 +528,35 @@ function ObjectPlacementFields({
         {panelAnchored ? 'Attached to panel' : 'Attach to panel'}
       </button>
 
-      {panelAnchored && bounds ? (
-        <div className="grid grid-cols-2 gap-2">
-          <LiveNumber
-            label="X %"
-            value={Number((relative.x * 100).toFixed(1))}
-            digits={1}
-            disabled={locked}
-            onCommit={(value) =>
-              onBox(localBoxFromRelative(document, bounds.id, { ...relative, x: value / 100 }))
-            }
-          />
-          <LiveNumber
-            label="Y %"
-            value={Number((relative.y * 100).toFixed(1))}
-            digits={1}
-            disabled={locked}
-            onCommit={(value) =>
-              onBox(localBoxFromRelative(document, bounds.id, { ...relative, y: value / 100 }))
-            }
-          />
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-2">
-          <LiveNumber
-            label="X"
-            value={selectedObject.x}
-            disabled={locked}
-            onCommit={(value) => onBox({ x: value })}
-          />
-          <LiveNumber
-            label="Y"
-            value={selectedObject.y}
-            disabled={locked}
-            onCommit={(value) => onBox({ y: value })}
-          />
-        </div>
-      )}
+      <div className="text-[10px] font-medium uppercase tracking-[0.12em] text-mute">Position</div>
       <div className="grid grid-cols-2 gap-2">
         <LiveNumber
-          label="Width"
-          value={selectedObject.width}
-          min={8}
+          label="X %"
+          value={Number((relative.x * 100).toFixed(1))}
+          digits={1}
           disabled={locked}
-          onCommit={(value) => onBox({ width: value })}
+          onCommit={(value) => {
+            if (panelAnchored && bounds) {
+              onBox(localBoxFromRelative(document, bounds.id, { ...relative, x: value / 100 }))
+              return
+            }
+            onBox({ x: (value / 100) * (getGarment(document.garmentType).viewBox.width) })
+          }}
         />
         <LiveNumber
-          label="Height"
-          value={selectedObject.height}
-          min={8}
+          label="Y %"
+          value={Number((relative.y * 100).toFixed(1))}
+          digits={1}
           disabled={locked}
-          onCommit={(value) => onBox({ height: value })}
+          onCommit={(value) => {
+            if (panelAnchored && bounds) {
+              onBox(localBoxFromRelative(document, bounds.id, { ...relative, y: value / 100 }))
+              return
+            }
+            onBox({ y: (value / 100) * (getGarment(document.garmentType).viewBox.height) })
+          }}
         />
       </div>
-      <LiveNumber
-        label="Rotation"
-        value={Number(selectedObject.rotation.toFixed(1))}
-        digits={1}
-        disabled={locked}
-        onCommit={(value) => onBox({ rotation: value })}
-      />
     </div>
   )
 }

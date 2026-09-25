@@ -28,7 +28,7 @@ describe('Phase 7B.4 design objects', () => {
     const text = createTextObject(document)
     const shape = createShapeObject(document)
     expect(text.type).toBe('text')
-    expect(text.content).toBe('Text')
+    expect(text.content).toBe('New Text')
     expect(text.visible).toBe(true)
     expect(text.locked).toBe(false)
     expect(text.zone).toBe('front')

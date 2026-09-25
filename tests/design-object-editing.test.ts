@@ -39,8 +39,8 @@ describe('Phase 7B.7 professional design editing', () => {
     const text = createTextObject(document)
     const image = createImageObject(document, { source: 'a', fileName: 'Resistiq.png' })
     const shape = createShapeObject(document)
-    expect(objectDisplayName(text)).toBe('Text — Text')
-    expect(objectDisplayName(image)).toBe('Logo — Resistiq')
+    expect(objectDisplayName(text)).toBe('Text — New Text')
+    expect(objectDisplayName(image)).toBe('Image — Resistiq')
     expect(objectDisplayName(shape)).toBe('Shape — Rectangle')
   })
 

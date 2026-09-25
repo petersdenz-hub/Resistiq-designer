@@ -66,6 +66,9 @@ async function run() {
   await page.waitForSelector('#design-stage')
   await page.click('button[aria-label="Design"]')
   await page.waitForSelector('[data-design-panel="true"]')
+  await page.waitForSelector('[data-toolbar-mode="empty"]')
+  await page.waitForSelector('[data-empty-state="true"]')
+  await page.waitForSelector('[data-zoom-fit="true"]')
   await page.click('[data-add-design-text="true"]')
   await page.click('[data-add-design-shape="true"]')
   await delay(150)
@@ -85,11 +88,18 @@ async function run() {
   await page.keyboard.up('Shift')
   await delay(150)
 
-  const selectedCount = await page.$eval('[data-edit-toolbar="true"]', (node) =>
-    Number(node.getAttribute('data-selected-count')),
+  const toolbar = await page.$eval('[data-edit-toolbar="true"]', (node) => ({
+    count: Number(node.getAttribute('data-selected-count')),
+    mode: node.getAttribute('data-toolbar-mode'),
+  }))
+  if (toolbar.count < 2 || toolbar.mode !== 'multi') {
+    throw new Error(`Toolbar did not show multi-selection, ${JSON.stringify(toolbar)}`)
+  }
+  const sections = await page.$eval('[data-properties-kind="multi-object"]', (node) =>
+    node.getAttribute('data-property-sections'),
   )
-  if (selectedCount < 2) {
-    throw new Error(`Toolbar did not show multi-selection, count=${selectedCount}`)
+  if (!sections?.includes('align')) {
+    throw new Error('Multi-select properties are missing the align section')
   }
 
   await page.click('[data-action="group"]')
@@ -101,7 +111,6 @@ async function run() {
     throw new Error('Group did not mark both layers')
   }
 
-  await page.click('[data-action="align"]')
   await page.waitForSelector('[data-align="left"]')
   await page.click('[data-align="left"]')
   await delay(100)
@@ -143,7 +152,8 @@ async function run() {
   if (vite) {
     vite.kill('SIGTERM')
   }
-  console.log('Phase 7B.7 browser smoke passed')
+  console.log('Phase 7B.8 browser smoke passed')
+  process.exit(0)
 }
 
 run().catch((error) => {

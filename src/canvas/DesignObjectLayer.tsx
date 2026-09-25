@@ -11,7 +11,7 @@ interface DesignObjectLayerProps {
   objects: DesignObject[]
   selectedObjectId?: string | null
   selectedObjectIds?: string[]
-  onSelect: (objectId: string, event: ReactPointerEvent<SVGElement>) => void
+  onSelect: (objectId: string, event: { shiftKey: boolean }) => void
   onMoveStart: (objectId: string, event: ReactPointerEvent<SVGElement>) => void
 }
 
@@ -53,6 +53,14 @@ export function DesignObjectLayer({
               }
               onSelect(object.id, event)
               onMoveStart(object.id, event)
+            }}
+            onDoubleClick={(event) => {
+              event.stopPropagation()
+              if (object.locked || object.type !== 'text') {
+                return
+              }
+              onSelect(object.id, event)
+              window.dispatchEvent(new CustomEvent('resistq-edit-text', { detail: object.id }))
             }}
           >
             {object.type === 'shape' ? (

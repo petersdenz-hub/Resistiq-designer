@@ -1,10 +1,9 @@
 import { ACCEPTED_IMAGE_ACCEPT } from '@/design/ingestImage'
+import { moveDesignObjectLayer } from '@/design/designObjects'
 import {
   getDesignObjectsInZone,
   objectDisplayName,
-  objectsSharePlacement,
   PLACEMENT_ZONE_LABELS,
-  PLACEMENT_ZONES,
   resolveActiveZone,
   zonesForGarment,
 } from '@/design'
@@ -16,7 +15,6 @@ import { useRef, useState } from 'react'
 export function DesignPanel() {
   const {
     document,
-    selectedObjectId,
     selectedObjectIds,
     selectObject,
     setActiveZone,
@@ -24,32 +22,21 @@ export function DesignPanel() {
     addDesignShape,
     addDesignImageFromFile,
     removeObjectById,
-    removeSelected,
     duplicateSelectedObject,
     updateObjectById,
-    moveSelectedObjectLayer,
-    groupSelectedObjects,
-    ungroupSelectedObjects,
+    applyDocument,
   } = useDesign()
   const { gridVisible, snapToGrid, setGridVisible, setSnapToGrid } = useCanvasEditor()
   const inputRef = useRef<HTMLInputElement>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const zone = resolveActiveZone(document)
-  const garmentZones = new Set(zonesForGarment(document.garmentType))
   const objects = getDesignObjectsInZone(document, zone, true)
-  const selectedObjects = objects.filter((object) => selectedObjectIds.includes(object.id))
-  const canGroup =
-    selectedObjects.filter((object) => !object.locked).length >= 2 &&
-    objectsSharePlacement(selectedObjects.filter((object) => !object.locked))
-  const canUngroup = selectedObjects.some((object) => object.groupId)
+  const garmentZones = zonesForGarment(document.garmentType)
 
   return (
     <div className="space-y-5" data-design-panel="true">
-      <p className="text-[12px] leading-5 text-mute">
-        Artwork lives on the Design Document as design objects. Construction stays on the garment.
-      </p>
-
       <section className="space-y-2" data-design-section="true">
         <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Design</div>
         <div className="grid grid-cols-1 gap-1.5">
@@ -112,17 +99,18 @@ export function DesignPanel() {
         <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Layers</div>
         {objects.length === 0 ? (
           <p className="text-[12px] leading-5 text-mute">
-            No design objects on {PLACEMENT_ZONE_LABELS[zone]} yet.
+            No artwork on {PLACEMENT_ZONE_LABELS[zone]} yet.
           </p>
         ) : (
-          <ul className="space-y-1.5">
+          <ul className="space-y-1">
             {[...objects].reverse().map((object, order) => {
               const selected = selectedObjectIds.includes(object.id)
               const layerOrder = objects.length - order
+              const renaming = editingId === object.id
               return (
                 <li key={object.id}>
                   <div
-                    className={`rounded-md border px-2 py-1.5 ${
+                    className={`flex items-center gap-1 rounded-md border px-1.5 py-1 ${
                       selected ? 'border-accent/50 bg-accent/10' : 'border-line'
                     }`}
                     data-layer-row={object.id}
@@ -130,131 +118,164 @@ export function DesignPanel() {
                     data-layer-order={layerOrder}
                     data-layer-group={object.groupId ?? ''}
                   >
-                    <div className="flex items-start gap-1">
+                    <button
+                      type="button"
+                      data-layer-visibility={object.id}
+                      aria-pressed={object.visible}
+                      title={object.visible ? 'Hide' : 'Show'}
+                      aria-label={object.visible ? 'Hide' : 'Show'}
+                      onClick={() => updateObjectById(object.id, { visible: !object.visible })}
+                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-mute hover:text-ink"
+                    >
+                      {object.visible ? <EyeIcon /> : <EyeOffIcon />}
+                    </button>
+                    {renaming ? (
+                      <input
+                        data-layer-rename={object.id}
+                        autoFocus
+                        defaultValue={objectDisplayName(object)}
+                        onBlur={(event) => {
+                          const name = event.target.value.trim()
+                          if (name) {
+                            updateObjectById(object.id, { name })
+                          }
+                          setEditingId(null)
+                        }}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter') {
+                            event.currentTarget.blur()
+                          }
+                          if (event.key === 'Escape') {
+                            setEditingId(null)
+                          }
+                        }}
+                        className="h-6 min-w-0 flex-1 rounded border border-line bg-studio px-1 text-[12px] text-ink"
+                      />
+                    ) : (
                       <button
                         type="button"
-                        data-layer-visibility={object.id}
-                        aria-pressed={object.visible}
-                        title={object.visible ? 'Hide' : 'Show'}
-                        onClick={() => updateObjectById(object.id, { visible: !object.visible })}
-                        className="mt-0.5 h-6 w-6 shrink-0 rounded border border-line text-[10px] text-mute hover:text-ink"
-                      >
-                        {object.visible ? 'V' : 'H'}
-                      </button>
-                      <button
-                        type="button"
-                        data-layer-lock={object.id}
-                        aria-pressed={object.locked}
-                        title={object.locked ? 'Unlock' : 'Lock'}
-                        onClick={() => updateObjectById(object.id, { locked: !object.locked })}
-                        className="mt-0.5 h-6 w-6 shrink-0 rounded border border-line text-[10px] text-mute hover:text-ink"
-                      >
-                        {object.locked ? 'L' : 'U'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(event) =>
-                          selectObject(object.id, { toggle: event.shiftKey })
-                        }
-                        className="min-w-0 flex-1 text-left text-[12px] text-ink"
+                        onClick={(event) => selectObject(object.id, { toggle: event.shiftKey })}
+                        onDoubleClick={() => setEditingId(object.id)}
+                        className="min-w-0 flex-1 truncate text-left text-[12px] text-ink"
                         data-layer-name={object.id}
-                        title={objectDisplayName(object)}
+                        title={`${objectDisplayName(object)} — double-click to rename`}
                       >
                         {objectDisplayName(object)}
-                        <span className="mt-0.5 block text-[10px] text-mute">
-                          {object.type}
-                          {object.visible ? ' · visible' : ' · hidden'}
-                          {object.locked ? ' · locked' : ''}
-                          {object.groupId ? ' · group' : ''}
-                          {` · ${layerOrder}`}
-                        </span>
                       </button>
-                    </div>
-                    {selected && object.id === selectedObjectId ? (
-                      <div className="mt-1.5 flex flex-wrap gap-1">
-                        <MiniButton onClick={() => moveSelectedObjectLayer('forward')}>Forward</MiniButton>
-                        <MiniButton onClick={() => moveSelectedObjectLayer('backward')}>Back</MiniButton>
-                        <MiniButton onClick={() => moveSelectedObjectLayer('front')}>Front</MiniButton>
-                        <MiniButton onClick={() => moveSelectedObjectLayer('back')}>To back</MiniButton>
-                        <MiniButton onClick={duplicateSelectedObject}>Duplicate</MiniButton>
-                        <MiniButton onClick={() => removeObjectById(object.id)}>Delete</MiniButton>
-                        <MiniButton disabled={!canGroup} onClick={groupSelectedObjects}>
-                          Group
-                        </MiniButton>
-                        <MiniButton disabled={!canUngroup} onClick={ungroupSelectedObjects}>
-                          Ungroup
-                        </MiniButton>
-                      </div>
-                    ) : null}
+                    )}
+                    <button
+                      type="button"
+                      title="Bring forward"
+                      aria-label="Bring forward"
+                      onClick={() => applyDocument(moveDesignObjectLayer(document, object.id, 'forward'))}
+                      className="flex h-6 w-5 items-center justify-center text-[10px] text-mute hover:text-ink"
+                    >
+                      ▲
+                    </button>
+                    <button
+                      type="button"
+                      title="Send backward"
+                      aria-label="Send backward"
+                      onClick={() => applyDocument(moveDesignObjectLayer(document, object.id, 'backward'))}
+                      className="flex h-6 w-5 items-center justify-center text-[10px] text-mute hover:text-ink"
+                    >
+                      ▼
+                    </button>
+                    <button
+                      type="button"
+                      data-layer-lock={object.id}
+                      aria-pressed={object.locked}
+                      title={object.locked ? 'Unlock' : 'Lock'}
+                      aria-label={object.locked ? 'Unlock' : 'Lock'}
+                      onClick={() => updateObjectById(object.id, { locked: !object.locked })}
+                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded ${
+                        object.locked ? 'text-accent' : 'text-mute hover:text-ink'
+                      }`}
+                    >
+                      {object.locked ? <LockIcon /> : <UnlockIcon />}
+                    </button>
                   </div>
+                  {selected && selectedObjectIds.length === 1 ? (
+                    <div className="mt-1 flex flex-wrap gap-1 px-1">
+                      <MiniButton onClick={duplicateSelectedObject}>Duplicate</MiniButton>
+                      <MiniButton onClick={() => removeObjectById(object.id)}>Delete</MiniButton>
+                    </div>
+                  ) : null}
                 </li>
               )
             })}
           </ul>
         )}
-        {selectedObjectIds.length > 1 ? (
-          <button
-            type="button"
-            className="text-[11px] text-mute hover:text-ink"
-            onClick={removeSelected}
-          >
-            Delete selected
-          </button>
-        ) : null}
       </section>
 
       <section className="space-y-2" data-placement-section="true">
-        <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Placement</div>
+        <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Panel</div>
         <div className="flex flex-wrap gap-1">
-          {PLACEMENT_ZONES.map((item) => {
-            const selected = item === zone
-            const typical = garmentZones.has(item)
-            return (
-              <button
-                key={item}
-                type="button"
-                data-zone-option={item}
-                aria-pressed={selected}
-                onClick={() => setActiveZone(item)}
-                className={`h-7 rounded-md border px-2 text-[11px] ${
-                  selected
-                    ? 'border-accent/50 bg-accent/10 text-ink'
-                    : typical
-                      ? 'border-line text-mute hover:text-ink'
-                      : 'border-line/70 text-mute/70 hover:text-ink'
-                }`}
-              >
-                {PLACEMENT_ZONE_LABELS[item]}
-              </button>
-            )
-          })}
+          {garmentZones.map((item) => (
+            <button
+              key={item}
+              type="button"
+              data-zone-option={item}
+              aria-pressed={item === zone}
+              onClick={() => setActiveZone(item)}
+              className={`h-7 rounded-md border px-2 text-[11px] ${
+                item === zone
+                  ? 'border-accent/50 bg-accent/10 text-ink'
+                  : 'border-line text-mute hover:text-ink'
+              }`}
+            >
+              {PLACEMENT_ZONE_LABELS[item]}
+            </button>
+          ))}
         </div>
-        <p className="text-[11px] leading-4 text-mute">
-          Front and back are separate artwork surfaces. Sleeves and legs use a 2D overlay on their panel.
-          Switching zones does not change objects on another zone.
-        </p>
       </section>
     </div>
   )
 }
 
-function MiniButton({
-  children,
-  onClick,
-  disabled,
-}: {
-  children: string
-  onClick: () => void
-  disabled?: boolean
-}) {
+function MiniButton({ children, onClick }: { children: string; onClick: () => void }) {
   return (
     <button
       type="button"
-      disabled={disabled}
       onClick={onClick}
-      className="h-6 rounded border border-line px-1.5 text-[10px] text-mute hover:text-ink disabled:opacity-35"
+      className="h-6 rounded border border-line px-1.5 text-[10px] text-mute hover:text-ink"
     >
       {children}
     </button>
+  )
+}
+
+function EyeIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path d="M1.5 8s2.4-4.5 6.5-4.5S14.5 8 14.5 8s-2.4 4.5-6.5 4.5S1.5 8 1.5 8Z" stroke="currentColor" strokeWidth="1.3" />
+      <circle cx="8" cy="8" r="1.8" stroke="currentColor" strokeWidth="1.3" />
+    </svg>
+  )
+}
+
+function EyeOffIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path d="M2 2.5 14 13.5M4 5.2C2.7 6.2 1.5 8 1.5 8s2.4 4.5 6.5 4.5c1 0 1.9-.2 2.7-.6M12 10.7c1.2-1 2.5-2.7 2.5-2.7S12.1 3.5 8 3.5c-.6 0-1.1.1-1.6.2" stroke="currentColor" strokeWidth="1.3" />
+    </svg>
+  )
+}
+
+function LockIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <rect x="3.5" y="7" width="9" height="6.5" rx="1.2" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M5.5 7V5.2a2.5 2.5 0 0 1 5 0V7" stroke="currentColor" strokeWidth="1.3" />
+    </svg>
+  )
+}
+
+function UnlockIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <rect x="3.5" y="7" width="9" height="6.5" rx="1.2" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M5.5 7V5.2a2.5 2.5 0 0 1 4.6-1.4" stroke="currentColor" strokeWidth="1.3" />
+    </svg>
   )
 }

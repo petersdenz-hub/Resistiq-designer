@@ -1,33 +1,73 @@
 import { getDesignObjectsInZone, getElementsInView, resolveActiveZone } from '@/design/selectors'
-import { PLACEMENT_ZONE_LABELS } from '@/design/designObjects'
+import { PLACEMENT_ZONE_LABELS, zonesForGarment } from '@/design/designObjects'
 import { useDesign } from '@/design/useDesign'
 import { StageViewport } from '@/canvas/StageViewport'
 import { CanvasRulers, RULER_SIZE } from '@/canvas/CanvasRulers'
 import { EditToolbar } from '@/studio/EditToolbar'
+import { fitCanvasZoom } from '@/studio/editorChrome'
 import { useCanvasEditor } from '@/studio/canvasEditorContext'
 import { getGarment } from '@/garments/registry'
-import { SegmentedControl } from '@/ui'
-import { useRef, useState, type PointerEvent as ReactPointerEvent, type WheelEvent } from 'react'
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type WheelEvent } from 'react'
 
 const MIN_ZOOM = 0.4
 const MAX_ZOOM = 2.4
 const ZOOM_STEP = 0.15
 
-export function CanvasStage() {
-  const { document, setActiveView } = useDesign()
+export function CanvasStage({
+  leftOpen,
+  rightOpen,
+  onToggleLeft,
+  onToggleRight,
+}: {
+  leftOpen: boolean
+  rightOpen: boolean
+  onToggleLeft: () => void
+  onToggleRight: () => void
+}) {
+  const { document, setActiveView, setActiveZone } = useDesign()
   const { pan, setPan, gridSize, gridVisible, snapToGrid } = useCanvasEditor()
-  const [zoom, setZoom] = useState(0.9)
+  const [zoom, setZoom] = useState(0.95)
   const [showSafeAreas, setShowSafeAreas] = useState(true)
   const panning = useRef<{ x: number; y: number; panX: number; panY: number } | null>(null)
+  const areaRef = useRef<HTMLDivElement | null>(null)
   const elementCount = getElementsInView(document, document.activeView).length
   const zone = resolveActiveZone(document)
   const objectCount = getDesignObjectsInZone(document, zone, true).length
-  const viewLabel = document.views.find((view) => view.id === document.activeView)?.label ?? 'Front'
+  const visibleCount = getDesignObjectsInZone(document, zone).length
   const garment = getGarment(document.garmentType)
+  const garmentZones = zonesForGarment(document.garmentType)
 
   function clampZoom(value: number) {
     return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Number(value.toFixed(2))))
   }
+
+  function fitGarment() {
+    const area = areaRef.current
+    if (!area) {
+      return
+    }
+    setZoom(
+      fitCanvasZoom(garment.viewBox, {
+        width: area.clientWidth,
+        height: area.clientHeight,
+      }),
+    )
+    setPan({ x: 0, y: 0 })
+  }
+
+  useEffect(() => {
+    const area = areaRef.current
+    if (!area) {
+      return
+    }
+    setZoom(
+      fitCanvasZoom(garment.viewBox, {
+        width: area.clientWidth,
+        height: area.clientHeight,
+      }),
+    )
+    setPan({ x: 0, y: 0 })
+  }, [document.garmentType, garment.viewBox, leftOpen, rightOpen, setPan])
 
   function onWheel(event: WheelEvent<HTMLDivElement>) {
     if (event.ctrlKey || event.metaKey) {
@@ -60,24 +100,42 @@ export function CanvasStage() {
 
   return (
     <section className="relative flex min-w-0 flex-1 flex-col bg-canvas">
-      <div className="pointer-events-none absolute inset-0 opacity-40 [background-image:linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] [background-size:32px_32px]" />
+      <div className="pointer-events-none absolute inset-0 opacity-40 [background-image:linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] [background-size:32px 32px]" />
 
-      <div className="relative z-10 px-4 pt-3">
-        <EditToolbar />
+      <div className="relative z-10 flex items-center gap-2 px-3 pt-2">
+        <button
+          type="button"
+          title={leftOpen ? 'Hide tools' : 'Show tools'}
+          aria-label={leftOpen ? 'Hide tools' : 'Show tools'}
+          onClick={onToggleLeft}
+          className="flex h-7 w-7 items-center justify-center rounded-md border border-line text-[11px] text-mute hover:text-ink"
+        >
+          {leftOpen ? '‹' : '›'}
+        </button>
+        <div className="min-w-0 flex-1">
+          <EditToolbar />
+        </div>
+        <button
+          type="button"
+          title={rightOpen ? 'Hide properties' : 'Show properties'}
+          aria-label={rightOpen ? 'Hide properties' : 'Show properties'}
+          onClick={onToggleRight}
+          className="flex h-7 w-7 items-center justify-center rounded-md border border-line text-[11px] text-mute hover:text-ink"
+        >
+          {rightOpen ? '›' : '‹'}
+        </button>
       </div>
 
       <div
-        className="relative flex flex-1 items-center justify-center overflow-hidden p-8"
+        ref={areaRef}
+        className="relative flex flex-1 items-center justify-center overflow-hidden p-4"
         onWheel={onWheel}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
       >
-        <div
-          className="relative"
-          style={{ transform: `translate(${pan.x}px, ${pan.y}px)` }}
-        >
+        <div className="relative" style={{ transform: `translate(${pan.x}px, ${pan.y}px)` }}>
           <div className="relative" style={{ paddingLeft: RULER_SIZE, paddingTop: RULER_SIZE }}>
             <CanvasRulers
               width={garment.viewBox.width}
@@ -88,25 +146,63 @@ export function CanvasStage() {
             <StageViewport zoom={zoom} showSafeAreas={showSafeAreas} />
           </div>
           {elementCount === 0 && objectCount === 0 ? (
-            <p className="pointer-events-none absolute bottom-6 left-1/2 w-[16rem] -translate-x-1/2 text-center text-[12px] leading-5 text-mute">
-              Choose a placement zone, then add text, a shape, or an image. Construction stays separate.
-            </p>
+            <div
+              className="pointer-events-none absolute bottom-4 left-1/2 w-[16rem] -translate-x-1/2 text-center"
+              data-empty-state="true"
+            >
+              <p className="text-[13px] font-medium text-ink">Start designing</p>
+              <p className="mt-1 text-[12px] leading-5 text-mute">
+                Add text, a logo or a shape to begin.
+              </p>
+            </div>
           ) : null}
         </div>
       </div>
 
-      <div className="relative flex h-14 items-center justify-between border-t border-line bg-panel/90 px-4">
-        <div className="flex items-center gap-3">
-          <div
-            className="rounded-md border border-accent/40 bg-accent/10 px-2 py-1 text-[11px] uppercase tracking-[0.14em] text-ink"
-            data-active-zone={zone}
-          >
-            {PLACEMENT_ZONE_LABELS[zone]}
+      <div className="relative flex min-h-12 flex-wrap items-center justify-between gap-2 border-t border-line bg-panel/90 px-3 py-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="text-[10px] uppercase tracking-[0.14em] text-mute">Garment</div>
+          <div className="flex rounded-md border border-line p-0.5">
+            {document.views.map((view) => (
+              <button
+                key={view.id}
+                type="button"
+                data-garment-view={view.id}
+                aria-pressed={document.activeView === view.id}
+                onClick={() => setActiveView(view.id)}
+                className={`h-7 rounded px-2 text-[11px] ${
+                  document.activeView === view.id
+                    ? 'bg-accent/15 text-ink'
+                    : 'text-mute hover:text-ink'
+                }`}
+              >
+                {view.label}
+              </button>
+            ))}
           </div>
-          <div className="text-[11px] uppercase tracking-[0.14em] text-mute">{viewLabel}</div>
+          <div className="text-[10px] uppercase tracking-[0.14em] text-mute">Panel</div>
+          <div className="flex flex-wrap gap-1">
+            {garmentZones.map((item) => (
+              <button
+                key={item}
+                type="button"
+                data-zone-option={item}
+                aria-pressed={item === zone}
+                onClick={() => setActiveZone(item)}
+                className={`h-7 rounded-md border px-2 text-[11px] ${
+                  item === zone
+                    ? 'border-accent/50 bg-accent/10 text-ink'
+                    : 'border-line text-mute hover:text-ink'
+                }`}
+              >
+                {PLACEMENT_ZONE_LABELS[item]}
+              </button>
+            ))}
+          </div>
           <button
             type="button"
             aria-pressed={showSafeAreas}
+            title="Toggle safe area"
             onClick={() => setShowSafeAreas((value) => !value)}
             className={`h-7 rounded-md border px-2 text-[11px] ${
               showSafeAreas
@@ -121,32 +217,41 @@ export function CanvasStage() {
             {snapToGrid ? ' · snap' : ''}
           </span>
         </div>
-        <SegmentedControl
-          className="w-auto shrink-0"
-          value={document.activeView}
-          options={document.views.map((view) => ({ value: view.id, label: view.label }))}
-          onChange={setActiveView}
-        />
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" data-zoom-controls="true">
           <button
             type="button"
             className="flex h-7 w-7 items-center justify-center rounded-md border border-line text-ink hover:bg-panel-hover"
             onClick={() => setZoom((value) => clampZoom(value - ZOOM_STEP))}
             aria-label="Zoom out"
+            title="Zoom out"
           >
             −
           </button>
-          <span className="w-12 text-center text-[12px] text-mute">{Math.round(zoom * 100)}%</span>
+          <span className="w-12 text-center text-[12px] text-mute" data-zoom-value="true">
+            {Math.round(zoom * 100)}%
+          </span>
           <button
             type="button"
             className="flex h-7 w-7 items-center justify-center rounded-md border border-line text-ink hover:bg-panel-hover"
             onClick={() => setZoom((value) => clampZoom(value + ZOOM_STEP))}
             aria-label="Zoom in"
+            title="Zoom in"
           >
             +
           </button>
+          <button
+            type="button"
+            data-zoom-fit="true"
+            title="Fit garment to canvas"
+            aria-label="Fit garment to canvas"
+            onClick={fitGarment}
+            className="h-7 rounded-md border border-line px-2 text-[11px] text-mute hover:text-ink"
+          >
+            Fit
+          </button>
         </div>
       </div>
+      <span className="sr-only" data-visible-object-count={visibleCount} />
     </section>
   )
 }

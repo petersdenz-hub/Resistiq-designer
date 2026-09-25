@@ -39,9 +39,9 @@ export function TransformControls({
   onResizeStart,
   onRotateStart,
 }: TransformControlsProps) {
-  const handleSize = 9 / zoom
-  const stroke = 1.25 / zoom
-  const rotateOffset = 28 / zoom
+  const handleSize = 10 / zoom
+  const stroke = 1.55 / zoom
+  const rotateOffset = 30 / zoom
   const center = getCenter(element)
   const top = handleLocalPoint(element, 'n')
 
@@ -56,7 +56,8 @@ export function TransformControls({
         y={element.y}
         width={element.width}
         height={element.height}
-        fill="none"
+        data-selection-bounds="true"
+        fill="rgba(201,163,106,0.05)"
         stroke="#c9a36a"
         strokeWidth={stroke}
         pointerEvents="none"
