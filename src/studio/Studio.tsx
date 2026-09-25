@@ -50,12 +50,6 @@ export function Studio({ onClose, onNew }: StudioProps) {
   }, [])
 
   useEffect(() => {
-    if (rightOverlay && selectedObjectId) {
-      setRightOpen(true)
-    }
-  }, [rightOverlay, selectedObjectId])
-
-  useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target
       const typing =
