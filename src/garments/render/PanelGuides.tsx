@@ -1,5 +1,6 @@
 import type { DesignSafeArea } from '@/design/types'
 import type { PointerEvent as ReactPointerEvent } from 'react'
+import { regionForPanel } from '../colorRegions'
 import { localRectToCanvas } from '../coordinates'
 import {
   isPrintablePanel,
@@ -9,9 +10,11 @@ import {
   panelDesignZones,
   panelDisplayLabel,
 } from '../model'
+import { panelSilhouettePaths } from '../topology'
 import type { GarmentPanelDefinition } from '../types'
 
 interface PanelGuidesProps {
+  garmentType?: string
   panels: GarmentPanelDefinition[]
   safeAreas: DesignSafeArea[]
   activePanelId: string
@@ -26,6 +29,7 @@ interface PanelGuidesProps {
 }
 
 export function PanelGuides({
+  garmentType,
   panels,
   safeAreas,
   activePanelId,
@@ -42,6 +46,8 @@ export function PanelGuides({
       {panels.map((panel) => {
         const active = panel.id === activePanelId
         const panelSelected = active && selectionKind === 'panel'
+        const region = garmentType ? regionForPanel(garmentType, panel.id) : null
+        const silhouettes = panelSilhouettePaths(panel)
         const safe = showSafeAreas
           ? (safeAreas.find((area) => area.panelId === panel.id) ?? null)
           : null
@@ -66,10 +72,52 @@ export function PanelGuides({
           <g
             key={panel.id}
             data-panel-guide={panel.id}
+            data-region-id={region?.id ?? ''}
+            data-region-selected={panelSelected ? 'true' : 'false'}
             data-panel-selected={panelSelected ? 'true' : 'false'}
             data-panel-printable={isPrintablePanel(panel) ? 'true' : 'false'}
           >
-            {showGuides || panelSelected || active ? (
+            {silhouettes.length > 0 ? (
+              <g
+                data-region-boundary={panel.id}
+                onPointerDown={(event) => {
+                  event.stopPropagation()
+                  if (onPanelPointerDown) {
+                    onPanelPointerDown(panel.id, event)
+                    return
+                  }
+                  onSelectPanel(panel.id)
+                }}
+                style={{ cursor: 'pointer' }}
+              >
+                {silhouettes.map((path) => (
+                  <path
+                    key={path}
+                    d={path}
+                    fill={
+                      panelSelected
+                        ? 'rgba(201,163,106,0.10)'
+                        : active
+                          ? 'rgba(201,163,106,0.05)'
+                          : showGuides
+                            ? 'rgba(238,240,244,0.02)'
+                            : 'transparent'
+                    }
+                    stroke={
+                      panelSelected
+                        ? 'rgba(201,163,106,1)'
+                        : active
+                          ? 'rgba(201,163,106,0.7)'
+                          : showGuides
+                            ? 'rgba(238,240,244,0.45)'
+                            : 'transparent'
+                    }
+                    strokeDasharray={panelSelected ? '0' : '4 3'}
+                    strokeWidth={panelSelected ? 2 : active ? 1.4 : 1.1}
+                  />
+                ))}
+              </g>
+            ) : showGuides || panelSelected || active ? (
               <rect
                 x={panel.frame.x}
                 y={panel.frame.y}

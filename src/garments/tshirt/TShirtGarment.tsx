@@ -3,52 +3,21 @@ import { clothFor } from '../render/cloth'
 import { FabricFinish, FabricSheen, HemBand } from '../render/constructionDraw'
 import { constructionStyle, cuffStyle, fabricFilter } from '../render/constructionState'
 import { ClothGradient, FlatPart, FlatShadow, Fold, Seam, Stitch } from '../render/flatStyle'
-
-/**
- * Fashion-flat T-shirt. Body, sleeves, and collar are separate parts so
- * panels can sit on real garment structure.
- *
- * Coordinates assume viewBox 560×640, center x=280.
- */
-
-const BODY_FRONT =
-  'M176 228 L188 486 C188 500 200 508 216 508 L344 508 C360 508 372 500 372 486 L384 228 L398 148 L324 148 C314 184 246 184 236 148 L162 148 L176 228 Z'
-
-const BODY_FRONT_VNECK =
-  'M176 228 L188 486 C188 500 200 508 216 508 L344 508 C360 508 372 500 372 486 L384 228 L398 148 L324 148 L280 214 L236 148 L162 148 L176 228 Z'
-
-const BODY_BACK =
-  'M176 228 L188 486 C188 500 200 508 216 508 L344 508 C360 508 372 500 372 486 L384 228 L398 148 L318 148 C310 164 250 164 242 148 L162 148 L176 228 Z'
-
-const RIGHT_SLEEVE =
-  'M162 150 C118 158 86 170 66 180 C58 200 70 220 84 228 L176 226 C170 198 166 168 162 150 Z'
-
-const LEFT_SLEEVE =
-  'M398 150 C442 158 474 170 494 180 C502 200 490 220 476 228 L384 226 C390 198 394 168 398 150 Z'
-
-const COLLAR_CREW_FRONT =
-  'M228 146 C240 188 320 188 332 146 L324 148 C314 184 246 184 236 148 Z'
-
-const COLLAR_CREW_BACK =
-  'M234 146 C244 166 316 166 326 146 L318 148 C310 164 250 164 242 148 Z'
-
-const COLLAR_RIB_FRONT =
-  'M222 140 C236 196 324 196 338 140 L324 148 C314 184 246 184 236 148 Z'
-
-const COLLAR_RIB_BACK =
-  'M228 140 C240 174 320 174 332 140 L318 148 C310 164 250 164 242 148 Z'
-
-const COLLAR_STAND_FRONT =
-  'M216 124 L236 168 L324 168 L344 124 C330 112 230 112 216 124 Z'
-
-const COLLAR_STAND_BACK =
-  'M224 126 L240 164 L320 164 L336 126 C324 116 236 116 224 126 Z'
-
-const COLLAR_VNECK_FRONT =
-  'M228 146 L280 208 L332 146 L324 148 L280 196 L236 148 Z'
-
-const COLLAR_VNECK_BACK =
-  'M234 146 C244 166 316 166 326 146 L318 148 C310 164 250 164 242 148 Z'
+import {
+  BODY_BACK,
+  BODY_FRONT,
+  BODY_FRONT_VNECK,
+  COLLAR_CREW_BACK,
+  COLLAR_CREW_FRONT,
+  COLLAR_RIB_BACK,
+  COLLAR_RIB_FRONT,
+  COLLAR_STAND_BACK,
+  COLLAR_STAND_FRONT,
+  COLLAR_VNECK_BACK,
+  COLLAR_VNECK_FRONT,
+  LEFT_SLEEVE,
+  RIGHT_SLEEVE,
+} from './geometry'
 
 export function TShirtGarment({ viewId, bodyColor, panelColors, construction }: GarmentRenderProps) {
   const isBack = viewId === 'back'
@@ -56,7 +25,9 @@ export function TShirtGarment({ viewId, bodyColor, panelColors, construction }: 
   const rightId = isBack ? 'right_sleeve_back' : 'right_sleeve'
   const leftId = isBack ? 'left_sleeve_back' : 'left_sleeve'
   const collarId = isBack ? 'collar_back' : 'collar'
+  const hemId = isBack ? 'hem_back' : 'hem'
   const body = clothFor(bodyColor, panelColors, bodyId)
+  const hem = clothFor(bodyColor, panelColors, hemId)
   const right = clothFor(bodyColor, panelColors, rightId)
   const left = clothFor(bodyColor, panelColors, leftId)
   const collar = clothFor(bodyColor, panelColors, collarId)
@@ -96,7 +67,7 @@ export function TShirtGarment({ viewId, bodyColor, panelColors, construction }: 
       <FabricFinish id={id} materialId={materialId} />
 
       <g filter={fabricFilter(id, materialId) ?? `url(#${id}-soft)`} data-garment-template="tshirt">
-        <g data-garment-part={rightId} data-panel-color={right.cloth}>
+        <g data-garment-part={rightId} data-region-id="right-sleeve" data-panel-color={right.cloth}>
           <FlatPart d={RIGHT_SLEEVE} fill={`url(#${id}-sleeve-r)`} stroke={right.stitch} />
           {sleeveHem ? (
             <path
@@ -112,7 +83,7 @@ export function TShirtGarment({ viewId, bodyColor, panelColors, construction }: 
           ) : null}
         </g>
 
-        <g data-garment-part={leftId} data-panel-color={left.cloth}>
+        <g data-garment-part={leftId} data-region-id="left-sleeve" data-panel-color={left.cloth}>
           <FlatPart d={LEFT_SLEEVE} fill={`url(#${id}-sleeve-l)`} stroke={left.stitch} />
           {sleeveHem ? (
             <path
@@ -128,7 +99,7 @@ export function TShirtGarment({ viewId, bodyColor, panelColors, construction }: 
           ) : null}
         </g>
 
-        <g data-garment-part={bodyId} data-panel-color={body.cloth}>
+        <g data-garment-part={bodyId} data-region-id={isBack ? 'back-body' : 'front-body'} data-panel-color={body.cloth}>
           <FlatPart
             d={isBack ? BODY_BACK : collarStyle === 'vneck' ? BODY_FRONT_VNECK : BODY_FRONT}
             fill={`url(#${id}-body)`}
@@ -144,11 +115,12 @@ export function TShirtGarment({ viewId, bodyColor, panelColors, construction }: 
         <Fold d="M196 250 C220 246 340 246 364 250" color={body.highlight} />
         <Fold d="M80 188 C110 204 148 216 168 220" color={right.highlight} />
         <Fold d="M480 188 C450 204 412 216 392 220" color={left.highlight} />
-        {hemStyle ? <HemBand style={hemStyle} y={500} left={216} right={344} color={body} /> : null}
+        {hemStyle ? <HemBand style={hemStyle} y={500} left={216} right={344} color={hem} partId={hemId} /> : null}
 
         {collarStyle ? (
           <g
             data-garment-part={collarId}
+            data-region-id="collar"
             data-panel-color={collar.cloth}
             data-construction-kind="collar"
             data-construction-style={collarStyle}

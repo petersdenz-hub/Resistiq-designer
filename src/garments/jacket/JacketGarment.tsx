@@ -1,6 +1,7 @@
 import type { GarmentRenderProps } from '../types'
-import { clothFor, clothShades } from '../render/cloth'
+import { clothFor } from '../render/cloth'
 import {
+  CuffCap,
   FabricFinish,
   FabricSheen,
   HemBand,
@@ -16,55 +17,25 @@ import {
   pocketStyle,
 } from '../render/constructionState'
 import { ClothGradient, FlatPart, FlatShadow, Fold, PanelBoundary, Seam, Stitch } from '../render/flatStyle'
-
-/**
- * Fashion-flat outdoor jacket. Front is two body panels plus a zipper.
- * The zipper is garment structure, not an editable design element.
- */
-
-const FRONT_LEFT =
-  'M162 206 L172 516 C172 528 186 538 208 538 L274 538 L274 166 L148 166 L162 206 Z'
-
-const FRONT_LEFT_VNECK =
-  'M162 206 L172 516 C172 528 186 538 208 538 L274 538 L274 200 L228 166 L148 166 L162 206 Z'
-
-const FRONT_RIGHT =
-  'M398 206 L388 516 C388 528 374 538 352 538 L286 538 L286 166 L412 166 L398 206 Z'
-
-const FRONT_RIGHT_VNECK =
-  'M398 206 L388 516 C388 528 374 538 352 538 L286 538 L286 200 L332 166 L412 166 L398 206 Z'
-
-const BODY_BACK =
-  'M162 206 L172 516 C172 528 186 538 208 538 L352 538 C374 538 388 528 388 516 L398 206 L412 160 L326 160 C316 182 244 182 234 160 L148 160 L162 206 Z'
-
-const RIGHT_SLEEVE =
-  'M148 166 C96 178 58 194 44 202 C38 236 54 300 68 332 C104 322 146 310 176 302 L164 208 L148 166 Z'
-const LEFT_SLEEVE =
-  'M412 166 C464 178 502 194 516 202 C522 236 506 300 492 332 C456 322 414 310 384 302 L396 208 L412 166 Z'
-
-const COLLAR_STAND_FRONT =
-  'M208 126 L230 166 L330 166 L352 126 C338 114 222 114 208 126 Z'
-
-const COLLAR_STAND_BACK =
-  'M218 128 L236 162 L324 162 L342 128 C330 118 230 118 218 128 Z'
-
-const COLLAR_CREW_FRONT =
-  'M226 146 C238 184 322 184 334 146 L324 160 C314 176 246 176 236 160 Z'
-
-const COLLAR_CREW_BACK =
-  'M232 146 C242 164 318 164 328 146 L320 160 C312 170 248 170 240 160 Z'
-
-const COLLAR_RIB_FRONT =
-  'M214 134 C230 186 330 186 346 134 L330 166 L230 166 Z'
-
-const COLLAR_RIB_BACK =
-  'M222 134 C236 170 324 170 338 134 L324 162 L236 162 Z'
-
-const COLLAR_VNECK_FRONT =
-  'M226 146 L280 198 L334 146 L324 160 L280 186 L236 160 Z'
-
-const COLLAR_VNECK_BACK =
-  'M232 146 C242 164 318 164 328 146 L320 160 C312 170 248 170 240 160 Z'
+import {
+  BODY_BACK,
+  COLLAR_CREW_BACK,
+  COLLAR_CREW_FRONT,
+  COLLAR_RIB_BACK,
+  COLLAR_RIB_FRONT,
+  COLLAR_STAND_BACK,
+  COLLAR_STAND_FRONT,
+  COLLAR_VNECK_BACK,
+  COLLAR_VNECK_FRONT,
+  FRONT_LEFT,
+  FRONT_LEFT_VNECK,
+  FRONT_RIGHT,
+  FRONT_RIGHT_VNECK,
+  LEFT_CUFF,
+  LEFT_SLEEVE,
+  RIGHT_CUFF,
+  RIGHT_SLEEVE,
+} from './geometry'
 
 export function JacketGarment({ viewId, bodyColor, panelColors, construction }: GarmentRenderProps) {
   const isBack = viewId === 'back'
@@ -77,7 +48,13 @@ export function JacketGarment({ viewId, bodyColor, panelColors, construction }: 
   const right = clothFor(bodyColor, panelColors, rightId)
   const left = clothFor(bodyColor, panelColors, leftId)
   const collar = clothFor(bodyColor, panelColors, collarId)
-  const zipper = clothShades(bodyColor)
+  const cuffRightId = isBack ? 'cuff_left_back' : 'cuff_right'
+  const cuffLeftId = isBack ? 'cuff_right_back' : 'cuff_left'
+  const cuffRight = clothFor(bodyColor, panelColors, cuffRightId)
+  const cuffLeft = clothFor(bodyColor, panelColors, cuffLeftId)
+  const zipper = clothFor(bodyColor, panelColors, 'zipper')
+  const pocketLeft = clothFor(bodyColor, panelColors, 'pocket_left')
+  const pocketRight = clothFor(bodyColor, panelColors, 'pocket_right')
   const id = `jacket-${viewId}`
   const collarStyle = construction ? constructionStyle(construction, 'collar') : 'stand'
   const zipperStyle = construction ? constructionStyle(construction, 'zipper') : 'center_front'
@@ -119,54 +96,52 @@ export function JacketGarment({ viewId, bodyColor, panelColors, construction }: 
       <FabricFinish id={id} materialId={materialId} />
 
       <g filter={fabricFilter(id, materialId) ?? `url(#${id}-soft)`} data-garment-template="jacket">
-        <g data-garment-part={rightId} data-panel-color={right.cloth}>
+        <g data-garment-part={rightId} data-region-id="right-sleeve" data-panel-color={right.cloth}>
           <FlatPart d={RIGHT_SLEEVE} fill={`url(#${id}-sleeve-r)`} stroke={right.stitch} />
           {cuffs ? (
-            <path
-              d="M70 328 L176 302"
-              fill="none"
-              stroke={cuffs === 'rib' ? right.rib : right.clothDeep}
-              strokeWidth={cuffs === 'rib' ? 12 : 8}
-              strokeLinecap="round"
-              opacity="0.5"
-              data-construction-kind="cuff"
-              data-construction-style={cuffs}
-            />
+            <g data-garment-part={cuffRightId} data-region-id="right-cuff" data-panel-color={cuffRight.cloth}>
+              <CuffCap
+                d={RIGHT_CUFF}
+                style={cuffs}
+                color={cuffRight}
+                stitchPath="M52 338 H86"
+                ribBox={{ x: 42, y: 312, width: 50, height: 52 }}
+              />
+            </g>
           ) : null}
           <Seam d="M86 248 L156 236" color={right.stitch} width={1} opacity={0.22} />
         </g>
-        <g data-garment-part={leftId} data-panel-color={left.cloth}>
+        <g data-garment-part={leftId} data-region-id="left-sleeve" data-panel-color={left.cloth}>
           <FlatPart d={LEFT_SLEEVE} fill={`url(#${id}-sleeve-l)`} stroke={left.stitch} />
           {cuffs ? (
-            <path
-              d="M384 302 L490 328"
-              fill="none"
-              stroke={cuffs === 'rib' ? left.rib : left.clothDeep}
-              strokeWidth={cuffs === 'rib' ? 12 : 8}
-              strokeLinecap="round"
-              opacity="0.5"
-              data-construction-kind="cuff"
-              data-construction-style={cuffs}
-            />
+            <g data-garment-part={cuffLeftId} data-region-id="left-cuff" data-panel-color={cuffLeft.cloth}>
+              <CuffCap
+                d={LEFT_CUFF}
+                style={cuffs}
+                color={cuffLeft}
+                stitchPath="M474 338 H508"
+                ribBox={{ x: 468, y: 312, width: 50, height: 52 }}
+              />
+            </g>
           ) : null}
           <Seam d="M474 248 L404 236" color={left.stitch} width={1} opacity={0.22} />
         </g>
 
         {isBack ? (
-          <g data-garment-part="back_body" data-panel-color={back.cloth}>
+          <g data-garment-part="back_body" data-region-id="back" data-panel-color={back.cloth}>
             <FlatPart d={BODY_BACK} fill={`url(#${id}-body-b)`} stroke={back.stitch} />
             <Seam d="M196 176 H364" color={back.stitch} width={1.1} opacity={0.28} />
           </g>
         ) : (
           <>
-            <g data-garment-part="front_body_left" data-panel-color={leftBody.cloth}>
+            <g data-garment-part="front_body_left" data-region-id="front-left" data-panel-color={leftBody.cloth}>
               <FlatPart
                 d={collarStyle === 'vneck' ? FRONT_LEFT_VNECK : FRONT_LEFT}
                 fill={`url(#${id}-body-l)`}
                 stroke={leftBody.stitch}
               />
             </g>
-            <g data-garment-part="front_body_right" data-panel-color={rightBody.cloth}>
+            <g data-garment-part="front_body_right" data-region-id="front-right" data-panel-color={rightBody.cloth}>
               <FlatPart
                 d={collarStyle === 'vneck' ? FRONT_RIGHT_VNECK : FRONT_RIGHT}
                 fill={`url(#${id}-body-r)`}
@@ -187,9 +162,11 @@ export function JacketGarment({ viewId, bodyColor, panelColors, construction }: 
               <PocketSet
                 style={pocket}
                 kind="jacket"
-                fill={leftBody.detail}
-                stitch={leftBody.stitch}
-                highlight={leftBody.highlight}
+                fill={pocketLeft.detail}
+                leftFill={pocketLeft.detail}
+                rightFill={pocketRight.detail}
+                stitch={pocketLeft.stitch}
+                highlight={pocketLeft.highlight}
               />
             ) : null}
           </>
@@ -206,6 +183,7 @@ export function JacketGarment({ viewId, bodyColor, panelColors, construction }: 
         {collarStyle ? (
           <g
             data-garment-part={collarId}
+            data-region-id="collar"
             data-panel-color={collar.cloth}
             data-construction-kind="collar"
             data-construction-style={collarStyle}

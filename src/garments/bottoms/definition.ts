@@ -1,6 +1,8 @@
 import { garmentCapabilities } from '../capabilities'
+import { attachSilhouettes } from '../topology'
 import { FRONT_BACK_VIEWS, STANDARD_VIEWBOX } from '../types'
 import type { GarmentDefinition, GarmentPanelDefinition } from '../types'
+import { bottomsPaths } from './geometry'
 
 export type BottomsKind = 'pants' | 'shorts'
 
@@ -89,6 +91,78 @@ export function createBottomsMeta(kind: BottomsKind): Omit<GarmentDefinition, 'r
       frame: { x: 288, y: 108, width: 108, height: legFrameHeight },
       safeArea: legPrint(`${kind}_right_leg_back_print`, printHeight),
     },
+    {
+      id: 'pocket_left',
+      label: 'Left pocket',
+      viewId: 'front',
+      type: 'pocket',
+      printable: false,
+      local: { width: 50, height: 74 },
+      frame: { x: 196, y: 128, width: 50, height: 80 },
+    },
+    {
+      id: 'pocket_right',
+      label: 'Right pocket',
+      viewId: 'front',
+      type: 'pocket',
+      printable: false,
+      local: { width: 50, height: 74 },
+      frame: { x: 314, y: 128, width: 50, height: 80 },
+    },
+    {
+      id: 'pocket_left_back',
+      label: 'Left pocket',
+      viewId: 'back',
+      type: 'pocket',
+      printable: false,
+      local: { width: 72, height: 78 },
+      frame: { x: 196, y: 150, width: 72, height: 78 },
+    },
+    {
+      id: 'pocket_right_back',
+      label: 'Right pocket',
+      viewId: 'back',
+      type: 'pocket',
+      printable: false,
+      local: { width: 72, height: 78 },
+      frame: { x: 294, y: 150, width: 72, height: 78 },
+    },
+    {
+      id: 'inseam',
+      label: 'Inseam',
+      viewId: 'front',
+      type: 'seam',
+      printable: false,
+      local: { width: 40, height: long ? 436 : 192 },
+      frame: { x: 254, y: 110, width: 52, height: long ? 436 : 192 },
+    },
+    {
+      id: 'inseam_back',
+      label: 'Inseam',
+      viewId: 'back',
+      type: 'seam',
+      printable: false,
+      local: { width: 40, height: long ? 436 : 192 },
+      frame: { x: 254, y: 110, width: 52, height: long ? 436 : 192 },
+    },
+    {
+      id: 'outseam',
+      label: 'Outseam',
+      viewId: 'front',
+      type: 'seam',
+      printable: false,
+      local: { width: 40, height: long ? 436 : 192 },
+      frame: { x: 164, y: 110, width: 232, height: long ? 436 : 192 },
+    },
+    {
+      id: 'outseam_back',
+      label: 'Outseam',
+      viewId: 'back',
+      type: 'seam',
+      printable: false,
+      local: { width: 40, height: long ? 436 : 192 },
+      frame: { x: 164, y: 110, width: 232, height: long ? 436 : 192 },
+    },
   ]
 
   return {
@@ -98,7 +172,7 @@ export function createBottomsMeta(kind: BottomsKind): Omit<GarmentDefinition, 'r
     category: 'bottoms',
     views: FRONT_BACK_VIEWS,
     viewBox: STANDARD_VIEWBOX,
-    panels,
+    panels: attachSilhouettes(panels, bottomsPaths(kind)),
     preview: { viewId: 'front' },
     supportedDesignZones: ['front', 'back', 'left-leg', 'right-leg'],
     defaults: { bodyColor: long ? '#2a3140' : '#4a5568' },

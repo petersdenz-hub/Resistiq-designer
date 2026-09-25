@@ -12,11 +12,14 @@ export type GarmentPanelType =
   | 'cuff'
   | 'leg'
   | 'waistband'
+  | 'hem'
   | 'structure'
   | 'pocket'
   | 'chest'
   | 'lower_sleeve'
   | 'side_panel'
+  | 'zipper'
+  | 'seam'
 
 export type GarmentPanelSide = 'front' | 'back' | 'left' | 'right' | 'center'
 
@@ -97,6 +100,11 @@ export interface GarmentPanelDefinition {
   designZones?: DesignZoneDefinition[]
   /** Optional design/safe area for this panel. */
   safeArea?: GarmentSafeAreaDefinition
+  /**
+   * True panel silhouette in garment viewBox coordinates.
+   * Used for selection outlines and artwork clipping — never a print rectangle.
+   */
+  silhouette?: string | string[]
 }
 
 export interface GarmentDefaults {
@@ -108,6 +116,8 @@ export interface GarmentRenderProps {
   bodyColor: string
   /** Optional per-panel overrides. Missing ids use bodyColor. */
   panelColors?: Record<string, string>
+  /** Optional per-panel fabric. Missing ids use the garment material. */
+  panelMaterials?: Record<string, string>
   /**
    * Resolved construction from the Design Document.
    * 7B.1 stores this; renderers still use the current hardcoded flats.

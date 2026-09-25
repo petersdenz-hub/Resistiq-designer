@@ -1,6 +1,8 @@
 import { garmentCapabilities } from '../capabilities'
+import { attachSilhouettes } from '../topology'
 import { FRONT_BACK_VIEWS, STANDARD_VIEWBOX } from '../types'
 import type { GarmentDefinition, GarmentPanelDefinition } from '../types'
+import { HOODIE_PATHS } from './geometry'
 
 const CHEST_PRINT = {
   id: 'hoodie_chest_print',
@@ -151,6 +153,33 @@ export const HOODIE_PANELS: GarmentPanelDefinition[] = [
     local: { width: 60, height: 40 },
     frame: { x: 26, y: 356, width: 58, height: 52 },
   },
+  {
+    id: 'waistband',
+    label: 'Waistband',
+    viewId: 'front',
+    type: 'waistband',
+    printable: false,
+    local: { width: 128, height: 16 },
+    frame: { x: 216, y: 524, width: 128, height: 16 },
+  },
+  {
+    id: 'waistband_back',
+    label: 'Waistband',
+    viewId: 'back',
+    type: 'waistband',
+    printable: false,
+    local: { width: 128, height: 16 },
+    frame: { x: 216, y: 524, width: 128, height: 16 },
+  },
+  {
+    id: 'pocket',
+    label: 'Kangaroo pocket',
+    viewId: 'front',
+    type: 'pocket',
+    printable: false,
+    local: { width: 132, height: 126 },
+    frame: { x: 214, y: 328, width: 132, height: 126 },
+  },
 ]
 
 export function hoodieDefaultPanelId(viewId: string): string {
@@ -164,7 +193,7 @@ export const hoodieMeta = {
   category: 'tops',
   views: FRONT_BACK_VIEWS,
   viewBox: STANDARD_VIEWBOX,
-  panels: HOODIE_PANELS,
+  panels: attachSilhouettes(HOODIE_PANELS, HOODIE_PATHS),
   preview: { viewId: 'front' },
   supportedDesignZones: ['front', 'back', 'left-sleeve', 'right-sleeve'],
   defaults: { bodyColor: '#3a4150' },

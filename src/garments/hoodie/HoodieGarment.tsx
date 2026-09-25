@@ -9,33 +9,16 @@ import {
   pocketStyle,
 } from '../render/constructionState'
 import { ClothGradient, FlatPart, FlatShadow, Fold, Seam, Stitch } from '../render/flatStyle'
-
-/**
- * Fashion-flat hoodie. Hood, body, sleeves, and cuffs are separate parts.
- * The kangaroo pocket is garment structure, not a design element.
- */
-
-const BODY_FRONT =
-  'M168 224 L178 508 C178 526 194 540 216 540 L344 540 C366 540 382 526 382 508 L392 224 L408 186 L330 186 C318 220 242 220 230 186 L152 186 L168 224 Z'
-
-const BODY_BACK =
-  'M168 224 L178 508 C178 526 194 540 216 540 L344 540 C366 540 382 526 382 508 L392 224 L408 186 L326 186 C316 206 244 206 234 186 L152 186 L168 224 Z'
-
-const HOOD_SHELL =
-  'M172 188 C160 118 176 58 280 52 C384 58 400 118 388 188 L348 204 C340 108 220 108 212 204 Z'
-
-const HOOD_BACK =
-  'M172 188 C160 118 176 56 280 50 C384 56 400 118 388 188 L346 202 C338 112 222 112 214 202 Z'
-
-const RIGHT_SLEEVE =
-  'M152 186 C110 198 64 216 40 230 C34 262 44 328 52 352 L70 360 C100 350 140 338 172 328 L166 224 L152 186 Z'
-const LEFT_SLEEVE =
-  'M408 186 C450 198 496 216 520 230 C526 262 516 328 508 352 L490 360 C460 350 420 338 388 328 L394 224 L408 186 Z'
-
-const RIGHT_CUFF =
-  'M40 348 C32 352 30 366 34 380 L46 404 C52 412 68 412 74 402 L80 376 C82 364 70 350 56 348 Z'
-const LEFT_CUFF =
-  'M520 348 C528 352 530 366 526 380 L514 404 C508 412 492 412 486 402 L480 376 C478 364 490 350 504 348 Z'
+import {
+  BODY_BACK,
+  BODY_FRONT,
+  HOOD_BACK,
+  HOOD_SHELL,
+  LEFT_CUFF,
+  LEFT_SLEEVE,
+  RIGHT_CUFF,
+  RIGHT_SLEEVE,
+} from './geometry'
 
 export function HoodieGarment({ viewId, bodyColor, panelColors, construction }: GarmentRenderProps) {
   const isBack = viewId === 'back'
@@ -51,6 +34,9 @@ export function HoodieGarment({ viewId, bodyColor, panelColors, construction }: 
   const left = clothFor(bodyColor, panelColors, leftId)
   const cuffRight = clothFor(bodyColor, panelColors, cuffRightId)
   const cuffLeft = clothFor(bodyColor, panelColors, cuffLeftId)
+  const waistId = isBack ? 'waistband_back' : 'waistband'
+  const waist = clothFor(bodyColor, panelColors, waistId)
+  const pocketCloth = clothFor(bodyColor, panelColors, 'pocket')
   const id = `hoodie-${viewId}`
   const hoodStyle = construction ? constructionStyle(construction, 'hood') : 'pullover'
   const hoodOpening = construction ? constructionVariant(construction, 'hood', 'standard') : 'standard'
@@ -74,16 +60,17 @@ export function HoodieGarment({ viewId, bodyColor, panelColors, construction }: 
       <FabricFinish id={id} materialId={materialId} />
 
       <g filter={fabricFilter(id, materialId) ?? `url(#${id}-soft)`} data-garment-template="hoodie">
-        <g data-garment-part={rightId} data-panel-color={right.cloth}>
+        <g data-garment-part={rightId} data-region-id="right-sleeve" data-panel-color={right.cloth}>
           <FlatPart d={RIGHT_SLEEVE} fill={`url(#${id}-sleeve-r)`} stroke={right.stitch} />
         </g>
-        <g data-garment-part={leftId} data-panel-color={left.cloth}>
+        <g data-garment-part={leftId} data-region-id="left-sleeve" data-panel-color={left.cloth}>
           <FlatPart d={LEFT_SLEEVE} fill={`url(#${id}-sleeve-l)`} stroke={left.stitch} />
         </g>
 
         {hoodStyle ? (
           <g
             data-garment-part={hoodId}
+            data-region-id="hood"
             data-panel-color={hood.cloth}
             data-construction-kind="hood"
             data-construction-style={hoodStyle}
@@ -148,7 +135,7 @@ export function HoodieGarment({ viewId, bodyColor, panelColors, construction }: 
           </g>
         )}
 
-        <g data-garment-part={bodyId} data-panel-color={body.cloth}>
+        <g data-garment-part={bodyId} data-region-id={isBack ? 'back-body' : 'front-body'} data-panel-color={body.cloth}>
           <FlatPart d={isBack ? BODY_BACK : BODY_FRONT} fill={`url(#${id}-body)`} stroke={body.stitch} />
         </g>
         <Seam d="M168 224 L152 186" color={body.stitch} width={1.15} opacity={0.34} />
@@ -161,7 +148,7 @@ export function HoodieGarment({ viewId, bodyColor, panelColors, construction }: 
 
         {cuffs ? (
           <>
-            <g data-garment-part={cuffRightId} data-panel-color={cuffRight.cloth}>
+            <g data-garment-part={cuffRightId} data-region-id="right-cuff" data-panel-color={cuffRight.cloth}>
               <CuffCap
                 d={RIGHT_CUFF}
                 style={cuffs}
@@ -170,7 +157,7 @@ export function HoodieGarment({ viewId, bodyColor, panelColors, construction }: 
                 ribBox={{ x: 34, y: 350, width: 44, height: 54 }}
               />
             </g>
-            <g data-garment-part={cuffLeftId} data-panel-color={cuffLeft.cloth}>
+            <g data-garment-part={cuffLeftId} data-region-id="left-cuff" data-panel-color={cuffLeft.cloth}>
               <CuffCap
                 d={LEFT_CUFF}
                 style={cuffs}
@@ -185,7 +172,7 @@ export function HoodieGarment({ viewId, bodyColor, panelColors, construction }: 
 
       <Seam d="M174 232 L184 516" color={body.stitch} width={1} opacity={0.22} />
       <Seam d="M386 232 L376 516" color={body.stitch} width={1} opacity={0.22} />
-      {hemStyle ? <HemBand style={hemStyle} y={532} left={216} right={344} color={body} /> : null}
+      {hemStyle ? <HemBand style={hemStyle} y={532} left={216} right={344} color={waist} partId={waistId} /> : null}
 
       {isBack ? (
         <Seam d="M232 196 C246 226 314 226 328 196" color={body.highlight} width={1.6} opacity={0.22} />
@@ -193,9 +180,9 @@ export function HoodieGarment({ viewId, bodyColor, panelColors, construction }: 
         <PocketSet
           style={pocket}
           kind="hoodie"
-          fill={body.detail}
-          stitch={body.stitch}
-          highlight={body.highlight}
+          fill={pocketCloth.detail}
+          stitch={pocketCloth.stitch}
+          highlight={pocketCloth.highlight}
         />
       ) : null}
       <FabricSheen id={id} materialId={materialId} path={isBack ? BODY_BACK : BODY_FRONT} />

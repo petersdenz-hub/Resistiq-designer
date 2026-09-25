@@ -35,6 +35,28 @@ export function documentChromeFromGarment(garment: GarmentDefinition): {
   }
 }
 
+/** Add any panels/safe areas the current garment definition exposes. */
+export function mergeDocumentChrome(document: DesignDocument): DesignDocument {
+  const garment = getGarment(document.garmentType)
+  const chrome = documentChromeFromGarment(garment)
+  const havePanels = new Set(document.panels.map((panel) => panel.id))
+  const haveSafe = new Set(document.safeAreas.map((area) => area.id))
+  const panels = [
+    ...document.panels,
+    ...chrome.panels.filter((panel) => !havePanels.has(panel.id)),
+  ]
+  const safeAreas = [
+    ...document.safeAreas,
+    ...chrome.safeAreas.filter((area) => !haveSafe.has(area.id)),
+  ]
+  return {
+    ...document,
+    views: chrome.views,
+    panels,
+    safeAreas,
+  }
+}
+
 export function createNewDesign(garmentType = 'tshirt'): DesignDocument {
   const garment = getGarment(garmentType)
   const now = new Date().toISOString()

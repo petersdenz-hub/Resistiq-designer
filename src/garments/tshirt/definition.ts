@@ -1,6 +1,8 @@
 import { garmentCapabilities } from '../capabilities'
+import { attachSilhouettes } from '../topology'
 import { FRONT_BACK_VIEWS, STANDARD_VIEWBOX } from '../types'
 import type { GarmentDefinition, GarmentPanelDefinition } from '../types'
+import { TSHIRT_PATHS } from './geometry'
 
 export const TSHIRT_VIEWBOX = STANDARD_VIEWBOX
 
@@ -154,6 +156,28 @@ export const TSHIRT_PANELS: GarmentPanelDefinition[] = [
     local: { width: 120, height: 40 },
     frame: { x: 226, y: 140, width: 108, height: 36 },
   },
+  {
+    id: 'hem',
+    name: 'Hem',
+    label: 'Hem',
+    viewId: 'front',
+    side: 'front',
+    type: 'hem',
+    printable: false,
+    local: { width: 128, height: 16 },
+    frame: { x: 216, y: 492, width: 128, height: 16 },
+  },
+  {
+    id: 'hem_back',
+    name: 'Hem',
+    label: 'Hem',
+    viewId: 'back',
+    side: 'back',
+    type: 'hem',
+    printable: false,
+    local: { width: 128, height: 16 },
+    frame: { x: 216, y: 492, width: 128, height: 16 },
+  },
 ]
 
 export function tshirtDefaultPanelId(viewId: string): string {
@@ -167,7 +191,7 @@ export const tshirtMeta = {
   category: 'tops',
   views: FRONT_BACK_VIEWS,
   viewBox: TSHIRT_VIEWBOX,
-  panels: TSHIRT_PANELS,
+  panels: attachSilhouettes(TSHIRT_PANELS, TSHIRT_PATHS),
   preview: { viewId: 'front' },
   supportedDesignZones: ['front', 'back', 'left-sleeve', 'right-sleeve'],
   defaults: { bodyColor: '#e8e4dc' },

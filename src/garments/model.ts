@@ -237,6 +237,7 @@ export function completePanel(panel: GarmentPanelDefinition): GarmentPanelDefini
     printable: isPrintablePanel(panel),
     designBounds: panelDesignBounds(panel),
     designZones: panelDesignZones(panel),
+    silhouette: panel.silhouette,
   }
 }
 

@@ -30,6 +30,20 @@ export function getPanelColor(document: DesignDocument, panelId: string): string
   return getPanelColorMap(document)[panelId] ?? getBodyColor(document)
 }
 
+export function getPanelMaterialMap(document: DesignDocument): Record<string, string> {
+  const map: Record<string, string> = {}
+  for (const color of document.colors) {
+    if (color.role === 'panel' && color.materialId) {
+      map[color.id] = color.materialId
+    }
+  }
+  return map
+}
+
+export function getPanelMaterial(document: DesignDocument, panelId: string): string | undefined {
+  return getPanelMaterialMap(document)[panelId] ?? document.construction?.materialId
+}
+
 /** Reserved for later trim/structure colors. Falls back to body. */
 export function getTrimColor(document: DesignDocument, trimId: string): string {
   return (

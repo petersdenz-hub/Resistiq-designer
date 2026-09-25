@@ -4,6 +4,17 @@ import { BeltLoops, FabricFinish, FabricSheen, HemBand, PocketSet } from '../ren
 import { constructionStyle, fabricFilter, pocketStyle } from '../render/constructionState'
 import { ClothGradient, FlatPart, FlatShadow, Fold, Seam, Stitch } from '../render/flatStyle'
 import type { BottomsKind } from './definition'
+import {
+  LEFT_LEG_PANTS,
+  LEFT_LEG_SHORTS,
+  RIGHT_LEG_PANTS,
+  RIGHT_LEG_SHORTS,
+  INSEAM_PANTS,
+  INSEAM_SHORTS,
+  OUTSEAM_PANTS,
+  OUTSEAM_SHORTS,
+  WAISTBAND,
+} from './geometry'
 
 /**
  * Shared fashion-flat for pants and shorts. Length is the only visual
@@ -26,6 +37,10 @@ export function BottomsGarment({
   const left = clothFor(bodyColor, panelColors, leftId)
   const right = clothFor(bodyColor, panelColors, rightId)
   const waist = clothFor(bodyColor, panelColors, waistId)
+  const pocketLeft = clothFor(bodyColor, panelColors, isBack ? 'pocket_left_back' : 'pocket_left')
+  const pocketRight = clothFor(bodyColor, panelColors, isBack ? 'pocket_right_back' : 'pocket_right')
+  const inseam = clothFor(bodyColor, panelColors, isBack ? 'inseam_back' : 'inseam')
+  const outseam = clothFor(bodyColor, panelColors, isBack ? 'outseam_back' : 'outseam')
   const id = `${kind}-${viewId}`
   const waistStyle = construction ? constructionStyle(construction, 'waistband') : 'faced'
   const beltLoops = construction ? constructionStyle(construction, 'beltLoops') : null
@@ -36,13 +51,10 @@ export function BottomsGarment({
   const materialId = construction?.materialId
   const hemY = long ? 542 : 306
 
-  const leftLeg = long
-    ? 'M200 110 C176 168 166 250 170 360 L176 524 C178 548 204 556 228 546 L254 546 L266 268 C272 186 276 136 280 110 Z'
-    : 'M200 110 C176 148 168 196 176 248 L184 298 C188 316 214 322 236 310 L258 302 L270 198 C274 150 276 124 280 110 Z'
-
-  const rightLeg = long
-    ? 'M360 110 C384 168 394 250 390 360 L384 524 C382 548 356 556 332 546 L306 546 L294 268 C288 186 284 136 280 110 Z'
-    : 'M360 110 C384 148 392 196 384 248 L376 298 C372 316 346 322 324 310 L302 302 L290 198 C286 150 284 124 280 110 Z'
+  const leftLeg = long ? LEFT_LEG_PANTS : LEFT_LEG_SHORTS
+  const rightLeg = long ? RIGHT_LEG_PANTS : RIGHT_LEG_SHORTS
+  const inseamPaths = long ? INSEAM_PANTS : INSEAM_SHORTS
+  const outseamPaths = long ? OUTSEAM_PANTS : OUTSEAM_SHORTS
 
   return (
     <g pointerEvents="none">
@@ -54,11 +66,21 @@ export function BottomsGarment({
       <FabricFinish id={id} materialId={materialId} />
 
       <g filter={fabricFilter(id, materialId) ?? `url(#${id}-soft)`} data-garment-template={kind}>
-        <g data-garment-part={leftId} data-panel-color={left.cloth}>
+        <g data-garment-part={leftId} data-region-id="left-leg" data-panel-color={left.cloth}>
           <FlatPart d={leftLeg} fill={`url(#${id}-leg-l)`} stroke={left.stitch} />
         </g>
-        <g data-garment-part={rightId} data-panel-color={right.cloth}>
+        <g data-garment-part={rightId} data-region-id="right-leg" data-panel-color={right.cloth}>
           <FlatPart d={rightLeg} fill={`url(#${id}-leg-r)`} stroke={right.stitch} />
+        </g>
+        <g data-garment-part={isBack ? 'outseam_back' : 'outseam'} data-region-id="outseam" data-construction-kind="seam" data-construction-style="outseam" data-panel-color={outseam.cloth}>
+          {outseamPaths.map((path) => (
+            <path key={path} d={path} fill={outseam.clothDeep} opacity="0.18" data-region-shading="true" />
+          ))}
+        </g>
+        <g data-garment-part={isBack ? 'inseam_back' : 'inseam'} data-region-id="inseam" data-construction-kind="seam" data-construction-style="inseam" data-panel-color={inseam.cloth}>
+          {inseamPaths.map((path) => (
+            <path key={path} d={path} fill={inseam.clothDeep} opacity="0.16" data-region-shading="true" />
+          ))}
         </g>
         <Stitch d={long ? 'M206 130 C188 220 186 360 196 520' : 'M206 130 C188 180 190 240 204 292'} color={left.stitch} />
         <Stitch d={long ? 'M354 130 C372 220 374 360 364 520' : 'M354 130 C372 180 370 240 356 292'} color={right.stitch} />
@@ -78,12 +100,13 @@ export function BottomsGarment({
         {waistStyle ? (
           <g
             data-garment-part={waistId}
+            data-region-id="waistband"
             data-panel-color={waist.cloth}
             data-construction-kind="waistband"
             data-construction-style={waistStyle}
           >
             <FlatPart
-              d="M196 66 C196 58 208 54 222 54 L338 54 C352 54 364 58 364 66 L364 110 L196 110 Z"
+              d={WAISTBAND}
               fill={waistStyle === 'rib' ? waist.rib : waistStyle === 'elastic' ? waist.clothDeep : waist.rib}
               stroke={waist.stitch}
             />
@@ -112,9 +135,11 @@ export function BottomsGarment({
             <PocketSet
               style={backPocket}
               kind="bottoms-back"
-              fill={left.detail}
-              stitch={left.stitch}
-              highlight={left.highlight}
+              fill={pocketLeft.detail}
+              leftFill={pocketLeft.detail}
+              rightFill={pocketRight.detail}
+              stitch={pocketLeft.stitch}
+              highlight={pocketLeft.highlight}
             />
           ) : null}
         </>
@@ -126,18 +151,22 @@ export function BottomsGarment({
             <PocketSet
               style={frontPocket}
               kind="bottoms-front"
-              fill={left.detail}
-              stitch={left.stitch}
-              highlight={left.highlight}
+              fill={pocketLeft.detail}
+              leftFill={pocketLeft.detail}
+              rightFill={pocketRight.detail}
+              stitch={pocketLeft.stitch}
+              highlight={pocketLeft.highlight}
             />
           ) : null}
           {cargoPocket ? (
             <PocketSet
               style={cargoPocket}
               kind="cargo"
-              fill={left.detail}
-              stitch={left.stitch}
-              highlight={left.highlight}
+              fill={pocketLeft.detail}
+              leftFill={pocketLeft.detail}
+              rightFill={pocketRight.detail}
+              stitch={pocketLeft.stitch}
+              highlight={pocketLeft.highlight}
             />
           ) : null}
         </>

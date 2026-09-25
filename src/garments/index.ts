@@ -18,9 +18,20 @@ export {
   visibleConstructionControls,
 } from './constructionOptions'
 export { MATERIAL_CATALOG, VISUAL_FINISHES, getCatalogMaterial, visualFinishCatalog } from './materialCatalog'
-export { colorRegionsFor, regionColor } from './colorRegions'
+export { colorRegionById, colorRegionsFor, regionColor, regionForPanel, regionLabelForPanel } from './colorRegions'
 export { garmentExportManifest } from './exportManifest'
 export type { ColorRegion } from './colorRegions'
+export {
+  attachSilhouettes,
+  asSilhouettePaths,
+  garmentSilhouettePaths,
+  hasGarmentSilhouette,
+  panelSilhouetteFor,
+  panelSilhouettePaths,
+  rectPath,
+  silhouetteBounds,
+  viewPanelSilhouettes,
+} from './topology'
 export type { GarmentExportManifest } from './exportManifest'
 export { GarmentPicker } from './GarmentPicker'
 export { GarmentSelector } from './GarmentSelector'

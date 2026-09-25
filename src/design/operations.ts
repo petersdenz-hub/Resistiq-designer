@@ -1,3 +1,4 @@
+import { getCatalogMaterial } from '@/garments/materialCatalog'
 import { getGarment } from '@/garments/registry'
 import { getGarmentPanel } from '@/garments/coordinates'
 import { constrainElementInDocument, getConstraintBounds } from './constraints'
@@ -189,6 +190,56 @@ export function setGarmentMaterial(
   materialId: string,
 ): DesignDocument {
   return writeSetGarmentMaterial(document, materialId)
+}
+
+export function setPanelMaterial(
+  document: DesignDocument,
+  panelId: string,
+  materialId: string,
+): DesignDocument {
+  const catalog = getCatalogMaterial(materialId)
+  if (!catalog) {
+    return document
+  }
+  const source = writeUpsertMaterial(document, {
+    id: catalog.id,
+    name: catalog.name,
+    finish: catalog.finish,
+    family: catalog.family,
+  })
+  const index = source.colors.findIndex((color) => color.role === 'panel' && color.id === panelId)
+  if (index >= 0) {
+    return touch({
+      ...source,
+      colors: source.colors.map((color, colorIndex) =>
+        colorIndex === index ? { ...color, materialId: catalog.id } : color,
+      ),
+    })
+  }
+  return touch({
+    ...source,
+    colors: [
+      ...source.colors,
+      {
+        id: panelId,
+        role: 'panel',
+        value: source.colors.find((color) => color.role === 'body')?.value ?? '#e8e4dc',
+        materialId: catalog.id,
+      },
+    ],
+  })
+}
+
+export function setRegionMaterial(
+  document: DesignDocument,
+  panelIds: string[],
+  materialId: string,
+): DesignDocument {
+  let next = document
+  for (const panelId of panelIds) {
+    next = setPanelMaterial(next, panelId, materialId)
+  }
+  return next
 }
 
 export function addElement(
