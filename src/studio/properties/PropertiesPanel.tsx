@@ -24,7 +24,7 @@ import {
   panelsForZone,
 } from '@/design/objectPlacement'
 import { useAsset } from '@/persistence/useAsset'
-import { getPanelById, getPanelColor } from '@/design/selectors'
+import { getPanelById } from '@/design/selectors'
 import {
   isGraphicElement,
   isLockedElement,
@@ -33,6 +33,7 @@ import {
   type LayerDirection,
 } from '@/design/types'
 import { useDesign } from '@/design/useDesign'
+import { GarmentCustomization } from './GarmentCustomization'
 import { minLocalSize, getGarmentPanel } from '@/garments/coordinates'
 import { getGarment } from '@/garments/registry'
 import { Button, ColorPicker, Field, NumberField, SegmentedControl } from '@/ui'
@@ -68,53 +69,10 @@ export function PropertiesPanel({ onCollapse }: { onCollapse?: () => void }) {
         ) : selectedElement ? (
           <SelectedProperties />
         ) : (
-          <SelectedPanelProperties />
+          <GarmentCustomization />
         )}
       </div>
     </aside>
-  )
-}
-
-function SelectedPanelProperties() {
-  const { document, setPanelColor, commitGesture } = useDesign()
-  const panel = getPanelById(document, document.activePanelId)
-  const originRef = useRef(document)
-  const viewLabel =
-    document.views.find((view) => view.id === panel?.viewId)?.label ?? panel?.viewId ?? '—'
-  const color = panel ? getPanelColor(document, panel.id) : null
-
-  if (!panel || !color) {
-    return (
-      <p className="text-[12px] leading-5 text-mute">
-        Select a garment panel to change its color. Design elements stay separate.
-      </p>
-    )
-  }
-
-  return (
-    <div className="space-y-4" data-properties-kind="panel">
-      <div>
-        <div className="text-[12px] font-medium text-ink">Panel</div>
-        <div className="mt-1 text-[11px] text-mute">{panel.label}</div>
-      </div>
-      <p className="text-[11px] leading-4 text-mute">
-        This is garment structure, not a design element. Color is stored on the Design Document.
-      </p>
-      <div className="rounded-md border border-line px-3 py-2 text-[12px]">
-        <div className="text-[10px] uppercase tracking-[0.14em] text-mute">View</div>
-        <div className="mt-0.5 text-ink">{viewLabel}</div>
-      </div>
-      <ColorPicker
-        label="Panel color"
-        value={color}
-        onCommit={(value) => setPanelColor(panel.id, value)}
-        onLiveStart={() => {
-          originRef.current = document
-        }}
-        onLiveChange={(value) => setPanelColor(panel.id, value, 'replace')}
-        onLiveEnd={() => commitGesture(originRef.current)}
-      />
-    </div>
   )
 }
 
@@ -155,8 +113,8 @@ function SelectedObjectProperties() {
       data-properties-kind="design-object"
       data-property-sections={objectPropertySections(selectedObject.type).join(',')}
     >
-      <section className="space-y-2" data-properties-section="object">
-        <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Object</div>
+      <section className="space-y-2" data-properties-section="object" data-artwork-properties="true">
+        <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Artwork</div>
         <Field label="Name">
           <input
             data-object-name="true"

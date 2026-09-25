@@ -46,7 +46,7 @@ export const SWEATSHIRT_PANELS: GarmentPanelDefinition[] = [
     frame: { x: 174, y: 200, width: 212, height: 342 },
     designBounds: { x: 12, y: 12, width: 76, height: 40 },
     designZones: [
-      { id: 'sweatshirt-full-front', name: 'Full front', bounds: { x: 0, y: 0, width: 100, height: 100 } },
+      { id: 'sweatshirt-full-front', name: 'Front print', bounds: { x: 0, y: 0, width: 100, height: 100 } },
       { id: 'sweatshirt-chest', name: 'Chest', bounds: { x: 12, y: 12, width: 76, height: 40 } },
       { id: 'sweatshirt-center-front', name: 'Center front', bounds: { x: 30, y: 20, width: 40, height: 40 } },
     ],
@@ -64,7 +64,7 @@ export const SWEATSHIRT_PANELS: GarmentPanelDefinition[] = [
     frame: { x: 174, y: 190, width: 212, height: 352 },
     designBounds: { x: 10, y: 8.75, width: 80, height: 56.25 },
     designZones: [
-      { id: 'sweatshirt-full-back', name: 'Full back', bounds: { x: 0, y: 0, width: 100, height: 100 } },
+      { id: 'sweatshirt-full-back', name: 'Back print', bounds: { x: 0, y: 0, width: 100, height: 100 } },
       { id: 'sweatshirt-upper-back', name: 'Upper back', bounds: { x: 10, y: 8.75, width: 80, height: 40 } },
     ],
     safeArea: BACK_PRINT,
@@ -81,7 +81,7 @@ export const SWEATSHIRT_PANELS: GarmentPanelDefinition[] = [
     frame: { x: 32, y: 180, width: 142, height: 186 },
     designBounds: { x: 14.55, y: 11.25, width: 70.91, height: 56.25 },
     designZones: [
-      { id: 'sweatshirt-right-outer-sleeve', name: 'Outer sleeve', bounds: { x: 0, y: 0, width: 100, height: 100 } },
+      { id: 'sweatshirt-right-outer-sleeve', name: 'Right sleeve', bounds: { x: 0, y: 0, width: 100, height: 100 } },
       { id: 'sweatshirt-right-sleeve-center', name: 'Sleeve center', bounds: { x: 14.55, y: 11.25, width: 70.91, height: 56.25 } },
     ],
     safeArea: sleevePrint('sweatshirt_right_sleeve_print'),
@@ -98,7 +98,7 @@ export const SWEATSHIRT_PANELS: GarmentPanelDefinition[] = [
     frame: { x: 386, y: 180, width: 142, height: 186 },
     designBounds: { x: 14.55, y: 11.25, width: 70.91, height: 56.25 },
     designZones: [
-      { id: 'sweatshirt-left-outer-sleeve', name: 'Outer sleeve', bounds: { x: 0, y: 0, width: 100, height: 100 } },
+      { id: 'sweatshirt-left-outer-sleeve', name: 'Left sleeve', bounds: { x: 0, y: 0, width: 100, height: 100 } },
       { id: 'sweatshirt-left-sleeve-center', name: 'Sleeve center', bounds: { x: 14.55, y: 11.25, width: 70.91, height: 56.25 } },
     ],
     safeArea: sleevePrint('sweatshirt_left_sleeve_print'),

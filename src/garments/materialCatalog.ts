@@ -41,7 +41,17 @@ export const MATERIAL_CATALOG: CatalogMaterial[] = [
     sheen: 0.19,
   },
   { id: 'fleece', name: 'Fleece', family: 'fleece', finish: 'napped', grain: 0.22, sheen: 0.05 },
+  { id: 'denim', name: 'Denim', family: 'denim', finish: 'twill', grain: 0.18, sheen: 0.04 },
 ]
+
+/** Visual finishes shown in the garment customization UI. */
+export const VISUAL_FINISHES = ['cotton', 'fleece', 'nylon', 'softshell', 'polyester', 'denim'] as const
+
+export function visualFinishCatalog(): CatalogMaterial[] {
+  return VISUAL_FINISHES.map((id) => getCatalogMaterial(id)).filter(
+    (material): material is CatalogMaterial => Boolean(material),
+  )
+}
 
 export function getCatalogMaterial(id: string | undefined | null): CatalogMaterial | null {
   if (!id) {

@@ -17,7 +17,11 @@ export {
   editableConstructionKinds,
   visibleConstructionControls,
 } from './constructionOptions'
-export { MATERIAL_CATALOG, getCatalogMaterial } from './materialCatalog'
+export { MATERIAL_CATALOG, VISUAL_FINISHES, getCatalogMaterial, visualFinishCatalog } from './materialCatalog'
+export { colorRegionsFor, regionColor } from './colorRegions'
+export { garmentExportManifest } from './exportManifest'
+export type { ColorRegion } from './colorRegions'
+export type { GarmentExportManifest } from './exportManifest'
 export { GarmentPicker } from './GarmentPicker'
 export { GarmentSelector } from './GarmentSelector'
 export {
@@ -50,6 +54,7 @@ export {
   localFromPercent,
   panelDesignBounds,
   panelDesignBoundsLocal,
+  panelBleedBounds,
   panelDesignZones,
   panelName,
   percentFromLocal,

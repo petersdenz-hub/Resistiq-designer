@@ -37,12 +37,16 @@ export function normalizeHex(value: string): string | null {
 }
 
 export const GARMENT_COLOR_PRESETS = [
-  { value: '#ffffff', label: 'White' },
-  { value: '#e8e4dc', label: 'Natural' },
-  { value: '#d4d4d8', label: 'Light grey' },
   { value: '#1a1a1a', label: 'Black' },
+  { value: '#ffffff', label: 'White' },
+  { value: '#f4f0e8', label: 'Off-white' },
+  { value: '#2c2f36', label: 'Charcoal' },
+  { value: '#6b7280', label: 'Grey' },
   { value: '#1e2a4a', label: 'Navy' },
-  { value: '#6b7280', label: 'Heather' },
-  { value: '#7c2d12', label: 'Burgundy' },
+  { value: '#1f3d2b', label: 'Forest green' },
   { value: '#3f4f2a', label: 'Olive' },
+  { value: '#c4b59a', label: 'Sand' },
+  { value: '#5c4033', label: 'Brown' },
+  { value: '#3d5a73', label: 'Muted blue' },
+  { value: '#8b3a3a', label: 'Muted red' },
 ] as const

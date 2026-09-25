@@ -9,7 +9,8 @@ import {
   getSafeAreasInView,
   resolveActiveZone,
 } from '@/design/selectors'
-import { getArtworkPanelBounds, paintDesignObject } from '@/design/objectPlacement'
+import { objectClipBox } from '@/design/objectClip'
+import { getArtworkPanelBounds, paintDesignObject, zoneForPanel } from '@/design/objectPlacement'
 import { collectSnapGuideBoxes, objectIdsInMarquee, unionBoxes } from '@/design/objectEditing'
 import { useDesign } from '@/design/useDesign'
 import { getGarment } from '@/garments/registry'
@@ -31,7 +32,6 @@ import { clientToSvgPoint } from './geometry'
 
 interface StageViewportProps {
   zoom: number
-  showSafeAreas: boolean
 }
 
 interface MarqueeState {
@@ -44,7 +44,7 @@ interface MarqueeState {
   panelId?: string
 }
 
-export function StageViewport({ zoom, showSafeAreas }: StageViewportProps) {
+export function StageViewport({ zoom }: StageViewportProps) {
   const svgRef = useRef<SVGSVGElement | null>(null)
   const marqueeRef = useRef<MarqueeState | null>(null)
   const [marquee, setMarquee] = useState<MarqueeState | null>(null)
@@ -58,11 +58,12 @@ export function StageViewport({ zoom, showSafeAreas }: StageViewportProps) {
     selectObject,
     selectObjects,
     setActivePanel,
+    setActiveZone,
     updateElementById,
     applyDocument,
     commitGesture,
   } = useDesign()
-  const { gridVisible, gridSize, snapToGrid } = useCanvasEditor()
+  const { gridVisible, gridSize, snapToGrid, showPrintArea, showSafeAreas, showGuides } = useCanvasEditor()
 
   const garment = getGarment(document.garmentType)
   const viewPanels = getPanelsForView(garment, document.activeView)
@@ -89,6 +90,14 @@ export function StageViewport({ zoom, showSafeAreas }: StageViewportProps) {
 
   const paintedObjects = objects.map((object) =>
     applyObjectPreview(paintDesignObject(document, object), objectGesture.preview),
+  )
+  const clipBoxes = Object.fromEntries(
+    objects
+      .map((object) => {
+        const box = objectClipBox(document, object)
+        return box ? [object.id, box] : null
+      })
+      .filter((entry): entry is [string, NonNullable<ReturnType<typeof objectClipBox>>] => Boolean(entry)),
   )
   const selectedPainted = paintedObjects.filter((object) => selectedObjectIds.includes(object.id))
   const union = unionBoxes(selectedPainted.map((object) => ({
@@ -214,11 +223,19 @@ export function StageViewport({ zoom, showSafeAreas }: StageViewportProps) {
         panels={viewPanels}
         safeAreas={getSafeAreasInView(document, document.activeView)}
         activePanelId={document.activePanelId}
+        showPrintArea={showPrintArea}
         showSafeAreas={showSafeAreas}
+        showGuides={showGuides}
         selectionKind={selectedElementId || selectedObjectId ? 'element' : 'panel'}
         onSelectPanel={(panelId) => {
           selectObjects([])
           setActivePanel(panelId)
+          setActiveZone(zoneForPanel(panelId, zone, document.activeView))
+        }}
+        onSelectZone={(panelId) => {
+          selectObjects([])
+          setActivePanel(panelId)
+          setActiveZone(zoneForPanel(panelId, zone, document.activeView))
         }}
         onPanelPointerDown={(panelId, event) => {
           beginEmptyGesture(event, panelId)
@@ -232,11 +249,13 @@ export function StageViewport({ zoom, showSafeAreas }: StageViewportProps) {
         onMoveStart={gesture.startMove}
       />
 
-      <ZoneSurfaceOverlay document={document} zone={zone} />
+      {showGuides ? <ZoneSurfaceOverlay document={document} zone={zone} /> : null}
 
       <DesignObjectLayer
         objects={paintedObjects}
         selectedObjectIds={selectedObjectIds}
+        clipEnabled
+        clipBoxes={clipBoxes}
         onSelect={(objectId, event) => {
           selectObject(objectId, { toggle: event.shiftKey, expandGroup: true })
         }}

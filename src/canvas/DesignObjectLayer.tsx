@@ -6,12 +6,15 @@ import {
   type TextDesignObject,
 } from '@/design/designObjects'
 import { useAsset } from '@/persistence/useAsset'
+import type { GarmentRect } from '@/garments/types'
 import type { PointerEvent as ReactPointerEvent } from 'react'
 
 interface DesignObjectLayerProps {
   objects: DesignObject[]
   selectedObjectId?: string | null
   selectedObjectIds?: string[]
+  clipBoxes?: Record<string, GarmentRect>
+  clipEnabled?: boolean
   onSelect: (objectId: string, event: { shiftKey: boolean }) => void
   onMoveStart: (objectId: string, event: ReactPointerEvent<SVGElement>) => void
 }
@@ -20,18 +23,30 @@ export function DesignObjectLayer({
   objects,
   selectedObjectId = null,
   selectedObjectIds,
+  clipBoxes,
+  clipEnabled = false,
   onSelect,
   onMoveStart,
 }: DesignObjectLayerProps) {
   const selected = new Set(selectedObjectIds ?? (selectedObjectId ? [selectedObjectId] : []))
 
   return (
-    <g data-design-object-layer="true">
+    <g data-design-object-layer="true" data-artwork-clip={clipEnabled ? 'true' : 'false'}>
       {objects.map((object) => {
         if (!object.visible) {
           return null
         }
         const isSelected = selected.has(object.id)
+        const clip = clipEnabled ? clipBoxes?.[object.id] : undefined
+        const clipId = `artwork-clip-${object.id}`
+        const rotate = `rotate(${object.rotation} ${object.x + object.width / 2} ${object.y + object.height / 2})`
+        const visuals = (
+          <>
+            {object.type === 'shape' ? <ObjectShape object={object} /> : null}
+            {object.type === 'text' ? <ObjectText object={object} selected={isSelected} /> : null}
+            {object.type === 'image' ? <ObjectImage object={object} selected={isSelected} /> : null}
+          </>
+        )
         return (
           <g
             key={object.id}
@@ -44,7 +59,7 @@ export function DesignObjectLayer({
             data-object-locked={object.locked ? 'true' : 'false'}
             data-object-selected={isSelected ? 'true' : 'false'}
             data-object-name={object.name ?? ''}
-            transform={`rotate(${object.rotation} ${object.x + object.width / 2} ${object.y + object.height / 2})`}
+            data-object-clipped={clip ? 'true' : 'false'}
             opacity={object.opacity}
             style={{ cursor: object.locked ? 'default' : 'move' }}
             onPointerDown={(event) => {
@@ -65,9 +80,27 @@ export function DesignObjectLayer({
               window.dispatchEvent(new CustomEvent('resistq-edit-text', { detail: object.id }))
             }}
           >
-            {object.type === 'shape' ? <ObjectShape object={object} /> : null}
-            {object.type === 'text' ? <ObjectText object={object} selected={isSelected} /> : null}
-            {object.type === 'image' ? <ObjectImage object={object} selected={isSelected} /> : null}
+            {clip ? (
+              <>
+                <clipPath id={clipId} clipPathUnits="userSpaceOnUse">
+                  <rect x={clip.x} y={clip.y} width={clip.width} height={clip.height} />
+                </clipPath>
+                <g clipPath={`url(#${clipId})`} data-artwork-clip-box={object.id}>
+                  <g transform={rotate}>{visuals}</g>
+                </g>
+              </>
+            ) : (
+              <g transform={rotate}>{visuals}</g>
+            )}
+            <g transform={rotate}>
+              <rect
+                x={object.x}
+                y={object.y}
+                width={object.width}
+                height={object.height}
+                fill="transparent"
+              />
+            </g>
           </g>
         )
       })}

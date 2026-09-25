@@ -127,7 +127,7 @@ const CONTROLS: Record<string, ConstructionControlSpec[]> = {
   tshirt: [
     { id: 'collar', kind: 'collar', label: 'Collar', options: COLLAR_OPTIONS },
     { id: 'hem', kind: 'hem', label: 'Hem', options: HEM_OPTIONS },
-    { id: 'cuff', kind: 'cuff', label: 'Sleeve hem', options: SLEEVE_HEM_OPTIONS },
+    { id: 'cuff', kind: 'cuff', label: 'Sleeve style', options: SLEEVE_HEM_OPTIONS },
   ],
   sweatshirt: [
     { id: 'collar', kind: 'collar', label: 'Collar', options: COLLAR_OPTIONS },

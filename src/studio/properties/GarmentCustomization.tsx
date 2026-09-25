@@ -1,30 +1,79 @@
 import { resolveConstruction } from '@/design'
 import { useDesign } from '@/design/useDesign'
 import {
+  colorRegionsFor,
+  regionColor,
+} from '@/garments/colorRegions'
+import {
   controlValue,
   visibleConstructionControls,
 } from '@/garments/constructionOptions'
 import { visualFinishCatalog } from '@/garments/materialCatalog'
 import { getGarment } from '@/garments/registry'
-import { Field } from '@/ui'
+import { ColorPicker, Field } from '@/ui'
+import { useRef } from 'react'
 
-export function MaterialsPanel() {
-  const { document, setGarmentMaterial, setConstructionStyle, setConstructionVariant } = useDesign()
+export function GarmentCustomization() {
+  const {
+    document,
+    setBodyColor,
+    setRegionColor,
+    setGarmentMaterial,
+    setConstructionStyle,
+    setConstructionVariant,
+    commitGesture,
+  } = useDesign()
   const garment = getGarment(document.garmentType)
   const resolved = resolveConstruction(document)
   const controls = visibleConstructionControls(document.garmentType, resolved)
+  const regions = colorRegionsFor(document.garmentType)
   const materialId = document.construction?.materialId
-  const source = document.construction ? 'document' : 'default'
+  const originRef = useRef(document)
+  const body = document.colors.find((color) => color.role === 'body')?.value ?? garment.defaults.bodyColor
 
   return (
-    <div className="space-y-5" data-construction-editor="true" data-construction-source={source}>
-      <p className="text-[12px] leading-5 text-mute">
-        Fabric and construction live on the Design Document. Changes draw on this{' '}
-        {garment.name.toLowerCase()} immediately.
-      </p>
-
+    <div className="space-y-5" data-properties-kind="garment" data-garment-customization="true">
       <section className="space-y-2">
-        <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Fabric</div>
+        <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Garment</div>
+        <div className="text-[13px] font-medium text-ink" data-garment-type-label="true">
+          {garment.name}
+        </div>
+        <p className="text-[11px] leading-4 text-mute">
+          Color, material, and construction belong to the garment — not to artwork.
+        </p>
+      </section>
+
+      <ColorPicker
+        label="Garment color"
+        value={body}
+        onCommit={(value) => setBodyColor(value)}
+        onLiveStart={() => {
+          originRef.current = document
+        }}
+        onLiveChange={(value) => setBodyColor(value, 'replace')}
+        onLiveEnd={() => commitGesture(originRef.current)}
+      />
+
+      <section className="space-y-2" data-color-regions="true">
+        <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Regions</div>
+        {regions.map((region) => (
+          <div key={region.id} data-color-region={region.id} data-color-region-panels={region.panelIds.join(',')}>
+            <ColorPicker
+              label={region.label}
+              value={regionColor(document, region)}
+              onCommit={(value) => setRegionColor(region.panelIds, value)}
+              onLiveStart={() => {
+                originRef.current = document
+              }}
+              onLiveChange={(value) => setRegionColor(region.panelIds, value, 'replace')}
+              onLiveEnd={() => commitGesture(originRef.current)}
+            />
+          </div>
+        ))}
+      </section>
+
+      <section className="space-y-2" data-garment-materials="true">
+        <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Material</div>
         <div className="grid grid-cols-2 gap-1.5">
           {visualFinishCatalog().map((material) => {
             const selected = materialId === material.id
@@ -49,7 +98,7 @@ export function MaterialsPanel() {
         </div>
       </section>
 
-      <section className="space-y-3">
+      <section className="space-y-3" data-garment-construction="true">
         <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">
           Construction
         </div>
@@ -96,10 +145,6 @@ export function MaterialsPanel() {
           )
         })}
       </section>
-
-      <p className="text-[11px] leading-4 text-mute">
-        Construction is garment structure, not a design element. Panel colors stay on the panel.
-      </p>
     </div>
   )
 }

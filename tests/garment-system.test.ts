@@ -71,7 +71,7 @@ describe('Phase 7C garment system foundation', () => {
       height: expect.any(Number),
     })
     expect(panelDesignZones(front).map((zone) => zone.name)).toEqual(
-      expect.arrayContaining(['Full front', 'Chest', 'Center front']),
+      expect.arrayContaining(['Front print', 'Chest', 'Center front']),
     )
     expect(tshirt).not.toHaveProperty('designObjects')
   })

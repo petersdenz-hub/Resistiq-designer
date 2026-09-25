@@ -35,6 +35,7 @@ export function ColorPicker({
         <div className="flex items-center gap-2">
           <input
             type="color"
+            data-color-custom="true"
             value={committed}
             onChange={(event) => {
               const next = event.target.value
@@ -88,6 +89,7 @@ export function ColorPicker({
                 <button
                   key={preset.value}
                   type="button"
+                  data-color-preset={preset.value}
                   title={preset.label}
                   aria-label={preset.label}
                   aria-pressed={selected}

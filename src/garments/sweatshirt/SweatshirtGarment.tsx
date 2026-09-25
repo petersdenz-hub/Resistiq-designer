@@ -2,7 +2,7 @@ import type { GarmentRenderProps } from '../types'
 import { clothFor } from '../render/cloth'
 import { FabricFinish, FabricSheen, HemBand } from '../render/constructionDraw'
 import { constructionStyle, cuffStyle, fabricFilter } from '../render/constructionState'
-import { FlatPart, FlatShadow, Seam } from '../render/flatStyle'
+import { FlatPart, FlatShadow, Fold, Seam } from '../render/flatStyle'
 
 /**
  * Fashion-flat crewneck sweatshirt. Set-in shoulders and a rib collar,
@@ -169,6 +169,9 @@ export function SweatshirtGarment({
 
       <Seam d="M178 230 L186 514" color={body.stitch} width={1} opacity={0.2} />
       <Seam d="M382 230 L374 514" color={body.stitch} width={1} opacity={0.2} />
+      <Fold d="M196 246 C224 240 336 240 364 246" color={body.highlight} />
+      <Fold d="M70 248 C108 280 146 314 168 328" color={right.highlight} opacity={0.16} />
+      <Fold d="M490 248 C452 280 414 314 392 328" color={left.highlight} opacity={0.16} />
       {hemStyle ? <HemBand style={hemStyle} y={530} left={218} right={342} color={body} /> : null}
       <FabricSheen id={id} materialId={materialId} path={isBack ? BODY_BACK : BODY_FRONT} />
     </g>

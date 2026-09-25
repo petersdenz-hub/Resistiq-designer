@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { setTimeout as delay } from 'node:timers/promises'
 
-const SMOKE_PNG = join(tmpdir(), 'resistq-7e-mark.png')
+const SMOKE_PNG = join(tmpdir(), 'resistq-8-mark.png')
 writeFileSync(
   SMOKE_PNG,
   Buffer.from(
@@ -83,6 +83,63 @@ async function run() {
   await page.waitForSelector('[data-zoom-fit="true"]')
   await page.waitForSelector('[data-design-breadcrumb="true"]')
   await page.waitForSelector('[data-garment-color-control="true"]')
+  await page.waitForSelector('[data-garment-customization="true"]')
+
+  const tshirtRegions = await page.$$eval('[data-color-region]', (nodes) =>
+    nodes.map((node) => node.getAttribute('data-color-region')),
+  )
+  if (!tshirtRegions.includes('body') || !tshirtRegions.includes('sleeve-left') || !tshirtRegions.includes('collar')) {
+    throw new Error(`T-shirt color regions are wrong: ${tshirtRegions.join(',')}`)
+  }
+  if (tshirtRegions.includes('hood') || tshirtRegions.includes('waistband')) {
+    throw new Error('T-shirt showed unsupported color regions')
+  }
+
+  const sleeveRegion = await page.$('[data-color-region="sleeve-left"] [data-color-preset="#8b3a3a"]')
+  if (!sleeveRegion) {
+    throw new Error('Region color presets are missing')
+  }
+  await sleeveRegion.click()
+  await delay(80)
+
+  await page.click('[data-material-option="fleece"]')
+  await delay(80)
+  const fleece = await page.$('[data-material-option="fleece"][aria-pressed="true"]')
+  if (!fleece) {
+    throw new Error('Fleece material was not selected')
+  }
+
+  await page.waitForSelector('[data-construction-control="collar"]')
+  const hoodControl = await page.$('[data-construction-control="hood"]')
+  if (hoodControl) {
+    throw new Error('T-shirt showed hoodie construction')
+  }
+  await page.click('[data-construction-option="collar:vneck"]')
+  await delay(80)
+
+  await page.click('[data-guide-toggle="print-area"]')
+  await delay(40)
+  await page.click('[data-guide-toggle="safe-area"]')
+  await delay(40)
+  await page.click('[data-guide-toggle="guides"]')
+  await delay(80)
+  const guides = await page.$eval('#design-stage', () => {
+    const print = document.querySelector('[data-guide-toggle="print-area"]')
+    const safe = document.querySelector('[data-guide-toggle="safe-area"]')
+    const all = document.querySelector('[data-guide-toggle="guides"]')
+    return {
+      print: print?.getAttribute('aria-pressed'),
+      safe: safe?.getAttribute('aria-pressed'),
+      guides: all?.getAttribute('aria-pressed'),
+    }
+  })
+  if (guides.print !== 'false' || guides.safe !== 'false' || guides.guides !== 'true') {
+    throw new Error(`Guide toggles did not flip: ${JSON.stringify(guides)}`)
+  }
+  await page.click('[data-guide-toggle="print-area"]')
+  await page.click('[data-guide-toggle="safe-area"]')
+  await page.click('[data-guide-toggle="guides"]')
+  await delay(60)
 
   await page.click('[data-add-design-text="true"]')
   await page.click('[data-add-design-shape="true"]')
@@ -92,6 +149,10 @@ async function run() {
   if (objectCount < 2) {
     throw new Error(`Expected 2 design objects, found ${objectCount}`)
   }
+  const clipped = await page.$('[data-artwork-clip="true"]')
+  if (!clipped) {
+    throw new Error('Artwork clipping is not enabled on the canvas')
+  }
 
   const addToolsAfterSelect = await page.$('[data-add-design-text="true"]')
   if (!addToolsAfterSelect) {
@@ -100,6 +161,7 @@ async function run() {
   await page.waitForSelector('[data-action="duplicate"]')
   await page.waitForSelector('[data-action="lock"]')
   await page.waitForSelector('[data-selection-bounds="true"]')
+  await page.waitForSelector('[data-artwork-properties="true"]')
 
   await page.click('[data-shape-menu="true"]')
   await page.waitForSelector('[data-shape-kind="circle"]')
@@ -202,8 +264,14 @@ async function run() {
     artwork: Number(node.getAttribute('data-preview-artwork')),
     handles: node.getAttribute('data-preview-handles'),
     seams: node.getAttribute('data-preview-seams'),
+    guides: node.getAttribute('data-preview-guides'),
   }))
-  if (preview.garment !== 'tshirt' || preview.handles !== 'false' || preview.seams !== 'true') {
+  if (
+    preview.garment !== 'tshirt' ||
+    preview.handles !== 'false' ||
+    preview.seams !== 'true' ||
+    preview.guides !== 'false'
+  ) {
     throw new Error(`Preview chrome is wrong: ${JSON.stringify(preview)}`)
   }
   if (preview.artwork < 1) {
@@ -213,12 +281,25 @@ async function run() {
   if (previewHandles) {
     throw new Error('Preview showed editing handles')
   }
+  const previewGuides = await page.$('[data-preview-stage="true"] [data-editor-chrome="true"]')
+  if (previewGuides) {
+    throw new Error('Preview showed design guides')
+  }
   await clickText(page, 'Close')
   await delay(80)
 
   await page.click('button[aria-label="Garment"]')
   await page.waitForSelector('[data-garment-selector="true"]')
   await page.waitForSelector('[data-garment-nav="true"]')
+
+  async function clearSelection() {
+    const box = await page.$eval('#design-stage', (node) => {
+      const rect = node.getBoundingClientRect()
+      return { x: rect.x, y: rect.y }
+    })
+    await page.mouse.click(box.x + 6, box.y + 6)
+    await delay(80)
+  }
 
   async function switchGarment(type, extraCheck) {
     await page.click(`[data-garment-option="${type}"]`)
@@ -243,23 +324,76 @@ async function run() {
     }
   }
 
-  await switchGarment('hoodie')
-  await switchGarment('jacket')
+  await switchGarment('hoodie', async () => {
+    await clearSelection()
+    await page.waitForSelector('[data-garment-customization="true"]')
+    const regions = await page.$$eval('[data-color-region]', (nodes) =>
+      nodes.map((node) => node.getAttribute('data-color-region')),
+    )
+    if (!regions.includes('hood') || !regions.includes('cuffs') || regions.includes('waistband')) {
+      throw new Error(`Hoodie regions are wrong: ${regions.join(',')}`)
+    }
+    await page.waitForSelector('[data-construction-control="hood"]')
+    await page.waitForSelector('[data-construction-option="pocket:kangaroo"]')
+  })
+  await switchGarment('sweatshirt', async () => {
+    await clearSelection()
+    await page.waitForSelector('[data-garment-customization="true"]')
+    const regions = await page.$$eval('[data-color-region]', (nodes) =>
+      nodes.map((node) => node.getAttribute('data-color-region')),
+    )
+    if (!regions.includes('collar') || !regions.includes('cuffs') || regions.includes('hood')) {
+      throw new Error(`Sweatshirt regions are wrong: ${regions.join(',')}`)
+    }
+  })
+  await switchGarment('jacket', async () => {
+    await clearSelection()
+    await page.waitForSelector('[data-garment-customization="true"]')
+    const regions = await page.$$eval('[data-color-region]', (nodes) =>
+      nodes.map((node) => node.getAttribute('data-color-region')),
+    )
+    if (!regions.includes('front-left') || !regions.includes('front-right') || regions.includes('cuffs')) {
+      throw new Error(`Jacket regions are wrong: ${regions.join(',')}`)
+    }
+    await page.waitForSelector('[data-construction-control="zipper"]')
+  })
   await switchGarment('pants', async () => {
     await page.waitForSelector('[data-zone-option="left-leg"]')
+    await clearSelection()
+    await page.waitForSelector('[data-garment-customization="true"]')
+    const regions = await page.$$eval('[data-color-region]', (nodes) =>
+      nodes.map((node) => node.getAttribute('data-color-region')),
+    )
+    if (!regions.includes('leg-left') || !regions.includes('waistband')) {
+      throw new Error(`Pants regions are wrong: ${regions.join(',')}`)
+    }
   })
   await switchGarment('shorts', async () => {
     await page.waitForSelector('[data-zone-option="right-leg"]')
+    await clearSelection()
+    await page.waitForSelector('[data-garment-customization="true"]')
+    const cargo = await page.$('[data-construction-control="cargo_pocket"]')
+    if (cargo) {
+      throw new Error('Shorts showed pants cargo pockets')
+    }
   })
   await switchGarment('tshirt', async () => {
     await page.waitForSelector('[data-zone-option="left-sleeve"]')
+    await clearSelection()
+    await page.waitForSelector('[data-garment-customization="true"]')
+    const regions = await page.$$eval('[data-color-region]', (nodes) =>
+      nodes.map((node) => node.getAttribute('data-color-region')),
+    )
+    if (!regions.includes('body') || regions.includes('hood')) {
+      throw new Error(`Returned T-shirt regions are wrong: ${regions.join(',')}`)
+    }
   })
 
   await browser.close()
   if (vite) {
     vite.kill('SIGTERM')
   }
-  console.log('Phase 7E browser smoke passed')
+  console.log('Phase 8 browser smoke passed')
   process.exit(0)
 }
 

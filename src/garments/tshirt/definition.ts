@@ -48,7 +48,7 @@ export const TSHIRT_PANELS: GarmentPanelDefinition[] = [
     frame: { x: 194, y: 192, width: 172, height: 300 },
     designBounds: { x: 11, y: 10, width: 78, height: 47.14 },
     designZones: [
-      { id: 'tshirt-full-front', name: 'Full front', bounds: { x: 0, y: 0, width: 100, height: 100 } },
+      { id: 'tshirt-full-front', name: 'Front print', bounds: { x: 0, y: 0, width: 100, height: 100 } },
       { id: 'tshirt-chest', name: 'Chest', bounds: { x: 11, y: 10, width: 78, height: 47.14 } },
       { id: 'tshirt-center-front', name: 'Center front', bounds: { x: 30, y: 20, width: 40, height: 40 } },
     ],
@@ -66,8 +66,9 @@ export const TSHIRT_PANELS: GarmentPanelDefinition[] = [
     frame: { x: 194, y: 186, width: 172, height: 310 },
     designBounds: { x: 9, y: 10.67, width: 82, height: 62 },
     designZones: [
-      { id: 'tshirt-full-back', name: 'Full back', bounds: { x: 0, y: 0, width: 100, height: 100 } },
+      { id: 'tshirt-full-back', name: 'Back print', bounds: { x: 0, y: 0, width: 100, height: 100 } },
       { id: 'tshirt-upper-back', name: 'Upper back', bounds: { x: 9, y: 10.67, width: 82, height: 40 } },
+      { id: 'tshirt-lower-back', name: 'Lower back', bounds: { x: 9, y: 50.67, width: 82, height: 22 } },
     ],
     safeArea: BACK_PRINT,
   },
@@ -83,7 +84,7 @@ export const TSHIRT_PANELS: GarmentPanelDefinition[] = [
     frame: { x: 68, y: 148, width: 104, height: 84 },
     designBounds: { x: 11.11, y: 13.33, width: 77.78, height: 71.11 },
     designZones: [
-      { id: 'tshirt-right-outer-sleeve', name: 'Outer sleeve', bounds: { x: 0, y: 0, width: 100, height: 100 } },
+      { id: 'tshirt-right-outer-sleeve', name: 'Right sleeve', bounds: { x: 0, y: 0, width: 100, height: 100 } },
       { id: 'tshirt-right-sleeve-center', name: 'Sleeve center', bounds: { x: 11.11, y: 13.33, width: 77.78, height: 71.11 } },
     ],
     safeArea: sleevePrint('right_sleeve_print'),
@@ -100,7 +101,7 @@ export const TSHIRT_PANELS: GarmentPanelDefinition[] = [
     frame: { x: 388, y: 148, width: 104, height: 84 },
     designBounds: { x: 11.11, y: 13.33, width: 77.78, height: 71.11 },
     designZones: [
-      { id: 'tshirt-left-outer-sleeve', name: 'Outer sleeve', bounds: { x: 0, y: 0, width: 100, height: 100 } },
+      { id: 'tshirt-left-outer-sleeve', name: 'Left sleeve', bounds: { x: 0, y: 0, width: 100, height: 100 } },
       { id: 'tshirt-left-sleeve-center', name: 'Sleeve center', bounds: { x: 11.11, y: 13.33, width: 77.78, height: 71.11 } },
     ],
     safeArea: sleevePrint('left_sleeve_print'),
