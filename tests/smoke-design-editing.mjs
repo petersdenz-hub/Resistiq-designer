@@ -22,7 +22,7 @@ async function waitForServer() {
 async function clickText(page, text) {
   const found = await page.evaluate((needle) => {
     const nodes = [...document.querySelectorAll('button, [role="button"]')]
-    const match = nodes.find((node) => node.textContent?.trim() === needle)
+    const match = nodes.find((node) => node.textContent?.replace(/\s+/g, ' ').includes(needle))
     if (!match) {
       return false
     }
@@ -59,7 +59,9 @@ async function run() {
     throw new Error('No buttons on dashboard')
   }
   await clickText(page, 'New design').catch(() => clickText(page, 'Create your first design'))
-  await delay(200)
+  await page.waitForFunction(() =>
+    [...document.querySelectorAll('button')].some((node) => node.textContent?.includes('T-shirt')),
+  )
   await clickText(page, 'T-shirt')
   await page.waitForSelector('#design-stage')
   await page.click('button[aria-label="Design"]')
