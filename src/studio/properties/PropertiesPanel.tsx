@@ -285,10 +285,11 @@ function SelectedObjectProperties() {
 
 function ImageObjectFields() {
   const { selectedObject, updateSelectedObject } = useDesign()
+  const source = selectedObject?.type === 'image' ? selectedObject.source : ''
+  const asset = useAsset(source)
   if (!selectedObject || selectedObject.type !== 'image') {
     return null
   }
-  const asset = useAsset(selectedObject.source)
   const format = selectedObject.mimeType.includes('svg')
     ? 'SVG'
     : selectedObject.mimeType.includes('png')

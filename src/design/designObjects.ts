@@ -348,7 +348,10 @@ export function removeDesignObject(
 function applyObjectPatch(document: DesignDocument, object: DesignObject, patch: DesignObjectPatch): DesignObject {
   const next = { ...object, ...patch } as DesignObject
   if (patch.zone && isPlacementZone(patch.zone) && patch.zone !== object.zone) {
-    next.anchor = resolveObjectAnchor(document, patch.zone, patch.anchor ?? object.anchor)
+    next.anchor = {
+      space: patch.anchor?.space ?? (object.anchor.space === 'panel' ? 'panel' : 'zone'),
+      panelId: patch.anchor?.panelId ?? defaultPanelIdForZone(document, patch.zone),
+    }
     next.zone = patch.zone
   }
   if (next.type === 'image' && next.aspectLocked !== false) {
