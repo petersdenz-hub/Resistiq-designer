@@ -28,6 +28,11 @@ export function panelName(panel: GarmentPanelDefinition): string {
   return panel.name ?? panel.label
 }
 
+/** Technical label used on the canvas. Derived from the definition name. */
+export function panelDisplayLabel(panel: GarmentPanelDefinition): string {
+  return panelName(panel).toUpperCase()
+}
+
 export function inferPanelSide(panel: Pick<GarmentPanelDefinition, 'id' | 'viewId' | 'side'>): GarmentPanelSide {
   if (panel.side) {
     return panel.side
@@ -110,19 +115,19 @@ function defaultZonesForPanel(panel: GarmentPanelDefinition): DesignZoneDefiniti
   if (panel.type === 'body' && inferPanelSide(panel) === 'left') {
     return [
       { id: `${panel.id}-full-front`, name: 'Left front', bounds: { x: 0, y: 0, width: 100, height: 100 } },
-      { id: `${panel.id}-chest`, name: 'Chest', bounds: print },
+      { id: `${panel.id}-chest`, name: 'Front chest', bounds: print },
     ]
   }
   if (panel.type === 'body' && inferPanelSide(panel) === 'right') {
     return [
       { id: `${panel.id}-full-front`, name: 'Right front', bounds: { x: 0, y: 0, width: 100, height: 100 } },
-      { id: `${panel.id}-chest`, name: 'Chest', bounds: print },
+      { id: `${panel.id}-chest`, name: 'Front chest', bounds: print },
     ]
   }
   if (panel.type === 'body' && inferPanelSide(panel) === 'front') {
     return [
       { id: `${panel.id}-full-front`, name: 'Front print', bounds: { x: 0, y: 0, width: 100, height: 100 } },
-      { id: `${panel.id}-chest`, name: 'Chest', bounds: print },
+      { id: `${panel.id}-chest`, name: 'Front chest', bounds: print },
       {
         id: `${panel.id}-center-front`,
         name: 'Center front',

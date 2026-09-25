@@ -31,7 +31,7 @@ export function DesignObjectLayer({
   const selected = new Set(selectedObjectIds ?? (selectedObjectId ? [selectedObjectId] : []))
 
   return (
-    <g data-design-object-layer="true" data-artwork-clip={clipEnabled ? 'true' : 'false'}>
+    <g data-design-object-layer="true" data-artwork-clip={clipEnabled ? 'true' : 'false'} data-artwork-on-garment="true">
       {objects.map((object) => {
         if (!object.visible) {
           return null

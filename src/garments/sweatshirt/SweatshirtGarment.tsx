@@ -1,8 +1,8 @@
 import type { GarmentRenderProps } from '../types'
 import { clothFor } from '../render/cloth'
-import { FabricFinish, FabricSheen, HemBand } from '../render/constructionDraw'
+import { CuffCap, FabricFinish, FabricSheen, HemBand } from '../render/constructionDraw'
 import { constructionStyle, cuffStyle, fabricFilter } from '../render/constructionState'
-import { FlatPart, FlatShadow, Fold, Seam } from '../render/flatStyle'
+import { ClothGradient, FlatPart, FlatShadow, Fold, Seam, Stitch } from '../render/flatStyle'
 
 /**
  * Fashion-flat crewneck sweatshirt. Set-in shoulders and a rib collar,
@@ -21,9 +21,9 @@ const LEFT_SLEEVE =
   'M400 188 C448 198 492 216 520 230 C526 258 512 332 500 368 C466 360 422 346 386 334 L392 224 L400 188 Z'
 
 const RIGHT_CUFF =
-  'M36 360 C28 362 26 372 28 382 L38 404 C42 412 56 412 64 404 L76 380 C78 370 70 360 60 360 Z'
+  'M40 348 C32 352 30 366 34 380 L46 404 C52 412 68 412 74 402 L80 376 C82 364 70 350 56 348 Z'
 const LEFT_CUFF =
-  'M524 360 C532 362 534 372 532 382 L522 404 C518 412 504 412 496 404 L484 380 C482 370 490 360 500 360 Z'
+  'M520 348 C528 352 530 366 526 380 L514 404 C508 412 492 412 486 402 L480 376 C478 364 490 350 504 348 Z'
 
 const COLLAR_CREW_FRONT =
   'M226 180 C238 220 322 220 334 180 L324 188 C314 214 246 214 236 188 Z'
@@ -84,23 +84,10 @@ export function SweatshirtGarment({
   return (
     <g pointerEvents="none">
       <defs>
-        <linearGradient id={`${id}-body`} x1="280" y1="170" x2="280" y2="542" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor={body.highlight} />
-          <stop offset="0.42" stopColor={body.cloth} />
-          <stop offset="1" stopColor={body.clothDeep} />
-        </linearGradient>
-        <linearGradient id={`${id}-sleeve-r`} x1="160" y1="184" x2="40" y2="368" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor={right.cloth} />
-          <stop offset="1" stopColor={right.clothDark} />
-        </linearGradient>
-        <linearGradient id={`${id}-sleeve-l`} x1="400" y1="184" x2="520" y2="368" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor={left.cloth} />
-          <stop offset="1" stopColor={left.clothDark} />
-        </linearGradient>
-        <linearGradient id={`${id}-collar`} x1="280" y1="158" x2="280" y2="220" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor={collar.highlight} />
-          <stop offset="1" stopColor={collar.rib} />
-        </linearGradient>
+        <ClothGradient id={`${id}-body`} color={body} x1={280} y1={170} x2={280} y2={542} />
+        <ClothGradient id={`${id}-sleeve-r`} color={right} x1={160} y1={184} x2={40} y2={360} />
+        <ClothGradient id={`${id}-sleeve-l`} color={left} x1={400} y1={184} x2={520} y2={360} />
+        <ClothGradient id={`${id}-collar`} color={collar} x1={280} y1={158} x2={280} y2={220} />
         <FlatShadow id={id} />
       </defs>
       <FabricFinish id={id} materialId={materialId} />
@@ -137,38 +124,32 @@ export function SweatshirtGarment({
         ) : null}
         {cuffs ? (
           <>
-            <g
-              data-garment-part={cuffRightId}
-              data-panel-color={cuffRight.cloth}
-              data-construction-kind="cuff"
-              data-construction-style={cuffs}
-            >
-              <FlatPart
+            <g data-garment-part={cuffRightId} data-panel-color={cuffRight.cloth}>
+              <CuffCap
                 d={RIGHT_CUFF}
-                fill={cuffs === 'rib' ? cuffRight.rib : cuffRight.clothDeep}
-                stroke={cuffRight.stitch}
+                style={cuffs}
+                color={cuffRight}
+                stitchPath="M42 372 H72"
+                ribBox={{ x: 34, y: 350, width: 44, height: 54 }}
               />
-              <Seam d="M40 380 H70" color={cuffRight.stitch} width={1.6} opacity={0.4} />
             </g>
-            <g
-              data-garment-part={cuffLeftId}
-              data-panel-color={cuffLeft.cloth}
-              data-construction-kind="cuff"
-              data-construction-style={cuffs}
-            >
-              <FlatPart
+            <g data-garment-part={cuffLeftId} data-panel-color={cuffLeft.cloth}>
+              <CuffCap
                 d={LEFT_CUFF}
-                fill={cuffs === 'rib' ? cuffLeft.rib : cuffLeft.clothDeep}
-                stroke={cuffLeft.stitch}
+                style={cuffs}
+                color={cuffLeft}
+                stitchPath="M488 372 H518"
+                ribBox={{ x: 482, y: 350, width: 44, height: 54 }}
               />
-              <Seam d="M490 380 H520" color={cuffLeft.stitch} width={1.6} opacity={0.4} />
             </g>
           </>
         ) : null}
       </g>
 
-      <Seam d="M178 230 L186 514" color={body.stitch} width={1} opacity={0.2} />
-      <Seam d="M382 230 L374 514" color={body.stitch} width={1} opacity={0.2} />
+      <Seam d="M178 230 L186 514" color={body.stitch} width={1} opacity={0.26} />
+      <Seam d="M382 230 L374 514" color={body.stitch} width={1} opacity={0.26} />
+      <Stitch d="M182 246 L190 506" color={body.stitch} />
+      <Stitch d="M378 246 L370 506" color={body.stitch} />
       <Fold d="M196 246 C224 240 336 240 364 246" color={body.highlight} />
       <Fold d="M70 248 C108 280 146 314 168 328" color={right.highlight} opacity={0.16} />
       <Fold d="M490 248 C452 280 414 314 392 328" color={left.highlight} opacity={0.16} />

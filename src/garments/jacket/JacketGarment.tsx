@@ -15,7 +15,7 @@ import {
   fabricFilter,
   pocketStyle,
 } from '../render/constructionState'
-import { FlatPart, FlatShadow, Fold, Seam } from '../render/flatStyle'
+import { ClothGradient, FlatPart, FlatShadow, Fold, PanelBoundary, Seam, Stitch } from '../render/flatStyle'
 
 /**
  * Fashion-flat outdoor jacket. Front is two body panels plus a zipper.
@@ -108,33 +108,12 @@ export function JacketGarment({ viewId, bodyColor, panelColors, construction }: 
   return (
     <g pointerEvents="none">
       <defs>
-        <linearGradient id={`${id}-body-l`} x1="220" y1="150" x2="220" y2="534" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor={leftBody.highlight} />
-          <stop offset="0.45" stopColor={leftBody.cloth} />
-          <stop offset="1" stopColor={leftBody.clothDeep} />
-        </linearGradient>
-        <linearGradient id={`${id}-body-r`} x1="340" y1="150" x2="340" y2="534" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor={rightBody.highlight} />
-          <stop offset="0.45" stopColor={rightBody.cloth} />
-          <stop offset="1" stopColor={rightBody.clothDeep} />
-        </linearGradient>
-        <linearGradient id={`${id}-body-b`} x1="280" y1="150" x2="280" y2="534" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor={back.highlight} />
-          <stop offset="0.45" stopColor={back.cloth} />
-          <stop offset="1" stopColor={back.clothDeep} />
-        </linearGradient>
-        <linearGradient id={`${id}-sleeve-r`} x1="168" y1="168" x2="52" y2="320" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor={right.cloth} />
-          <stop offset="1" stopColor={right.clothDark} />
-        </linearGradient>
-        <linearGradient id={`${id}-sleeve-l`} x1="392" y1="168" x2="508" y2="320" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor={left.cloth} />
-          <stop offset="1" stopColor={left.clothDark} />
-        </linearGradient>
-        <linearGradient id={`${id}-collar`} x1="280" y1="118" x2="280" y2="168" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor={collar.highlight} />
-          <stop offset="1" stopColor={collar.rib} />
-        </linearGradient>
+        <ClothGradient id={`${id}-body-l`} color={leftBody} x1={220} y1={150} x2={220} y2={534} />
+        <ClothGradient id={`${id}-body-r`} color={rightBody} x1={340} y1={150} x2={340} y2={534} />
+        <ClothGradient id={`${id}-body-b`} color={back} x1={280} y1={150} x2={280} y2={534} />
+        <ClothGradient id={`${id}-sleeve-r`} color={right} x1={168} y1={168} x2={52} y2={320} />
+        <ClothGradient id={`${id}-sleeve-l`} color={left} x1={392} y1={168} x2={508} y2={320} />
+        <ClothGradient id={`${id}-collar`} color={collar} x1={280} y1={118} x2={280} y2={168} />
         <FlatShadow id={id} />
       </defs>
       <FabricFinish id={id} materialId={materialId} />
@@ -194,6 +173,8 @@ export function JacketGarment({ viewId, bodyColor, panelColors, construction }: 
                 stroke={rightBody.stitch}
               />
             </g>
+            <PanelBoundary d="M274 168 V538" color={leftBody.stitch} />
+            <PanelBoundary d="M286 168 V538" color={rightBody.stitch} />
             {zipperStyle ? (
               <ZipperPart
                 style={zipperStyle}
@@ -250,8 +231,11 @@ export function JacketGarment({ viewId, bodyColor, panelColors, construction }: 
         ) : null}
       </g>
 
-      <Seam d="M170 214 L182 516" color={(isBack ? back : leftBody).stitch} width={1} opacity={0.2} />
-      <Seam d="M390 214 L378 516" color={(isBack ? back : rightBody).stitch} width={1} opacity={0.2} />
+      <Seam d="M170 214 L182 516" color={(isBack ? back : leftBody).stitch} width={1} opacity={0.24} />
+      <Seam d="M390 214 L378 516" color={(isBack ? back : rightBody).stitch} width={1} opacity={0.24} />
+      <Stitch d="M176 220 L188 512" color={(isBack ? back : leftBody).stitch} />
+      <Stitch d="M384 220 L372 512" color={(isBack ? back : rightBody).stitch} />
+      <Seam d={isBack ? 'M196 176 H364' : 'M168 206 H274 M286 206 H392'} color={(isBack ? back : leftBody).stitch} width={1} opacity={0.22} />
       <Fold
         d={isBack ? 'M196 220 C230 214 330 214 364 220' : 'M176 220 C210 214 246 214 268 220'}
         color={(isBack ? back : leftBody).highlight}

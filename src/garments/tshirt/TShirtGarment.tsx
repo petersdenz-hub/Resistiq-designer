@@ -2,7 +2,7 @@ import type { GarmentRenderProps } from '../types'
 import { clothFor } from '../render/cloth'
 import { FabricFinish, FabricSheen, HemBand } from '../render/constructionDraw'
 import { constructionStyle, cuffStyle, fabricFilter } from '../render/constructionState'
-import { FlatPart, FlatShadow, Fold, Seam } from '../render/flatStyle'
+import { ClothGradient, FlatPart, FlatShadow, Fold, Seam, Stitch } from '../render/flatStyle'
 
 /**
  * Fashion-flat T-shirt. Body, sleeves, and collar are separate parts so
@@ -21,10 +21,10 @@ const BODY_BACK =
   'M176 228 L188 486 C188 500 200 508 216 508 L344 508 C360 508 372 500 372 486 L384 228 L398 148 L318 148 C310 164 250 164 242 148 L162 148 L176 228 Z'
 
 const RIGHT_SLEEVE =
-  'M162 148 L68 172 L86 230 L176 228 L162 148 Z'
+  'M162 150 C118 158 86 170 66 180 C58 200 70 220 84 228 L176 226 C170 198 166 168 162 150 Z'
 
 const LEFT_SLEEVE =
-  'M398 148 L492 172 L474 230 L384 228 L398 148 Z'
+  'M398 150 C442 158 474 170 494 180 C502 200 490 220 476 228 L384 226 C390 198 394 168 398 150 Z'
 
 const COLLAR_CREW_FRONT =
   'M228 146 C240 188 320 188 332 146 L324 148 C314 184 246 184 236 148 Z'
@@ -87,23 +87,10 @@ export function TShirtGarment({ viewId, bodyColor, panelColors, construction }: 
   return (
     <g pointerEvents="none">
       <defs>
-        <linearGradient id={`${id}-body`} x1="280" y1="140" x2="280" y2="510" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor={body.highlight} />
-          <stop offset="0.4" stopColor={body.cloth} />
-          <stop offset="1" stopColor={body.clothDeep} />
-        </linearGradient>
-        <linearGradient id={`${id}-sleeve-r`} x1="170" y1="148" x2="70" y2="230" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor={right.cloth} />
-          <stop offset="1" stopColor={right.clothDark} />
-        </linearGradient>
-        <linearGradient id={`${id}-sleeve-l`} x1="390" y1="148" x2="490" y2="230" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor={left.cloth} />
-          <stop offset="1" stopColor={left.clothDark} />
-        </linearGradient>
-        <linearGradient id={`${id}-collar`} x1="280" y1="146" x2="280" y2="188" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor={collar.highlight} />
-          <stop offset="1" stopColor={collar.rib} />
-        </linearGradient>
+        <ClothGradient id={`${id}-body`} color={body} x1={280} y1={140} x2={280} y2={510} />
+        <ClothGradient id={`${id}-sleeve-r`} color={right} x1={170} y1={148} x2={70} y2={230} />
+        <ClothGradient id={`${id}-sleeve-l`} color={left} x1={390} y1={148} x2={490} y2={230} />
+        <ClothGradient id={`${id}-collar`} color={collar} x1={280} y1={146} x2={280} y2={188} />
         <FlatShadow id={id} />
       </defs>
       <FabricFinish id={id} materialId={materialId} />
@@ -151,7 +138,9 @@ export function TShirtGarment({ viewId, bodyColor, panelColors, construction }: 
 
         <Seam d="M180 236 L190 492" color={body.stitch} />
         <Seam d="M380 236 L370 492" color={body.stitch} />
-        <Seam d="M176 228 L384 228" color={body.stitch} width={1.05} opacity={0.22} />
+        <Seam d="M176 226 L384 226" color={body.stitch} width={1.1} opacity={0.28} />
+        <Stitch d="M184 250 L194 486" color={body.stitch} />
+        <Stitch d="M376 250 L366 486" color={body.stitch} />
         <Fold d="M196 250 C220 246 340 246 364 250" color={body.highlight} />
         <Fold d="M80 188 C110 204 148 216 168 220" color={right.highlight} />
         <Fold d="M480 188 C450 204 412 216 392 220" color={left.highlight} />
