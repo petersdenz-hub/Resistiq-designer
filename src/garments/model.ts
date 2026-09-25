@@ -1,5 +1,4 @@
 import {
-  GARMENT_DESIGN_ZONES,
   type DesignZoneDefinition,
   type GarmentDefinition,
   type GarmentDesignZoneId,

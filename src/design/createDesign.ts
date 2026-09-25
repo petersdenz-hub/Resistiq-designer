@@ -1,5 +1,5 @@
 import { getGarment } from '@/garments/registry'
-import { inferSupportedDesignZones, panelName } from '@/garments/model'
+import { inferPlacementZone, inferSupportedDesignZones, panelName } from '@/garments/model'
 import type { GarmentDefinition } from '@/garments/types'
 import { createId } from './ids'
 import type { DesignDocument, DesignPanel, DesignSafeArea, DesignView } from './types'
@@ -63,9 +63,15 @@ export function createNewDesign(garmentType = 'tshirt'): DesignDocument {
   const activeView = garment.preview?.viewId ?? garment.views[0]?.id ?? 'front'
   const chrome = documentChromeFromGarment(garment)
   const zones = inferSupportedDesignZones(garment)
-  const activeZone = zones.includes(activeView)
-    ? activeView
-    : (zones[0] ?? (activeView === 'back' ? 'back' : 'front'))
+  const activePanelId = garment.defaultPanelId(activeView)
+  const defaultPanel = garment.panels.find((panel) => panel.id === activePanelId)
+  const panelZone = defaultPanel ? inferPlacementZone(defaultPanel) : undefined
+  const activeZone =
+    panelZone && zones.includes(panelZone)
+      ? panelZone
+      : zones.includes(activeView)
+        ? activeView
+        : (zones[0] ?? (activeView === 'back' ? 'back' : 'front'))
 
   return {
     id: createId(),
@@ -74,7 +80,7 @@ export function createNewDesign(garmentType = 'tshirt'): DesignDocument {
     status: 'draft',
     garmentType: garment.id,
     activeView,
-    activePanelId: garment.defaultPanelId(activeView),
+    activePanelId,
     views: chrome.views,
     panels: chrome.panels,
     safeAreas: chrome.safeAreas,

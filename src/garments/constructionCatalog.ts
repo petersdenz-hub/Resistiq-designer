@@ -337,12 +337,12 @@ function bodyPanelId(garment: ConstructionGarment, side?: 'left' | 'right' | 'fr
   return panelIdOf(garment, 'body', side) ?? panelIdOf(garment, 'shell', side)
 }
 
-function part(
-  kind: ConstructionKind,
+function part<K extends ConstructionKind>(
+  kind: K,
   id: string,
   style: string,
-  extra: Partial<DesignConstructionPart> = {},
-): DesignConstructionPart {
+  extra: Partial<Omit<DesignConstructionPart, 'id' | 'kind' | 'style'>> = {},
+): DesignConstructionPart & { kind: K } {
   return { id, kind, style, present: true, ...extra }
 }
 
@@ -391,7 +391,7 @@ export function deriveConstructionDefaults(garment: ConstructionGarment): Design
     }
   }
   if (caps.pockets) {
-    next.pockets = pocketsForStyle(garment, caps.legs ? 'slash' : 'patch', caps.legs ? 'back' : undefined)
+    next.pockets = pocketsForStyle(garment, caps.legs ? 'slash' : 'patch', caps.legs ? 'back' : undefined) as DesignConstruction['pockets']
   }
   return next
 }
