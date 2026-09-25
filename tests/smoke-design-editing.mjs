@@ -293,11 +293,13 @@ async function run() {
   await page.waitForSelector('[data-garment-nav="true"]')
 
   async function clearSelection() {
-    const box = await page.$eval('#design-stage', (node) => {
-      const rect = node.getBoundingClientRect()
-      return { x: rect.x, y: rect.y }
+    await page.evaluate(() => {
+      const active = document.activeElement
+      if (active instanceof HTMLElement) {
+        active.blur()
+      }
     })
-    await page.mouse.click(box.x + 6, box.y + 6)
+    await page.keyboard.press('Escape')
     await delay(80)
   }
 
