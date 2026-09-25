@@ -50,6 +50,7 @@ export {
 } from './registry'
 export { GarmentRenderer } from './render/GarmentRenderer'
 export { PanelGuides } from './render/PanelGuides'
+export { capGarment } from './cap'
 export { hoodieGarment } from './hoodie'
 export { jacketGarment } from './jacket'
 export { pantsGarment } from './pants'

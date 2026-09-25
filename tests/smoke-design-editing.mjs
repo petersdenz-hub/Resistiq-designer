@@ -396,6 +396,23 @@ async function run() {
       throw new Error('Shorts showed pants cargo pockets')
     }
   })
+  await switchGarment('cap', async () => {
+    await page.waitForSelector('[data-zone-option="front"]')
+    await clearSelection()
+    await page.waitForSelector('[data-garment-customization="true"]')
+    const regions = await page.$$eval('[data-color-region]', (nodes) =>
+      nodes.map((node) => node.getAttribute('data-color-region')),
+    )
+    if (!regions.includes('front-panel') || !regions.includes('crown') || !regions.includes('brim') || !regions.includes('band')) {
+      throw new Error(`Cap regions are wrong: ${regions.join(',')}`)
+    }
+    const capSilhouette = await page.$('#design-stage [data-garment-silhouette="true"]')
+    if (!capSilhouette) {
+      throw new Error('Cap silhouette is missing')
+    }
+    await page.waitForSelector('[data-construction-control="hem"]')
+    await page.waitForSelector('[data-construction-control="waistband"]')
+  })
   await switchGarment('tshirt', async () => {
     await page.waitForSelector('[data-zone-option="left-sleeve"]')
     await clearSelection()

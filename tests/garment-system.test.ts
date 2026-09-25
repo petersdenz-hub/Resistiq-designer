@@ -35,7 +35,7 @@ import {
 import { describe, expect, it } from 'vitest'
 
 describe('Phase 7C garment system foundation', () => {
-  it('registers a six-garment catalog with T-shirt as the reference', () => {
+  it('registers a definition-driven catalog with T-shirt as the reference', () => {
     expect(AVAILABLE_GARMENTS.map((garment) => garment.id)).toEqual([
       'tshirt',
       'hoodie',
@@ -43,6 +43,7 @@ describe('Phase 7C garment system foundation', () => {
       'jacket',
       'pants',
       'shorts',
+      'cap',
     ])
     expect(getGarment('tshirt').id).toBe('tshirt')
     expect(getGarment('sweatshirt').id).toBe('sweatshirt')

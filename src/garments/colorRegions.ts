@@ -149,6 +149,15 @@ export function deriveRegionsFromPanels(panels: GarmentPanelDefinition[]): Color
   addGroup(regions, unlabeled, 'crown', 'crown', 'Crown')
   addGroup(regions, unlabeled, 'brim', 'brim', 'Brim')
   addGroup(regions, unlabeled, 'band', 'band', 'Band')
+  addTypedRegions(
+    regions,
+    unlabeled,
+    'side_panel',
+    (side) => (side === 'left' ? 'Left side' : 'Right side'),
+    'Sides',
+    'sides',
+  )
+  addGroup(regions, unlabeled, 'structure', 'structure', 'Structure')
   addTypedRegions(regions, unlabeled, 'hand', (side) => (side === 'left' ? 'Left hand' : 'Right hand'), 'Hands', 'hands')
   addTypedRegions(regions, unlabeled, 'foot', (side) => (side === 'left' ? 'Left foot' : 'Right foot'), 'Feet', 'feet')
   addGroup(regions, unlabeled, 'shell', 'shell', 'Shell')
