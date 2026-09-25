@@ -44,8 +44,15 @@ export function createBottomsMeta(kind: BottomsKind): Omit<GarmentDefinition, 'r
       label: 'Left leg',
       viewId: 'front',
       type: 'leg',
+      printable: true,
       local: { width: 90, height: legLocalHeight },
       frame: { x: 164, y: 108, width: 108, height: legFrameHeight },
+      designBounds: { x: 13.33, y: (18 / legLocalHeight) * 100, width: 73.33, height: (printHeight / legLocalHeight) * 100 },
+      designZones: [
+        { id: `${kind}-left-full`, name: 'Full left leg', bounds: { x: 0, y: 0, width: 100, height: 100 } },
+        { id: `${kind}-left-upper`, name: 'Upper leg', bounds: { x: 10, y: 8, width: 80, height: 38 } },
+        { id: `${kind}-left-lower`, name: 'Lower leg', bounds: { x: 16, y: long ? 58 : 52, width: 68, height: long ? 32 : 36 } },
+      ],
       safeArea: legPrint(`${kind}_left_leg_print`, printHeight),
     },
     {
@@ -53,8 +60,15 @@ export function createBottomsMeta(kind: BottomsKind): Omit<GarmentDefinition, 'r
       label: 'Right leg',
       viewId: 'front',
       type: 'leg',
+      printable: true,
       local: { width: 90, height: legLocalHeight },
       frame: { x: 288, y: 108, width: 108, height: legFrameHeight },
+      designBounds: { x: 13.33, y: (18 / legLocalHeight) * 100, width: 73.33, height: (printHeight / legLocalHeight) * 100 },
+      designZones: [
+        { id: `${kind}-right-full`, name: 'Full right leg', bounds: { x: 0, y: 0, width: 100, height: 100 } },
+        { id: `${kind}-right-upper`, name: 'Upper leg', bounds: { x: 10, y: 8, width: 80, height: 38 } },
+        { id: `${kind}-right-lower`, name: 'Lower leg', bounds: { x: 16, y: long ? 58 : 52, width: 68, height: long ? 32 : 36 } },
+      ],
       safeArea: legPrint(`${kind}_right_leg_print`, printHeight),
     },
     {

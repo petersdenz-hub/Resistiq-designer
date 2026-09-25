@@ -2,6 +2,7 @@ import type { GarmentRenderProps } from '../types'
 import { clothFor } from '../render/cloth'
 import { BeltLoops, FabricFinish, FabricSheen, HemBand, PocketSet } from '../render/constructionDraw'
 import { constructionStyle, fabricFilter, pocketStyle } from '../render/constructionState'
+import { FlatPart, FlatShadow, Seam } from '../render/flatStyle'
 import type { BottomsKind } from './definition'
 
 /**
@@ -36,12 +37,12 @@ export function BottomsGarment({
   const hemY = long ? 542 : 306
 
   const leftLeg = long
-    ? 'M198 110 C176 168 164 250 172 380 L178 528 C180 552 206 562 230 548 L256 548 L268 260 C272 186 274 136 280 110 Z'
-    : 'M198 110 C176 150 168 200 176 250 L184 300 C188 318 214 324 236 312 L258 304 L270 200 C274 150 276 124 280 110 Z'
+    ? 'M200 110 C176 168 166 250 170 360 L176 524 C178 548 204 556 228 546 L254 546 L266 268 C272 186 276 136 280 110 Z'
+    : 'M200 110 C176 148 168 196 176 248 L184 298 C188 316 214 322 236 310 L258 302 L270 198 C274 150 276 124 280 110 Z'
 
   const rightLeg = long
-    ? 'M362 110 C384 168 396 250 388 380 L382 528 C380 552 354 562 330 548 L304 548 L292 260 C288 186 286 136 280 110 Z'
-    : 'M362 110 C384 150 392 200 384 250 L376 300 C372 318 346 324 324 312 L302 304 L290 200 C286 150 284 124 280 110 Z'
+    ? 'M360 110 C384 168 394 250 390 360 L384 524 C382 548 356 556 332 546 L306 546 L294 268 C288 186 284 136 280 110 Z'
+    : 'M360 110 C384 148 392 196 384 248 L376 298 C372 316 346 322 324 310 L302 302 L290 198 C286 150 284 124 280 110 Z'
 
   return (
     <g pointerEvents="none">
@@ -56,19 +57,23 @@ export function BottomsGarment({
           <stop offset="0.35" stopColor={right.cloth} />
           <stop offset="1" stopColor={right.clothDeep} />
         </linearGradient>
-        <filter id={`${id}-soft`} x="-8%" y="-4%" width="116%" height="110%">
-          <feDropShadow dx="0" dy="8" stdDeviation="8" floodColor="#000" floodOpacity="0.22" />
-        </filter>
+        <FlatShadow id={id} />
       </defs>
       <FabricFinish id={id} materialId={materialId} />
 
-      <g filter={fabricFilter(id, materialId) ?? `url(#${id}-soft)`}>
+      <g filter={fabricFilter(id, materialId) ?? `url(#${id}-soft)`} data-garment-template={kind}>
         <g data-garment-part={leftId} data-panel-color={left.cloth}>
-          <path d={leftLeg} fill={`url(#${id}-leg-l)`} />
+          <FlatPart d={leftLeg} fill={`url(#${id}-leg-l)`} stroke={left.stitch} />
         </g>
         <g data-garment-part={rightId} data-panel-color={right.cloth}>
-          <path d={rightLeg} fill={`url(#${id}-leg-r)`} />
+          <FlatPart d={rightLeg} fill={`url(#${id}-leg-r)`} stroke={right.stitch} />
         </g>
+        {long ? (
+          <>
+            <Seam d="M188 330 L248 330" color={left.stitch} width={1} opacity={0.16} />
+            <Seam d="M372 330 L312 330" color={right.stitch} width={1} opacity={0.16} />
+          </>
+        ) : null}
         {waistStyle ? (
           <g
             data-garment-part={waistId}
@@ -76,11 +81,12 @@ export function BottomsGarment({
             data-construction-kind="waistband"
             data-construction-style={waistStyle}
           >
-            <path
+            <FlatPart
               d="M196 66 C196 58 208 54 222 54 L338 54 C352 54 364 58 364 66 L364 110 L196 110 Z"
               fill={waistStyle === 'rib' ? waist.rib : waistStyle === 'elastic' ? waist.clothDeep : waist.rib}
+              stroke={waist.stitch}
             />
-            <path d="M214 80 H346" fill="none" stroke={waist.stitch} strokeWidth="1.5" opacity="0.4" />
+            <Seam d="M214 80 H346" color={waist.stitch} width={1.5} opacity={0.4} />
             {waistStyle === 'elastic' ? (
               <path
                 d="M206 70 Q220 86 234 70 Q248 86 262 70 Q276 86 290 70 Q304 86 318 70 Q332 86 346 70"
@@ -90,13 +96,7 @@ export function BottomsGarment({
                 opacity="0.45"
               />
             ) : (
-              <path
-                d="M218 56 V110 M280 56 V110 M342 56 V110"
-                fill="none"
-                stroke={waist.stitch}
-                strokeWidth="1.3"
-                opacity="0.3"
-              />
+              <Seam d="M218 56 V110 M280 56 V110 M342 56 V110" color={waist.stitch} width={1.3} opacity={0.3} />
             )}
             {beltLoops ? <BeltLoops color={waist} /> : null}
           </g>
@@ -106,7 +106,7 @@ export function BottomsGarment({
 
       {isBack ? (
         <>
-          <path d="M216 128 H344" fill="none" stroke={waist.stitch} strokeWidth="1.5" opacity="0.3" />
+          <Seam d="M216 128 H344" color={waist.stitch} width={1.5} opacity={0.3} />
           {backPocket ? (
             <PocketSet
               style={backPocket}
@@ -119,8 +119,8 @@ export function BottomsGarment({
         </>
       ) : (
         <>
-          <path d="M280 110 L280 198" fill="none" stroke={waist.stitch} strokeWidth="1.8" opacity="0.45" />
-          <path d="M268 140 C274 150 274 176 268 190" fill="none" stroke={left.highlight} strokeWidth="1.3" opacity="0.22" />
+          <Seam d="M280 110 L280 198" color={waist.stitch} width={1.8} opacity={0.45} />
+          <Seam d="M268 140 C274 150 274 176 268 190" color={left.highlight} width={1.3} opacity={0.22} />
           {frontPocket ? (
             <PocketSet
               style={frontPocket}

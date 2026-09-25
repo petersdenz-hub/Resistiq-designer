@@ -173,39 +173,48 @@ async function run() {
 
   await page.click('button[aria-label="Garment"]')
   await page.waitForSelector('[data-garment-selector="true"]')
-  await page.click('[data-garment-option="hoodie"]')
-  await page.waitForSelector('[data-dialog="true"]')
-  await clickText(page, 'Continue')
-  await page.waitForFunction(() => document.querySelector('[data-garment-type="hoodie"]'))
-  await page.click('[data-zone-option="front"]')
-  await delay(100)
-  const afterHoodie = await page.$$eval('[data-design-object]', (nodes) => nodes.length)
-  if (afterHoodie < 5) {
-    throw new Error(`Artwork was lost after switching to hoodie (${afterHoodie})`)
+
+  async function switchGarment(type, extraCheck) {
+    await page.click(`[data-garment-option="${type}"]`)
+    await page.waitForSelector('[data-dialog="true"]')
+    await clickText(page, 'Continue')
+    await page.waitForFunction(
+      (next) => document.querySelector(`[data-garment-type="${next}"]`),
+      {},
+      type,
+    )
+    if (extraCheck) {
+      await extraCheck()
+    }
+    const frontButton = await page.$('[data-zone-option="front"]')
+    if (frontButton) {
+      await frontButton.click()
+      await delay(80)
+    }
+    const count = await page.$$eval('[data-design-object]', (nodes) => nodes.length)
+    if (count < 5) {
+      throw new Error(`Artwork was lost after switching to ${type} (${count})`)
+    }
   }
 
-  await page.click('[data-garment-option="pants"]')
-  await page.waitForSelector('[data-dialog="true"]')
-  await clickText(page, 'Continue')
-  await page.waitForFunction(() => document.querySelector('[data-garment-type="pants"]'))
-  await page.waitForSelector('[data-zone-option="left-leg"]')
-
-  await page.click('[data-garment-option="tshirt"]')
-  await page.waitForSelector('[data-dialog="true"]')
-  await clickText(page, 'Continue')
-  await page.waitForFunction(() => document.querySelector('[data-garment-type="tshirt"]'))
-  await page.click('[data-zone-option="front"]')
-  await delay(100)
-  const restored = await page.$$eval('[data-design-object]', (nodes) => nodes.length)
-  if (restored < 5) {
-    throw new Error(`T-shirt artwork did not return after garment switching (${restored})`)
-  }
+  await switchGarment('hoodie')
+  await switchGarment('sweatshirt')
+  await switchGarment('jacket')
+  await switchGarment('pants', async () => {
+    await page.waitForSelector('[data-zone-option="left-leg"]')
+  })
+  await switchGarment('shorts', async () => {
+    await page.waitForSelector('[data-zone-option="right-leg"]')
+  })
+  await switchGarment('tshirt', async () => {
+    await page.waitForSelector('[data-zone-option="left-sleeve"]')
+  })
 
   await browser.close()
   if (vite) {
     vite.kill('SIGTERM')
   }
-  console.log('Phase 7C browser smoke passed')
+  console.log('Phase 7D browser smoke passed')
   process.exit(0)
 }
 

@@ -15,53 +15,56 @@ import {
   fabricFilter,
   pocketStyle,
 } from '../render/constructionState'
+import { FlatPart, FlatShadow, Seam } from '../render/flatStyle'
 
 /**
- * Fashion-flat jacket. Front is two body panels plus a zipper.
+ * Fashion-flat outdoor jacket. Front is two body panels plus a zipper.
  * The zipper is garment structure, not an editable design element.
  */
 
 const FRONT_LEFT =
-  'M164 208 L176 508 C176 524 190 534 210 534 L274 534 L274 168 L150 168 L164 208 Z'
+  'M162 206 L172 516 C172 528 186 538 208 538 L274 538 L274 166 L148 166 L162 206 Z'
 
 const FRONT_LEFT_VNECK =
-  'M164 208 L176 508 C176 524 190 534 210 534 L274 534 L274 200 L230 168 L150 168 L164 208 Z'
+  'M162 206 L172 516 C172 528 186 538 208 538 L274 538 L274 200 L228 166 L148 166 L162 206 Z'
 
 const FRONT_RIGHT =
-  'M396 208 L384 508 C384 524 370 534 350 534 L286 534 L286 168 L410 168 L396 208 Z'
+  'M398 206 L388 516 C388 528 374 538 352 538 L286 538 L286 166 L412 166 L398 206 Z'
 
 const FRONT_RIGHT_VNECK =
-  'M396 208 L384 508 C384 524 370 534 350 534 L286 534 L286 200 L330 168 L410 168 L396 208 Z'
+  'M398 206 L388 516 C388 528 374 538 352 538 L286 538 L286 200 L332 166 L412 166 L398 206 Z'
 
 const BODY_BACK =
-  'M164 208 L176 508 C176 524 190 534 210 534 L350 534 C370 534 384 524 384 508 L396 208 L410 160 L324 160 C316 184 244 184 236 160 L150 160 L164 208 Z'
+  'M162 206 L172 516 C172 528 186 538 208 538 L352 538 C374 538 388 528 388 516 L398 206 L412 160 L326 160 C316 182 244 182 234 160 L148 160 L162 206 Z'
 
-const RIGHT_SLEEVE = 'M150 168 L46 196 L72 330 L178 304 L164 208 L150 168 Z'
-const LEFT_SLEEVE = 'M410 168 L514 196 L488 330 L382 304 L396 208 L410 168 Z'
+const RIGHT_SLEEVE =
+  'M148 166 C96 178 58 194 44 202 C38 236 54 300 68 332 C104 322 146 310 176 302 L164 208 L148 166 Z'
+const LEFT_SLEEVE =
+  'M412 166 C464 178 502 194 516 202 C522 236 506 300 492 332 C456 322 414 310 384 302 L396 208 L412 166 Z'
 
 const COLLAR_STAND_FRONT =
-  'M208 128 L230 168 L330 168 L352 128 C338 116 222 116 208 128 Z'
+  'M208 126 L230 166 L330 166 L352 126 C338 114 222 114 208 126 Z'
 
 const COLLAR_STAND_BACK =
-  'M218 130 L236 164 L324 164 L342 130 C330 120 230 120 218 130 Z'
+  'M218 128 L236 162 L324 162 L342 128 C330 118 230 118 218 128 Z'
 
 const COLLAR_CREW_FRONT =
-  'M226 148 C238 186 322 186 334 148 L324 160 C314 176 246 176 236 160 Z'
+  'M226 146 C238 184 322 184 334 146 L324 160 C314 176 246 176 236 160 Z'
 
 const COLLAR_CREW_BACK =
-  'M232 148 C242 166 318 166 328 148 L320 160 C312 170 248 170 240 160 Z'
+  'M232 146 C242 164 318 164 328 146 L320 160 C312 170 248 170 240 160 Z'
 
 const COLLAR_RIB_FRONT =
-  'M214 136 C230 188 330 188 346 136 L330 168 L230 168 Z'
+  'M214 134 C230 186 330 186 346 134 L330 166 L230 166 Z'
 
 const COLLAR_RIB_BACK =
-  'M222 136 C236 172 324 172 338 136 L324 164 L236 164 Z'
+  'M222 134 C236 170 324 170 338 134 L324 162 L236 162 Z'
 
 const COLLAR_VNECK_FRONT =
-  'M226 148 L280 200 L334 148 L324 160 L280 188 L236 160 Z'
+  'M226 146 L280 198 L334 146 L324 160 L280 186 L236 160 Z'
 
 const COLLAR_VNECK_BACK =
-  'M232 148 C242 166 318 166 328 148 L320 160 C312 170 248 170 240 160 Z'
+  'M232 146 C242 164 318 164 328 146 L320 160 C312 170 248 170 240 160 Z'
 
 export function JacketGarment({ viewId, bodyColor, panelColors, construction }: GarmentRenderProps) {
   const isBack = viewId === 'back'
@@ -132,18 +135,16 @@ export function JacketGarment({ viewId, bodyColor, panelColors, construction }: 
           <stop offset="0" stopColor={collar.highlight} />
           <stop offset="1" stopColor={collar.rib} />
         </linearGradient>
-        <filter id={`${id}-soft`} x="-8%" y="-4%" width="116%" height="110%">
-          <feDropShadow dx="0" dy="8" stdDeviation="8" floodColor="#000" floodOpacity="0.22" />
-        </filter>
+        <FlatShadow id={id} />
       </defs>
       <FabricFinish id={id} materialId={materialId} />
 
-      <g filter={fabricFilter(id, materialId) ?? `url(#${id}-soft)`}>
+      <g filter={fabricFilter(id, materialId) ?? `url(#${id}-soft)`} data-garment-template="jacket">
         <g data-garment-part={rightId} data-panel-color={right.cloth}>
-          <path d={RIGHT_SLEEVE} fill={`url(#${id}-sleeve-r)`} />
+          <FlatPart d={RIGHT_SLEEVE} fill={`url(#${id}-sleeve-r)`} stroke={right.stitch} />
           {cuffs ? (
             <path
-              d="M72 330 L178 304"
+              d="M70 328 L176 302"
               fill="none"
               stroke={cuffs === 'rib' ? right.rib : right.clothDeep}
               strokeWidth={cuffs === 'rib' ? 12 : 8}
@@ -153,12 +154,13 @@ export function JacketGarment({ viewId, bodyColor, panelColors, construction }: 
               data-construction-style={cuffs}
             />
           ) : null}
+          <Seam d="M86 248 L156 236" color={right.stitch} width={1} opacity={0.22} />
         </g>
         <g data-garment-part={leftId} data-panel-color={left.cloth}>
-          <path d={LEFT_SLEEVE} fill={`url(#${id}-sleeve-l)`} />
+          <FlatPart d={LEFT_SLEEVE} fill={`url(#${id}-sleeve-l)`} stroke={left.stitch} />
           {cuffs ? (
             <path
-              d="M382 304 L488 330"
+              d="M384 302 L490 328"
               fill="none"
               stroke={cuffs === 'rib' ? left.rib : left.clothDeep}
               strokeWidth={cuffs === 'rib' ? 12 : 8}
@@ -168,19 +170,29 @@ export function JacketGarment({ viewId, bodyColor, panelColors, construction }: 
               data-construction-style={cuffs}
             />
           ) : null}
+          <Seam d="M474 248 L404 236" color={left.stitch} width={1} opacity={0.22} />
         </g>
 
         {isBack ? (
           <g data-garment-part="back_body" data-panel-color={back.cloth}>
-            <path d={BODY_BACK} fill={`url(#${id}-body-b)`} />
+            <FlatPart d={BODY_BACK} fill={`url(#${id}-body-b)`} stroke={back.stitch} />
+            <Seam d="M196 176 H364" color={back.stitch} width={1.1} opacity={0.28} />
           </g>
         ) : (
           <>
             <g data-garment-part="front_body_left" data-panel-color={leftBody.cloth}>
-              <path d={collarStyle === 'vneck' ? FRONT_LEFT_VNECK : FRONT_LEFT} fill={`url(#${id}-body-l)`} />
+              <FlatPart
+                d={collarStyle === 'vneck' ? FRONT_LEFT_VNECK : FRONT_LEFT}
+                fill={`url(#${id}-body-l)`}
+                stroke={leftBody.stitch}
+              />
             </g>
             <g data-garment-part="front_body_right" data-panel-color={rightBody.cloth}>
-              <path d={collarStyle === 'vneck' ? FRONT_RIGHT_VNECK : FRONT_RIGHT} fill={`url(#${id}-body-r)`} />
+              <FlatPart
+                d={collarStyle === 'vneck' ? FRONT_RIGHT_VNECK : FRONT_RIGHT}
+                fill={`url(#${id}-body-r)`}
+                stroke={rightBody.stitch}
+              />
             </g>
             {zipperStyle ? (
               <ZipperPart
@@ -217,7 +229,7 @@ export function JacketGarment({ viewId, bodyColor, panelColors, construction }: 
             data-construction-kind="collar"
             data-construction-style={collarStyle}
           >
-            <path d={collarPath} fill={`url(#${id}-collar)`} />
+            <FlatPart d={collarPath} fill={`url(#${id}-collar)`} stroke={collar.stitch} />
             <path
               d={
                 collarStyle === 'vneck'
@@ -238,10 +250,10 @@ export function JacketGarment({ viewId, bodyColor, panelColors, construction }: 
         ) : null}
       </g>
 
-      <path d="M170 216 L182 516" fill="none" stroke={(isBack ? back : leftBody).stitch} strokeWidth="1" opacity="0.2" />
-      <path d="M390 216 L378 516" fill="none" stroke={(isBack ? back : rightBody).stitch} strokeWidth="1" opacity="0.2" />
+      <Seam d="M170 214 L182 516" color={(isBack ? back : leftBody).stitch} width={1} opacity={0.2} />
+      <Seam d="M390 214 L378 516" color={(isBack ? back : rightBody).stitch} width={1} opacity={0.2} />
       {hemStyle ? (
-        <HemBand style={hemStyle} y={526} left={210} right={350} color={isBack ? back : leftBody} />
+        <HemBand style={hemStyle} y={528} left={208} right={352} color={isBack ? back : leftBody} />
       ) : null}
       <FabricSheen id={id} materialId={materialId} path={isBack ? BODY_BACK : FRONT_LEFT} />
     </g>
