@@ -28,6 +28,30 @@ export function ClothGradient({
   )
 }
 
+/** Gentle two-stop wash for technical flats. No highlight pole / spherical lighting. */
+export function ClothWash({
+  id,
+  color,
+  x1,
+  y1,
+  x2,
+  y2,
+}: {
+  id: string
+  color: ClothShades
+  x1: number
+  y1: number
+  x2: number
+  y2: number
+}) {
+  return (
+    <linearGradient id={id} x1={x1} y1={y1} x2={x2} y2={y2} gradientUnits="userSpaceOnUse">
+      <stop offset="0" stopColor={color.cloth} />
+      <stop offset="1" stopColor={color.clothDeep} />
+    </linearGradient>
+  )
+}
+
 export function FlatPart({
   d,
   fill,

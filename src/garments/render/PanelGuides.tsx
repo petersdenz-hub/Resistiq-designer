@@ -174,7 +174,7 @@ export function PanelGuides({
                 {panelDisplayLabel(panel)}
               </text>
             ) : null}
-            {bleed && (active || panelSelected) ? (
+            {bleed && silhouettes.length === 0 && (active || panelSelected) ? (
               <g pointerEvents="none" data-bleed-area={panel.id}>
                 <rect
                   x={bleed.x}
@@ -192,27 +192,41 @@ export function PanelGuides({
             {printable && (active || panelSelected || showPrintArea) ? (
               <g
                 data-printable-area={panel.id}
+                data-printable-area-kind={silhouettes.length > 0 ? 'silhouette' : 'box'}
                 onPointerDown={(event) => {
                   event.stopPropagation()
                   onSelectPanel(panel.id)
                 }}
                 style={{ cursor: 'pointer' }}
               >
-                <rect
-                  x={printable.x}
-                  y={printable.y}
-                  width={printable.width}
-                  height={printable.height}
-                  fill="rgba(201,163,106,0.015)"
-                  stroke="rgba(201,163,106,0.32)"
-                  strokeDasharray="4 5"
-                  strokeWidth="0.9"
-                  rx="2"
-                />
+                {silhouettes.length > 0 ? (
+                  silhouettes.map((path) => (
+                    <path
+                      key={path}
+                      d={path}
+                      fill="rgba(201,163,106,0.015)"
+                      stroke="rgba(201,163,106,0.32)"
+                      strokeDasharray="4 5"
+                      strokeWidth="0.9"
+                    />
+                  ))
+                ) : (
+                  <rect
+                    x={printable.x}
+                    y={printable.y}
+                    width={printable.width}
+                    height={printable.height}
+                    fill="rgba(201,163,106,0.015)"
+                    stroke="rgba(201,163,106,0.32)"
+                    strokeDasharray="4 5"
+                    strokeWidth="0.9"
+                    rx="2"
+                  />
+                )}
                 {showGuides ? (
                   <text
-                    x={printable.x + 5}
-                    y={printable.y + Math.min(11, printable.height - 4)}
+                    x={(silhouettes.length > 0 ? panel.frame.x : printable.x) + 5}
+                    y={(silhouettes.length > 0 ? panel.frame.y : printable.y) + 11}
                     fill="rgba(201,163,106,0.72)"
                     fontSize="7.5"
                     fontFamily="IBM Plex Sans, sans-serif"
@@ -251,44 +265,46 @@ export function PanelGuides({
                 ) : null}
               </g>
             ) : null}
-            {zones.map((zone) => (
-              <g
-                key={zone.id}
-                data-design-zone={zone.id}
-                data-design-zone-name={zone.name}
-                onPointerDown={(event) => {
-                  event.stopPropagation()
-                  if (onSelectZone) {
-                    onSelectZone(panel.id, zone.id)
-                    return
-                  }
-                  onSelectPanel(panel.id)
-                }}
-                style={{ cursor: 'pointer' }}
-              >
-                <rect
-                  x={zone.canvas.x}
-                  y={zone.canvas.y}
-                  width={zone.canvas.width}
-                  height={zone.canvas.height}
-                  fill="none"
-                  stroke="rgba(158, 176, 214, 0.7)"
-                  strokeDasharray="2 3"
-                  strokeWidth="0.95"
-                  rx="2"
-                />
-                <text
-                  x={zone.canvas.x + 4}
-                  y={zone.canvas.y + Math.min(11, zone.canvas.height - 3)}
-                  fill="rgba(186, 198, 224, 0.92)"
-                  fontSize="8"
-                  fontFamily="IBM Plex Sans, sans-serif"
-                  pointerEvents="none"
-                >
-                  {zone.name}
-                </text>
-              </g>
-            ))}
+            {silhouettes.length === 0
+              ? zones.map((zone) => (
+                  <g
+                    key={zone.id}
+                    data-design-zone={zone.id}
+                    data-design-zone-name={zone.name}
+                    onPointerDown={(event) => {
+                      event.stopPropagation()
+                      if (onSelectZone) {
+                        onSelectZone(panel.id, zone.id)
+                        return
+                      }
+                      onSelectPanel(panel.id)
+                    }}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <rect
+                      x={zone.canvas.x}
+                      y={zone.canvas.y}
+                      width={zone.canvas.width}
+                      height={zone.canvas.height}
+                      fill="none"
+                      stroke="rgba(158, 176, 214, 0.7)"
+                      strokeDasharray="2 3"
+                      strokeWidth="0.95"
+                      rx="2"
+                    />
+                    <text
+                      x={zone.canvas.x + 4}
+                      y={zone.canvas.y + Math.min(11, zone.canvas.height - 3)}
+                      fill="rgba(186, 198, 224, 0.92)"
+                      fontSize="8"
+                      fontFamily="IBM Plex Sans, sans-serif"
+                      pointerEvents="none"
+                    >
+                      {zone.name}
+                    </text>
+                  </g>
+                ))
+              : null}
           </g>
         )
       })}

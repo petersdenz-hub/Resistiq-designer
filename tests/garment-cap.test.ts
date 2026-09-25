@@ -29,6 +29,7 @@ import {
   panelDesignZones,
   panelSilhouetteFor,
   regionForPanel,
+  silhouetteBounds,
 } from '@/garments'
 import { PreviewStage } from '@/preview/PreviewStage'
 import { normalizeDocument } from '@/persistence/validateDocument'
@@ -275,6 +276,31 @@ describe('Phase 11 cap garment', () => {
     expect(document.garmentType).toBe('cap')
     expect(document.designObjects).toEqual(snapshot)
     expect(getDesignObjectById(document, mark.id)?.anchor.panelId).toBe('front_panel')
+  })
+
+  it('reads as a fashion-flat cap: tapered crown, crescent visor, center seam', () => {
+    const front = silhouetteBounds(panelSilhouetteFor('cap', 'front_panel'))
+    const brim = silhouetteBounds(panelSilhouetteFor('cap', 'brim'))
+    const crown = silhouetteBounds(panelSilhouetteFor('cap', 'crown'))
+    expect(front).toBeTruthy()
+    expect(brim).toBeTruthy()
+    expect(crown).toBeTruthy()
+    expect(brim!.height).toBeLessThan(100)
+    expect(brim!.y).toBeGreaterThan(front!.y + front!.height / 2)
+    expect(front!.width).toBeGreaterThan(120)
+    expect(crown!.height).toBeLessThan(front!.height)
+    const html = renderCap('front')
+    expect(html).toContain('M280 176 L280 358')
+    expect(html).toContain('data-flat-seam="true"')
+  })
+
+  it('applies cotton, nylon, and softshell through the shared material path', () => {
+    for (const materialId of ['cotton', 'nylon', 'softshell'] as const) {
+      const document = setGarmentMaterial(createNewDesign('cap'), materialId)
+      const html = renderCap('front', document)
+      expect(html).toContain(`data-fabric="${materialId}"`)
+      expect(getResolvedConstruction(document).materialId).toBe(materialId)
+    }
   })
 
   it('leaves the original six garments unchanged', () => {

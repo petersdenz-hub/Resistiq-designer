@@ -1,40 +1,49 @@
 import { rectPath } from '../topology'
 
-/** Upper crown / top gores meeting at the button. */
+/**
+ * Top gores only — the small plate around the button.
+ * Kept separate from the front shield so the crown does not read as a helmet lid.
+ */
 export const CROWN =
-  'M280 148 C234 150 190 176 174 226 C212 204 348 204 386 226 C370 176 326 150 280 148 Z'
+  'M280 166 C248 168 218 182 202 210 C232 196 328 196 358 210 C342 182 312 168 280 166 Z'
 
-/** Front gore — the print face of a 5-panel cap. */
+/**
+ * Front shield — both front gores as one printable region.
+ * Wider at the band so a logo sits on a cap face, not a tall rectangle.
+ */
 export const FRONT_PANEL =
-  'M280 162 C250 172 238 216 234 270 L228 332 L332 332 L326 270 C322 216 310 172 280 162 Z'
+  'M280 176 C254 184 234 214 222 262 L208 358 L352 358 L338 262 C326 214 306 184 280 176 Z'
 
 /** Wearer's right side panel (drawn on the left). */
 export const RIGHT_SIDE =
-  'M164 330 C150 268 168 194 226 158 L234 270 L228 332 L176 344 C162 338 158 332 164 330 Z'
+  'M150 358 C146 302 156 238 184 198 C204 176 236 170 264 176 L222 262 L208 358 Z'
 
 /** Wearer's left side panel (drawn on the right). */
 export const LEFT_SIDE =
-  'M396 330 C410 268 392 194 334 158 L326 270 L332 332 L384 344 C398 338 402 332 396 330 Z'
+  'M410 358 C414 302 404 238 376 198 C356 176 324 170 296 176 L338 262 L352 358 Z'
 
-/** Forward visor / bill — attached at the front of the band, not a halo. */
+/**
+ * Forward visor / bill — a thin crescent attached at the band.
+ * Not a halo or thick ring.
+ */
 export const BRIM =
-  'M210 328 C168 346 140 384 162 418 C196 448 364 448 398 418 C420 384 392 346 350 328 C318 346 242 346 210 328 Z'
+  'M188 356 C150 368 138 388 158 406 C190 426 370 426 402 406 C422 388 410 368 372 356 C332 374 228 374 188 356 Z'
 
-/** Front lip of the visor so the brim reads with thickness. */
+/** Thin front lip so the visor has an edge, not a puck. */
 export const BRIM_LIP =
-  'M162 418 C196 448 364 448 398 418 C398 430 364 458 280 458 C196 458 162 430 162 418 Z'
+  'M158 406 C190 426 370 426 402 406 C400 414 366 434 280 434 C194 434 160 414 158 406 Z'
 
 /** Sweatband at the crown base. */
 export const BAND =
-  'M162 322 C184 340 376 340 398 322 L392 356 C370 370 190 370 168 356 Z'
+  'M150 350 C174 366 386 366 410 350 L406 376 C382 390 178 390 154 376 Z'
 
-/** Back gore. */
+/** Back gores with a snapback opening above the closure. */
 export const BACK_PANEL =
-  'M280 162 C250 172 238 216 234 270 L228 332 L248 332 C256 306 304 306 312 332 L332 332 L326 270 C322 216 310 172 280 162 Z'
+  'M280 176 C254 184 234 214 222 262 L208 358 L236 358 C246 322 314 322 324 358 L352 358 L338 262 C326 214 306 184 280 176 Z'
 
-/** Adjustable closure / strap window on the back. */
+/** Adjustable strap / closure window. */
 export const CLOSURE =
-  'M226 336 C244 324 316 324 334 336 L338 380 L222 380 Z'
+  'M230 350 C246 336 314 336 330 350 L336 384 C322 394 238 394 224 384 Z'
 
 export const CROWN_BACK = CROWN
 export const RIGHT_SIDE_BACK = LEFT_SIDE
@@ -56,15 +65,17 @@ export const CAP_PATHS: Record<string, string> = {
   closure: CLOSURE,
 }
 
-export const BRIM_SEAM = 'M212 330 C244 346 316 346 348 330'
-export const BRIM_EDGE = 'M162 418 C196 448 364 448 398 418'
-export const BRIM_STITCH_INNER = 'M218 338 C246 352 314 352 342 338'
-export const BRIM_STITCH_MID = 'M196 368 C228 392 332 392 364 368'
-export const BRIM_STITCH_OUTER = 'M174 400 C206 426 354 426 386 400'
-export const CROWN_FRONT_SEAM_LEFT = 'M226 160 L234 270 L228 332'
-export const CROWN_FRONT_SEAM_RIGHT = 'M334 160 L326 270 L332 332'
-export const CROWN_TOP_SEAM = 'M196 214 C230 192 330 192 364 214'
-export const BAND_STITCH = 'M176 334 C196 348 364 348 384 334'
-export const CLOSURE_STITCH = rectPath(228, 348, 104, 22)
-export const EYELET_RIGHT = { cx: 198, cy: 214, r: 3.4 }
-export const EYELET_LEFT = { cx: 362, cy: 214, r: 3.4 }
+export const BRIM_SEAM = 'M190 358 C228 374 332 374 370 358'
+export const BRIM_EDGE = 'M158 406 C190 426 370 426 402 406'
+export const BRIM_STITCH_INNER = 'M200 366 C232 380 328 380 360 366'
+export const BRIM_STITCH_MID = 'M180 384 C216 400 344 400 380 384'
+export const BRIM_STITCH_OUTER = 'M166 398 C202 416 358 416 394 398'
+export const CROWN_CENTER_SEAM = 'M280 176 L280 358'
+export const CROWN_FRONT_SEAM_LEFT = 'M264 176 L222 262 L208 358'
+export const CROWN_FRONT_SEAM_RIGHT = 'M296 176 L338 262 L352 358'
+export const CROWN_TOP_SEAM = 'M214 206 C242 186 318 186 346 206'
+export const BAND_STITCH = 'M164 360 C190 372 370 372 396 360'
+export const CLOSURE_STITCH = rectPath(232, 356, 96, 20)
+export const CLOSURE_STRAP = 'M228 362 H332 V378 H228 Z'
+export const EYELET_RIGHT = { cx: 184, cy: 228, r: 3 }
+export const EYELET_LEFT = { cx: 376, cy: 228, r: 3 }
