@@ -13,12 +13,16 @@ interface ZoneSurfaceOverlayProps {
 export function ZoneSurfaceOverlay({ document, zone }: ZoneSurfaceOverlayProps) {
   const panelId = defaultPanelIdForZone(document, zone)
   const bounds = getArtworkPanelBounds(document, panelId)
-  if (!bounds) {
+  if (!bounds || !panelId) {
     return null
   }
 
   const panel = getGarmentPanel(getGarment(document.garmentType), panelId)
-  const silhouettes = panelSilhouettePaths(panel)
+  const silhouettes = panelSilhouettePaths(panel ?? undefined)
+  const outline = silhouetteBounds(silhouettes)
+  const labelBounds = outline
+    ? { ...bounds, x: outline.x, y: outline.y, width: outline.width, height: outline.height }
+    : bounds
   const surfaceKind = zone === 'front' || zone === 'back' ? 'view' : 'region'
 
   return (
@@ -51,7 +55,7 @@ export function ZoneSurfaceOverlay({ document, zone }: ZoneSurfaceOverlayProps) 
           strokeDasharray={surfaceKind === 'region' ? '6 4' : '3 3'}
         />
       )}
-      <SurfaceLabel bounds={silhouetteBounds(silhouettes) ?? bounds} zone={zone} />
+      <SurfaceLabel bounds={labelBounds} zone={zone} />
     </g>
   )
 }
