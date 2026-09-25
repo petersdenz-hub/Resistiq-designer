@@ -191,7 +191,8 @@ export function DesignPanel() {
           })}
         </div>
         <p className="text-[11px] leading-4 text-mute">
-          Switching zones only changes where new artwork is placed. Objects on other zones stay as they are.
+          Front and back are separate artwork surfaces. Sleeves and legs use a 2D overlay on their panel.
+          Switching zones does not change objects on another zone.
         </p>
       </section>
     </div>

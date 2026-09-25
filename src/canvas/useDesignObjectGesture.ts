@@ -6,6 +6,7 @@ import {
   snapValue,
   type DesignObjectPatch,
 } from '@/design/designObjects'
+import { resolveObjectViewBox, storeObjectViewBox } from '@/design/objectPlacement'
 import type { DesignDocument } from '@/design/types'
 import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject } from 'react'
 import {
@@ -102,15 +103,18 @@ export function useDesignObjectGesture(
           ? resizeRectKeepAspect(start, gesture.startRotation, gesture.handle, pointer, objectAspect(object))
           : resizeRect(start, gesture.startRotation, gesture.handle, pointer)
         const snapped = snapBox(next, apiRef.current.gridSize, apiRef.current.snapToGrid)
-        apiRef.current.updateObjectById(
-          gesture.objectId,
-          { x: snapped.x, y: snapped.y, width: Math.max(8, snapped.width), height: Math.max(8, snapped.height) },
-          'replace',
-        )
+        const stored = storeObjectViewBox(apiRef.current.document, object, {
+          x: snapped.x,
+          y: snapped.y,
+          width: Math.max(8, snapped.width),
+          height: Math.max(8, snapped.height),
+        })
+        apiRef.current.updateObjectById(gesture.objectId, stored, 'replace')
         return
       }
 
-      const rotation = rotationFromPointer(getCenter(object), pointer)
+      const painted = resolveObjectViewBox(apiRef.current.document, object)
+      const rotation = rotationFromPointer(getCenter(painted), pointer)
       apiRef.current.updateObjectById(
         gesture.objectId,
         { rotation: event.shiftKey ? snapAngle(rotation) : rotation },
@@ -126,11 +130,17 @@ export function useDesignObjectGesture(
       if (gesture.kind === 'move') {
         const object = getDesignObjectById(apiRef.current.document, gesture.objectId)
         if (object && (gesture.lastDx !== 0 || gesture.lastDy !== 0)) {
-          const next = {
-            x: snapValue(object.x + gesture.lastDx, apiRef.current.gridSize, apiRef.current.snapToGrid),
-            y: snapValue(object.y + gesture.lastDy, apiRef.current.gridSize, apiRef.current.snapToGrid),
+          const painted = resolveObjectViewBox(apiRef.current.document, object)
+          const viewBox = {
+            ...painted,
+            x: snapValue(painted.x + gesture.lastDx, apiRef.current.gridSize, apiRef.current.snapToGrid),
+            y: snapValue(painted.y + gesture.lastDy, apiRef.current.gridSize, apiRef.current.snapToGrid),
           }
-          apiRef.current.updateObjectById(gesture.objectId, next, 'record')
+          apiRef.current.updateObjectById(
+            gesture.objectId,
+            storeObjectViewBox(apiRef.current.document, object, viewBox),
+            'record',
+          )
         }
         setPreview(null)
       } else {
@@ -176,15 +186,16 @@ export function useDesignObjectGesture(
         return
       }
       event.preventDefault()
+      const painted = resolveObjectViewBox(apiRef.current.document, object)
       gestureRef.current = {
         kind: 'resize',
         objectId,
         origin: apiRef.current.document,
         handle,
-        startX: object.x,
-        startY: object.y,
-        startWidth: object.width,
-        startHeight: object.height,
+        startX: painted.x,
+        startY: painted.y,
+        startWidth: painted.width,
+        startHeight: painted.height,
         startRotation: object.rotation,
       }
     },

@@ -242,8 +242,8 @@ export interface DesignDocument {
   /**
    * Canvas design objects. Separate from construction and from panel-relative
    * elements. Older documents omit this field.
-   * Object x/y/width/height are garment viewBox units for the object's zone,
-   * not browser pixels. Optional `anchor.panelId` is a future projection hook.
+   * Zone-space objects use garment viewBox units. Panel-anchored objects use
+   * panel-local units for `anchor.panelId`. Neither uses browser pixels.
    */
   designObjects?: DesignObject[]
   /** Placement zone used when adding a new design object. */

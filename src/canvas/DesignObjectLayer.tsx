@@ -33,6 +33,8 @@ export function DesignObjectLayer({
             data-design-object={object.id}
             data-design-object-type={object.type}
             data-placement-zone={object.zone}
+            data-anchor-space={object.anchor.space}
+            data-panel-id={object.anchor.panelId ?? ''}
             data-object-locked={object.locked ? 'true' : 'false'}
             transform={`rotate(${object.rotation} ${object.x + object.width / 2} ${object.y + object.height / 2})`}
             opacity={object.opacity}
