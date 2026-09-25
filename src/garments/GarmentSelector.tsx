@@ -27,7 +27,7 @@ export function GarmentSelector() {
       <div className="space-y-3">
         {groups.map((group) => (
           <div key={group.id} data-garment-group={group.id}>
-            <div className="mb-1.5 text-[10px] font-medium uppercase tracking-[0.14em] text-mute">
+            <div className="mb-1 text-[9px] font-medium uppercase tracking-[0.18em] text-mute/70">
               {group.label}
             </div>
             <ul className="grid grid-cols-2 gap-1.5">

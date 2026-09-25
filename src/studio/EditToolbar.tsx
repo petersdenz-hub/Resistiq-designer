@@ -1,22 +1,16 @@
-import { ACCEPTED_IMAGE_ACCEPT } from '@/design/ingestImage'
 import {
   objectsSharePlacement,
   type Alignment,
   type Distribution,
 } from '@/design/objectEditing'
-import { SHAPE_KIND_LABELS, SHAPE_KINDS, type ShapeKind } from '@/design/designObjects'
 import { useDesign } from '@/design/useDesign'
 import { toolbarMode } from '@/studio/editorChrome'
 import { Button } from '@/ui'
-import { useRef, useState } from 'react'
 
 export function EditToolbar() {
   const {
     selectedObjects,
     selectedObject,
-    addDesignText,
-    addDesignShape,
-    addDesignImageFromFile,
     groupSelectedObjects,
     ungroupSelectedObjects,
     duplicateSelectedObject,
@@ -26,9 +20,6 @@ export function EditToolbar() {
     updateSelectedObject,
     moveSelectedObjectLayer,
   } = useDesign()
-  const inputRef = useRef<HTMLInputElement>(null)
-  const [busy, setBusy] = useState(false)
-  const [shapeOpen, setShapeOpen] = useState(false)
   const mode = toolbarMode(selectedObjects.length)
   const unlocked = selectedObjects.filter((object) => !object.locked)
   const canGroup = unlocked.length >= 2 && objectsSharePlacement(unlocked)
@@ -38,85 +29,15 @@ export function EditToolbar() {
   const canMutate = unlocked.length > 0
   const locked = selectedObject?.locked === true
 
-  function addShape(kind: ShapeKind) {
-    setShapeOpen(false)
-    addDesignShape(kind)
-  }
-
   return (
     <div
-      className="flex flex-wrap items-center gap-1 rounded-md border border-line bg-panel/95 px-2 py-1.5"
+      className={`flex flex-wrap items-center gap-1 ${
+        mode === 'empty' ? '' : 'rounded-md border border-line bg-panel/95 px-2 py-1.5'
+      }`}
       data-edit-toolbar="true"
       data-toolbar-mode={mode}
       data-selected-count={selectedObjects.length}
     >
-      <ToolButton data-action="add-text" data-add-design-text="true" onClick={addDesignText}>
-        Add text
-      </ToolButton>
-      <input
-        ref={inputRef}
-        type="file"
-        accept={ACCEPTED_IMAGE_ACCEPT}
-        className="absolute h-px w-px overflow-hidden opacity-0"
-        onChange={(event) => {
-          const file = event.target.files?.[0]
-          event.target.value = ''
-          if (!file) {
-            return
-          }
-          setBusy(true)
-          void addDesignImageFromFile(file).finally(() => setBusy(false))
-        }}
-      />
-      <ToolButton
-        data-action="add-image"
-        data-add-design-image="true"
-        disabled={busy}
-        onClick={() => inputRef.current?.click()}
-      >
-        {busy ? 'Uploading…' : 'Add logo / image'}
-      </ToolButton>
-      <div className="relative">
-        <ToolButton
-          data-action="add-shape"
-          data-add-design-shape="true"
-          onClick={() => addShape('rectangle')}
-        >
-          Add shape
-        </ToolButton>
-        <button
-          type="button"
-          data-shape-menu="true"
-          aria-expanded={shapeOpen}
-          aria-label="Shape kinds"
-          title="Shape kinds"
-          onClick={() => setShapeOpen((open) => !open)}
-          className="ml-0.5 h-7 rounded border border-line px-1.5 text-[10px] text-mute hover:text-ink"
-        >
-          ▾
-        </button>
-        {shapeOpen ? (
-          <div
-            className="absolute left-0 top-full z-20 mt-1 min-w-40 rounded-md border border-line bg-panel p-1 shadow-lg"
-            data-shape-menu-list="true"
-          >
-            {SHAPE_KINDS.map((kind) => (
-              <button
-                key={kind}
-                type="button"
-                data-shape-kind={kind}
-                onClick={() => addShape(kind)}
-                className="flex h-7 w-full items-center rounded px-2 text-left text-[11px] text-ink hover:bg-accent/10"
-              >
-                {SHAPE_KIND_LABELS[kind]}
-              </button>
-            ))}
-          </div>
-        ) : null}
-      </div>
-
-      {mode !== 'empty' ? <span className="mx-1 h-5 w-px bg-line" aria-hidden="true" /> : null}
-
       {mode === 'single' ? (
         <>
           <ToolButton data-action="duplicate" disabled={locked} onClick={duplicateSelectedObject}>

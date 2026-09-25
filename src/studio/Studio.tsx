@@ -1,6 +1,6 @@
 import { useDesign } from '@/design/useDesign'
 import { PreviewOverlay } from '@/preview/PreviewOverlay'
-import { studioLeftOverlay, studioRightOverlay, studioViewport, type StudioViewport } from '@/studio/editorChrome'
+import { studioLeftOverlay, studioRightOverlay, studioViewport, type StudioSectionId, type StudioViewport } from '@/studio/editorChrome'
 import { useEffect, useState } from 'react'
 import { CanvasEditorProvider } from './canvas-editor'
 import { CanvasStage } from './canvas-stage/CanvasStage'
@@ -34,8 +34,10 @@ export function Studio({ onClose, onNew }: StudioProps) {
   const [viewport, setViewport] = useState<StudioViewport>('desktop')
   const [leftOpen, setLeftOpen] = useState(true)
   const [rightOpen, setRightOpen] = useState(true)
+  const [mobileSheet, setMobileSheet] = useState<StudioSectionId | 'properties' | null>(null)
   const leftOverlay = studioLeftOverlay(viewport)
   const rightOverlay = studioRightOverlay(viewport)
+  const mobile = viewport === 'mobile'
 
   useEffect(() => {
     function syncLayout() {
@@ -43,6 +45,9 @@ export function Studio({ onClose, onNew }: StudioProps) {
       setViewport(next)
       setLeftOpen(next === 'desktop' || next === 'tablet')
       setRightOpen(next === 'desktop')
+      if (next !== 'mobile') {
+        setMobileSheet(null)
+      }
     }
     syncLayout()
     window.addEventListener('resize', syncLayout)
@@ -99,6 +104,14 @@ export function Studio({ onClose, onNew }: StudioProps) {
       }
 
       if (!typing && event.key === 'Escape') {
+        if (previewing) {
+          setPreviewing(false)
+          return
+        }
+        if (mobileSheet) {
+          setMobileSheet(null)
+          return
+        }
         if (leftOverlay) {
           setLeftOpen(false)
         }
@@ -130,12 +143,12 @@ export function Studio({ onClose, onNew }: StudioProps) {
   }, [
     duplicateSelectedObject,
     groupSelectedObjects,
-    leftOpen,
     leftOverlay,
+    mobileSheet,
     nudgeSelectedObjects,
+    previewing,
     redo,
     removeSelected,
-    rightOpen,
     rightOverlay,
     selectAllObjects,
     selectElement,
@@ -152,7 +165,7 @@ export function Studio({ onClose, onNew }: StudioProps) {
     <div className="relative flex h-full min-h-0 flex-col bg-studio text-ink" data-studio-viewport={viewport}>
       <Topbar onClose={onClose} onNew={onNew} onPreview={() => setPreviewing(true)} />
       <div className="relative flex min-h-0 flex-1 overflow-hidden">
-        {leftOverlay && leftOpen ? (
+        {!mobile && leftOverlay && leftOpen ? (
           <button
             type="button"
             aria-label="Close tools"
@@ -160,7 +173,7 @@ export function Studio({ onClose, onNew }: StudioProps) {
             onClick={() => setLeftOpen(false)}
           />
         ) : null}
-        {leftOpen ? (
+        {!mobile && leftOpen ? (
           <div
             className={
               leftOverlay
@@ -169,21 +182,19 @@ export function Studio({ onClose, onNew }: StudioProps) {
             }
             data-tools-drawer={leftOverlay ? 'true' : 'false'}
           >
-            <Sidebar
-              overlay={leftOverlay}
-              onCollapse={() => setLeftOpen(false)}
-            />
+            <Sidebar overlay={leftOverlay} onCollapse={() => setLeftOpen(false)} />
           </div>
-        ) : leftOverlay ? null : (
+        ) : !mobile && !leftOpen ? (
           <Sidebar collapsed onExpand={() => setLeftOpen(true)} />
-        )}
+        ) : null}
         <CanvasStage
-          leftOpen={leftOpen}
-          rightOpen={rightOpen}
+          leftOpen={mobile ? false : leftOpen}
+          rightOpen={mobile ? false : rightOpen}
+          compactChrome={mobile}
           onToggleLeft={() => setLeftOpen((value) => !value)}
           onToggleRight={() => setRightOpen((value) => !value)}
         />
-        {rightOverlay && rightOpen ? (
+        {!mobile && rightOverlay && rightOpen ? (
           <button
             type="button"
             aria-label="Close properties"
@@ -191,20 +202,18 @@ export function Studio({ onClose, onNew }: StudioProps) {
             onClick={() => setRightOpen(false)}
           />
         ) : null}
-        {rightOpen ? (
+        {!mobile && rightOpen ? (
           <div
             className={
-              viewport === 'mobile'
-                ? 'absolute inset-x-0 bottom-0 z-30 flex max-h-[72%] min-h-[16rem] flex-col overflow-hidden rounded-t-lg border-t border-line shadow-2xl'
-                : rightOverlay
-                  ? 'absolute inset-y-0 right-0 z-30 flex h-full w-60'
-                  : 'flex h-full w-60'
+              rightOverlay
+                ? 'absolute inset-y-0 right-0 z-30 flex h-full w-64'
+                : 'flex h-full w-64'
             }
             data-properties-drawer={rightOverlay ? 'true' : 'false'}
           >
             <PropertiesPanel onCollapse={() => setRightOpen(false)} />
           </div>
-        ) : rightOverlay ? null : (
+        ) : !mobile && !rightOpen ? (
           <aside className="flex w-10 shrink-0 flex-col items-center border-l border-line bg-panel py-3">
             <button
               type="button"
@@ -217,8 +226,58 @@ export function Studio({ onClose, onNew }: StudioProps) {
               P
             </button>
           </aside>
-        )}
+        ) : null}
+        {mobile && mobileSheet ? (
+          <>
+            <button
+              type="button"
+              aria-label="Close panel"
+              className="absolute inset-0 z-20 bg-black/45"
+              onClick={() => setMobileSheet(null)}
+            />
+            <div
+              className="absolute inset-x-0 bottom-12 z-30 flex max-h-[70%] min-h-[14rem] flex-col overflow-hidden rounded-t-lg border-t border-line bg-panel shadow-2xl"
+              data-mobile-sheet={mobileSheet}
+            >
+              {mobileSheet === 'properties' ? (
+                <PropertiesPanel onCollapse={() => setMobileSheet(null)} />
+              ) : (
+                <Sidebar
+                  overlay
+                  focusSection={mobileSheet}
+                  onCollapse={() => setMobileSheet(null)}
+                />
+              )}
+            </div>
+          </>
+        ) : null}
       </div>
+      {mobile ? (
+        <nav
+          className="grid h-12 shrink-0 grid-cols-4 border-t border-line bg-panel"
+          data-mobile-dock="true"
+        >
+          {([
+            ['garment', 'Garment'],
+            ['design', 'Design'],
+            ['layers', 'Layers'],
+            ['properties', 'Properties'],
+          ] as const).map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              aria-label={label}
+              aria-pressed={mobileSheet === id}
+              onClick={() => setMobileSheet((current) => (current === id ? null : id))}
+              className={`text-[11px] ${
+                mobileSheet === id ? 'bg-accent/10 text-ink' : 'text-mute hover:text-ink'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </nav>
+      ) : null}
       {previewing ? (
         <PreviewOverlay document={document} onClose={() => setPreviewing(false)} />
       ) : null}

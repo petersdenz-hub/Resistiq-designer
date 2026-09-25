@@ -24,8 +24,8 @@ export function PreviewOverlay({ document, onClose }: PreviewOverlayProps) {
   }, [onClose])
 
   return (
-    <div className="absolute inset-0 z-20 flex flex-col bg-[#0c0e12]">
-      <div className="flex h-14 items-center justify-between gap-3 border-b border-line px-4">
+    <div className="absolute inset-0 z-40 flex flex-col bg-[#0a0c10]">
+      <div className="flex h-12 items-center justify-between gap-3 px-4">
         <div className="flex min-w-0 items-center gap-3">
           <Button onClick={onClose} aria-label="Back">
             Back
@@ -33,12 +33,12 @@ export function PreviewOverlay({ document, onClose }: PreviewOverlayProps) {
           <div className="min-w-0">
             <div className="truncate text-[13px] font-medium text-ink">{document.name}</div>
             <div className="text-[10px] uppercase tracking-[0.14em] text-mute">
-              Preview · {garment.name}
+              {garment.name}
             </div>
           </div>
         </div>
         <SegmentedControl
-          className="w-auto shrink-0"
+          className="w-auto shrink-0 border-white/20 bg-[#141820]"
           value={viewId}
           options={document.views.map((view) => ({ value: view.id, label: view.label }))}
           onChange={setViewId}
@@ -46,10 +46,14 @@ export function PreviewOverlay({ document, onClose }: PreviewOverlayProps) {
         <Button onClick={onClose}>Close</Button>
       </div>
       <div
-        className="flex flex-1 items-center justify-center overflow-auto p-8"
+        className="flex flex-1 items-center justify-center overflow-auto p-6 sm:p-8"
         data-preview-overlay="true"
       >
-        <PreviewStage document={document} viewId={viewId} />
+        <PreviewStage
+          document={document}
+          viewId={viewId}
+          zoom={Math.min(1.7, 800 / garment.viewBox.height, 960 / garment.viewBox.width)}
+        />
       </div>
     </div>
   )

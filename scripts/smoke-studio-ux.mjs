@@ -173,7 +173,7 @@ async function run() {
   await page.keyboard.down('Control')
   await page.keyboard.press('KeyA')
   await page.keyboard.up('Control')
-  await page.keyboard.type('Phase 14 Tee')
+  await page.keyboard.type('Phase 15 Tee')
   await page.keyboard.press('Enter')
   await delay(80)
   await clickText(page, 'Save')
@@ -261,15 +261,22 @@ async function run() {
   }
   await shot(page, 'studio_tshirt_after_switch.png')
 
+  await page.setViewport({ width: 1024, height: 768 })
+  await delay(250)
+  await shot(page, 'studio_tablet.png')
+
   await page.setViewport({ width: 390, height: 844 })
-  await delay(200)
+  await delay(250)
   await shot(page, 'studio_mobile.png')
+  await page.click('button[aria-label="Design"]')
+  await delay(200)
+  await shot(page, 'studio_mobile_design.png')
 
   await browser.close()
   if (vite) {
     vite.kill('SIGTERM')
   }
-  console.log('Phase 14 browser smoke passed')
+  console.log('Phase 15 browser smoke passed')
   process.exit(0)
 }
 

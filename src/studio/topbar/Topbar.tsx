@@ -3,8 +3,9 @@ import { useDesign } from '@/design/useDesign'
 import { EXPORT_AVAILABLE } from '@/export'
 import { captureStageThumbnail } from '@/preview/captureThumbnail'
 import { getDesign, needsDesignName, saveDesign } from '@/persistence/designRepository'
+import { saveStatusLabel } from '@/studio/editorChrome'
 import { Button, Dialog, DialogActions, Field, RedoIcon, UndoIcon } from '@/ui'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 interface TopbarProps {
   onClose: () => void
@@ -23,12 +24,14 @@ export function Topbar({ onClose, onNew, onPreview }: TopbarProps) {
   const [namePrompt, setNamePrompt] = useState<'save' | 'save-as' | null>(null)
   const [nameInput, setNameInput] = useState(document.name)
   const [leavePrompt, setLeavePrompt] = useState<'close' | 'new' | null>(null)
+  const [saving, setSaving] = useState(false)
 
   if (nameDraft.committed !== document.name) {
     setNameDraft({ committed: document.name, text: document.name })
   }
 
   const dirty = snapshotOf(document) !== savedSnap
+  const status = saveStatusLabel(dirty, saving)
 
   useEffect(() => {
     if (!toast) {
@@ -39,14 +42,19 @@ export function Topbar({ onClose, onNew, onPreview }: TopbarProps) {
   }, [toast])
 
   async function persist(nextDocument = document) {
-    const stage = window.document.getElementById('design-stage')
-    const thumbnail = await captureStageThumbnail(
-      stage instanceof SVGSVGElement ? stage : null,
-    )
-    const saved = saveDesign(nextDocument, thumbnail)
-    hydrateDocument(saved.document)
-    setSavedSnap(snapshotOf(saved.document))
-    setToast('Design saved')
+    setSaving(true)
+    try {
+      const stage = window.document.getElementById('design-stage')
+      const thumbnail = await captureStageThumbnail(
+        stage instanceof SVGSVGElement ? stage : null,
+      )
+      const saved = saveDesign(nextDocument, thumbnail)
+      hydrateDocument(saved.document)
+      setSavedSnap(snapshotOf(saved.document))
+      setToast('Design saved')
+    } finally {
+      setSaving(false)
+    }
   }
 
   function requestSave(mode: 'save' | 'save-as') {
@@ -91,11 +99,30 @@ export function Topbar({ onClose, onNew, onPreview }: TopbarProps) {
     }
   }
 
+  const saveRef = useRef(() => {})
+  useEffect(() => {
+    saveRef.current = () => requestSave('save')
+  })
+
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 's') {
+        event.preventDefault()
+        saveRef.current()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
   return (
-    <header className="relative flex min-h-14 shrink-0 flex-wrap items-center gap-2 border-b border-line bg-panel px-3 py-2 lg:grid lg:h-14 lg:grid-cols-[1fr_minmax(10rem,22rem)_1fr] lg:flex-nowrap lg:py-0">
+    <header className="relative flex min-h-12 shrink-0 flex-wrap items-center gap-2 border-b border-line bg-panel px-3 py-2 lg:grid lg:h-12 lg:grid-cols-[1fr_minmax(10rem,22rem)_1fr] lg:flex-nowrap lg:py-0">
       <div className="flex items-center gap-2">
-        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-accent/15 text-[13px] font-semibold text-accent">
-          R
+        <div className="flex items-center gap-2">
+          <div className="flex h-6 w-6 items-center justify-center rounded-md bg-accent/15 text-[12px] font-semibold text-accent">
+            R
+          </div>
+          <span className="hidden text-[13px] font-medium tracking-wide text-ink sm:inline">Resistiq</span>
         </div>
         <Button variant="quiet" onClick={() => requestLeave('close')}>
           Designs
@@ -128,10 +155,10 @@ export function Topbar({ onClose, onNew, onPreview }: TopbarProps) {
           className="h-8 w-full max-w-xs rounded-md border border-transparent bg-transparent px-3 text-center text-[13px] font-medium text-ink outline-none hover:border-line focus:border-accent/40 focus:bg-studio"
         />
         <span
-          data-save-status={dirty ? 'unsaved' : 'saved'}
-          className="hidden shrink-0 text-[10px] uppercase tracking-[0.12em] text-mute sm:inline"
+          data-save-status={status}
+          className="hidden shrink-0 text-[10px] tracking-[0.04em] text-mute sm:inline"
         >
-          {dirty ? 'Unsaved' : 'Saved'}
+          {status === 'saving' ? 'Saving…' : status === 'unsaved' ? 'Unsaved changes' : 'Saved'}
         </span>
       </div>
 
@@ -145,22 +172,21 @@ export function Topbar({ onClose, onNew, onPreview }: TopbarProps) {
           <span className="hidden sm:inline">Redo</span>
         </Button>
         <div className="mx-1 hidden h-5 w-px bg-line sm:block" />
-        <Button onClick={() => requestSave('save')} title="Save this design">
+        <Button variant="accent" onClick={() => requestSave('save')} title="Save this design">
           Save
         </Button>
         <Button onClick={() => requestSave('save-as')} title="Save a copy of this design">
           Save as
         </Button>
         <Button onClick={onPreview}>Preview</Button>
-        <span className="hidden md:inline-flex">
-          <Button
-            variant="accent"
-            disabled={!EXPORT_AVAILABLE}
-            title="Export is not available yet."
-          >
-            Export
-          </Button>
-        </span>
+        <Button
+          disabled={!EXPORT_AVAILABLE}
+          title="Export coming later"
+          aria-disabled={!EXPORT_AVAILABLE}
+          className={!EXPORT_AVAILABLE ? 'opacity-35' : ''}
+        >
+          Export
+        </Button>
       </div>
 
       {toast ? (

@@ -1,9 +1,12 @@
 import { AVAILABLE_GARMENTS, studioGarmentGroupId, studioGarmentGroups } from '@/garments'
 import {
+  DEFAULT_OPEN_SECTIONS,
   STUDIO_SECTIONS,
+  saveStatusLabel,
   studioLeftOverlay,
   studioRightOverlay,
   studioViewport,
+  toggleStudioSections,
 } from '@/studio/editorChrome'
 import { describe, expect, it } from 'vitest'
 
@@ -43,6 +46,18 @@ describe('Phase 14 studio UX', () => {
       'Layers',
       'Canvas',
     ])
+  })
+
+  it('opens garment and design first and keeps at most two sections expanded', () => {
+    expect(DEFAULT_OPEN_SECTIONS).toEqual(['design', 'layers'])
+    expect(toggleStudioSections(['design', 'layers'], 'garment')).toEqual(['layers', 'garment'])
+    expect(toggleStudioSections(['design', 'layers'], 'layers')).toEqual(['design'])
+  })
+
+  it('labels save state for Saved, Unsaved changes, and Saving', () => {
+    expect(saveStatusLabel(false)).toBe('saved')
+    expect(saveStatusLabel(true)).toBe('unsaved')
+    expect(saveStatusLabel(true, true)).toBe('saving')
   })
 
   it('treats tablet as a docked left column and a properties drawer', () => {
