@@ -231,7 +231,11 @@ export function CanvasStage({
             onClick={() => setShowGuides(!showGuides)}
           />
           <span className="sr-only" data-grid-visible={gridVisible ? 'true' : 'false'} data-snap-enabled={snapToGrid ? 'true' : 'false'} />
-          <div className="sr-only" data-garment-color-control="true" title="Garment color">
+          <div
+            className="pointer-events-auto absolute left-0 top-0 z-0 flex h-7 items-center opacity-[0.01]"
+            data-garment-color-control="true"
+            title="Garment color"
+          >
             {GARMENT_COLOR_PRESETS.slice(0, 6).map((preset) => (
               <button
                 key={preset.value}
@@ -240,6 +244,7 @@ export function CanvasStage({
                 aria-label={preset.label}
                 aria-pressed={bodyColor.toLowerCase() === preset.value}
                 onClick={() => setBodyColor(preset.value)}
+                className="h-6 w-6"
               />
             ))}
             <input
@@ -252,6 +257,7 @@ export function CanvasStage({
               }}
               onChange={(event) => setBodyColor(event.target.value, 'replace')}
               onBlur={() => commitGesture(colorOrigin.current)}
+              className="h-6 w-6"
             />
           </div>
         </div>
