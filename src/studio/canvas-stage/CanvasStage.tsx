@@ -162,7 +162,7 @@ export function CanvasStage({
           </div>
           {elementCount === 0 && objectCount === 0 ? (
             <div
-              className="pointer-events-none absolute bottom-4 left-1/2 w-[16rem] -translate-x-1/2 text-center"
+              className="pointer-events-none absolute left-1/2 top-full mt-3 w-[16rem] -translate-x-1/2 text-center"
               data-empty-state="true"
             >
               <p className="text-[13px] font-medium text-ink">Start designing</p>

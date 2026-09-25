@@ -83,13 +83,13 @@ export function CapGarment({ viewId, bodyColor, panelColors, construction }: Gar
   return (
     <g pointerEvents="none">
       <defs>
-        <ClothWash id={`${id}-crown`} color={crown} x1={280} y1={166} x2={280} y2={214} />
-        <ClothWash id={`${id}-face`} color={face} x1={280} y1={176} x2={280} y2={358} />
-        <ClothWash id={`${id}-right`} color={right} x1={210} y1={176} x2={150} y2={358} />
-        <ClothWash id={`${id}-left`} color={left} x1={350} y1={176} x2={410} y2={358} />
-        <ClothWash id={`${id}-brim`} color={brim} x1={280} y1={356} x2={280} y2={434} />
-        <ClothWash id={`${id}-band`} color={band} x1={280} y1={350} x2={280} y2={390} />
-        <ClothWash id={`${id}-closure`} color={closure} x1={280} y1={336} x2={280} y2={394} />
+        <ClothWash id={`${id}-crown`} color={crown} x1={280} y1={198} x2={280} y2={248} />
+        <ClothWash id={`${id}-face`} color={face} x1={280} y1={210} x2={280} y2={372} />
+        <ClothWash id={`${id}-right`} color={right} x1={220} y1={210} x2={148} y2={372} />
+        <ClothWash id={`${id}-left`} color={left} x1={340} y1={210} x2={412} y2={372} />
+        <ClothWash id={`${id}-brim`} color={brim} x1={280} y1={368} x2={280} y2={484} />
+        <ClothWash id={`${id}-band`} color={band} x1={280} y1={364} x2={280} y2={402} />
+        <ClothWash id={`${id}-closure`} color={closure} x1={280} y1={348} x2={280} y2={408} />
         <FlatShadow id={id} />
       </defs>
       <FabricFinish id={id} materialId={materialId} />
@@ -158,7 +158,8 @@ export function CapGarment({ viewId, bodyColor, panelColors, construction }: Gar
         <Stitch d={CROWN_FRONT_SEAM_LEFT} color={face.highlight} />
         <Stitch d={CROWN_FRONT_SEAM_RIGHT} color={face.highlight} />
         {!isBack ? <Stitch d={CROWN_CENTER_SEAM} color={face.highlight} /> : null}
-        <Fold d="M246 214 C268 200 292 200 314 214" color={crown.highlight} opacity={0.14} />
+        <Fold d="M248 236 C268 222 292 222 312 236" color={crown.highlight} opacity={0.14} />
+        {!isBack ? <Fold d="M210 400 C248 418 312 418 350 400" color={brim.highlight} opacity={0.12} /> : null}
 
         {bandStyle ? (
           <g
@@ -193,11 +194,11 @@ export function CapGarment({ viewId, bodyColor, panelColors, construction }: Gar
                 <path d={CLOSURE_STRAP} fill={closure.tape} opacity="0.92" />
                 {closureStyle === 'snap' ? (
                   <>
-                    <circle cx="246" cy="370" r="3.6" fill={closure.metal} />
-                    <circle cx="314" cy="370" r="3.6" fill={closure.metal} />
+                    <circle cx="248" cy="382" r="3.6" fill={closure.metal} />
+                    <circle cx="312" cy="382" r="3.6" fill={closure.metal} />
                   </>
                 ) : (
-                  <circle cx="280" cy="370" r="4.2" fill={closure.metal} />
+                  <circle cx="280" cy="382" r="4.2" fill={closure.metal} />
                 )}
               </>
             ) : null}
@@ -206,8 +207,8 @@ export function CapGarment({ viewId, bodyColor, panelColors, construction }: Gar
 
         {!isBack ? (
           <g data-garment-part="top_button" data-construction-kind="button" data-construction-style={closureStyle ?? 'none'}>
-            <circle cx="280" cy="172" r="4.2" fill={crown.clothDark} />
-            <circle cx="280" cy="172" r="2.1" fill={crown.metal} />
+            <circle cx="280" cy="206" r="4.2" fill={crown.clothDark} />
+            <circle cx="280" cy="206" r="2.1" fill={crown.metal} />
           </g>
         ) : null}
       </g>
