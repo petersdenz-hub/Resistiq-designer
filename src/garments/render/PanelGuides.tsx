@@ -7,6 +7,7 @@ import {
   panelBleedBounds,
   panelDesignBounds,
   panelDesignZones,
+  panelDisplayLabel,
 } from '../model'
 import type { GarmentPanelDefinition } from '../types'
 
@@ -122,7 +123,7 @@ export function PanelGuides({
                 fontFamily="IBM Plex Sans, sans-serif"
                 pointerEvents="none"
               >
-                {panelSelected ? `Panel · ${panel.label}` : panel.label}
+                {panelDisplayLabel(panel)}
               </text>
             ) : null}
             {bleed && (active || panelSelected) ? (
@@ -154,22 +155,23 @@ export function PanelGuides({
                   y={printable.y}
                   width={printable.width}
                   height={printable.height}
-                  fill="rgba(201,163,106,0.04)"
-                  stroke="rgba(201,163,106,0.55)"
-                  strokeDasharray="5 4"
-                  strokeWidth="1.05"
+                  fill="rgba(201,163,106,0.015)"
+                  stroke="rgba(201,163,106,0.32)"
+                  strokeDasharray="4 5"
+                  strokeWidth="0.9"
                   rx="2"
                 />
-                {panelSelected || showGuides ? (
+                {showGuides ? (
                   <text
                     x={printable.x + 5}
-                    y={printable.y + Math.min(12, printable.height - 4)}
-                    fill="rgba(201,163,106,0.9)"
-                    fontSize="8.5"
+                    y={printable.y + Math.min(11, printable.height - 4)}
+                    fill="rgba(201,163,106,0.72)"
+                    fontSize="7.5"
                     fontFamily="IBM Plex Sans, sans-serif"
+                    letterSpacing="0.6"
                     pointerEvents="none"
                   >
-                    Printable
+                    PRINT AREA
                   </text>
                 ) : null}
               </g>
@@ -181,21 +183,24 @@ export function PanelGuides({
                   y={safeCanvas.y}
                   width={safeCanvas.width}
                   height={safeCanvas.height}
-                  fill={active ? 'rgba(125, 184, 168, 0.10)' : 'rgba(125, 184, 168, 0.05)'}
-                  stroke="rgba(125, 184, 168, 0.88)"
-                  strokeDasharray="3 3"
-                  strokeWidth="1.15"
+                  fill={active ? 'rgba(125, 184, 168, 0.045)' : 'rgba(125, 184, 168, 0.02)'}
+                  stroke="rgba(125, 184, 168, 0.42)"
+                  strokeDasharray="3 4"
+                  strokeWidth="0.9"
                   rx="2"
                 />
-                <text
-                  x={safeCanvas.x + 5}
-                  y={safeCanvas.y + Math.min(12, safeCanvas.height - 4)}
-                  fill="rgba(170, 214, 202, 0.95)"
-                  fontSize="9"
-                  fontFamily="IBM Plex Sans, sans-serif"
-                >
-                  {safe.label}
-                </text>
+                {showGuides || panelSelected ? (
+                  <text
+                    x={safeCanvas.x + 5}
+                    y={safeCanvas.y + Math.min(11, safeCanvas.height - 4)}
+                    fill="rgba(170, 214, 202, 0.7)"
+                    fontSize="7.5"
+                    fontFamily="IBM Plex Sans, sans-serif"
+                    letterSpacing="0.6"
+                  >
+                    SAFE AREA
+                  </text>
+                ) : null}
               </g>
             ) : null}
             {zones.map((zone) => (

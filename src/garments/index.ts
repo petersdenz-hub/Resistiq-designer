@@ -56,6 +56,7 @@ export {
   panelDesignBoundsLocal,
   panelBleedBounds,
   panelDesignZones,
+  panelDisplayLabel,
   panelName,
   percentFromLocal,
 } from './model'

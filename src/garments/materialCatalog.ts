@@ -14,7 +14,7 @@ export interface CatalogMaterial extends DesignMaterial {
  * the renderer can show.
  */
 export const MATERIAL_CATALOG: CatalogMaterial[] = [
-  { id: 'cotton', name: 'Cotton', family: 'cotton', finish: 'matte', grain: 0.09, sheen: 0.03 },
+  { id: 'cotton', name: 'Cotton', family: 'cotton', finish: 'matte', grain: 0.07, sheen: 0.025 },
   {
     id: 'heavy_cotton',
     name: 'Heavy Cotton',
@@ -28,20 +28,20 @@ export const MATERIAL_CATALOG: CatalogMaterial[] = [
     name: 'Polyester',
     family: 'other',
     finish: 'smooth',
-    grain: 0.025,
-    sheen: 0.15,
+    grain: 0.02,
+    sheen: 0.16,
   },
-  { id: 'nylon', name: 'Nylon', family: 'nylon', finish: 'sheen', grain: 0.015, sheen: 0.26 },
+  { id: 'nylon', name: 'Nylon', family: 'nylon', finish: 'sheen', grain: 0.012, sheen: 0.3 },
   {
     id: 'softshell',
     name: 'Softshell',
     family: 'nylon',
     finish: 'technical',
-    grain: 0.07,
-    sheen: 0.19,
+    grain: 0.09,
+    sheen: 0.2,
   },
-  { id: 'fleece', name: 'Fleece', family: 'fleece', finish: 'napped', grain: 0.22, sheen: 0.05 },
-  { id: 'denim', name: 'Denim', family: 'denim', finish: 'twill', grain: 0.18, sheen: 0.04 },
+  { id: 'fleece', name: 'Fleece', family: 'fleece', finish: 'napped', grain: 0.26, sheen: 0.04 },
+  { id: 'denim', name: 'Denim', family: 'denim', finish: 'twill', grain: 0.2, sheen: 0.05 },
 ]
 
 /** Visual finishes shown in the garment customization UI. */

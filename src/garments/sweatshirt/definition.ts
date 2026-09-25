@@ -47,7 +47,7 @@ export const SWEATSHIRT_PANELS: GarmentPanelDefinition[] = [
     designBounds: { x: 12, y: 12, width: 76, height: 40 },
     designZones: [
       { id: 'sweatshirt-full-front', name: 'Front print', bounds: { x: 0, y: 0, width: 100, height: 100 } },
-      { id: 'sweatshirt-chest', name: 'Chest', bounds: { x: 12, y: 12, width: 76, height: 40 } },
+      { id: 'sweatshirt-chest', name: 'Front chest', bounds: { x: 12, y: 12, width: 76, height: 40 } },
       { id: 'sweatshirt-center-front', name: 'Center front', bounds: { x: 30, y: 20, width: 40, height: 40 } },
     ],
     safeArea: CHEST_PRINT,

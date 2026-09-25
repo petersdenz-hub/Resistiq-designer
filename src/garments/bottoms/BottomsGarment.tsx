@@ -2,7 +2,7 @@ import type { GarmentRenderProps } from '../types'
 import { clothFor } from '../render/cloth'
 import { BeltLoops, FabricFinish, FabricSheen, HemBand, PocketSet } from '../render/constructionDraw'
 import { constructionStyle, fabricFilter, pocketStyle } from '../render/constructionState'
-import { FlatPart, FlatShadow, Fold, Seam } from '../render/flatStyle'
+import { ClothGradient, FlatPart, FlatShadow, Fold, Seam, Stitch } from '../render/flatStyle'
 import type { BottomsKind } from './definition'
 
 /**
@@ -47,16 +47,8 @@ export function BottomsGarment({
   return (
     <g pointerEvents="none">
       <defs>
-        <linearGradient id={`${id}-leg-l`} x1="220" y1="70" x2="220" y2={hem} gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor={left.highlight} />
-          <stop offset="0.35" stopColor={left.cloth} />
-          <stop offset="1" stopColor={left.clothDeep} />
-        </linearGradient>
-        <linearGradient id={`${id}-leg-r`} x1="340" y1="70" x2="340" y2={hem} gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor={right.highlight} />
-          <stop offset="0.35" stopColor={right.cloth} />
-          <stop offset="1" stopColor={right.clothDeep} />
-        </linearGradient>
+        <ClothGradient id={`${id}-leg-l`} color={left} x1={220} y1={70} x2={220} y2={hem} />
+        <ClothGradient id={`${id}-leg-r`} color={right} x1={340} y1={70} x2={340} y2={hem} />
         <FlatShadow id={id} />
       </defs>
       <FabricFinish id={id} materialId={materialId} />
@@ -68,17 +60,19 @@ export function BottomsGarment({
         <g data-garment-part={rightId} data-panel-color={right.cloth}>
           <FlatPart d={rightLeg} fill={`url(#${id}-leg-r)`} stroke={right.stitch} />
         </g>
+        <Stitch d={long ? 'M206 130 C188 220 186 360 196 520' : 'M206 130 C188 180 190 240 204 292'} color={left.stitch} />
+        <Stitch d={long ? 'M354 130 C372 220 374 360 364 520' : 'M354 130 C372 180 370 240 356 292'} color={right.stitch} />
         {long ? (
           <>
-            <Seam d="M188 330 L248 330" color={left.stitch} width={1} opacity={0.16} />
-            <Seam d="M372 330 L312 330" color={right.stitch} width={1} opacity={0.16} />
-            <Fold d="M214 180 C204 260 206 360 216 500" color={left.highlight} opacity={0.12} />
-            <Fold d="M346 180 C356 260 354 360 344 500" color={right.highlight} opacity={0.12} />
+            <Seam d="M188 330 L248 330" color={left.stitch} width={1} opacity={0.18} />
+            <Seam d="M372 330 L312 330" color={right.stitch} width={1} opacity={0.18} />
+            <Fold d="M214 180 C204 260 206 360 216 500" color={left.highlight} opacity={0.14} />
+            <Fold d="M346 180 C356 260 354 360 344 500" color={right.highlight} opacity={0.14} />
           </>
         ) : (
           <>
-            <Fold d="M214 140 C206 190 210 240 220 286" color={left.highlight} opacity={0.12} />
-            <Fold d="M346 140 C354 190 350 240 340 286" color={right.highlight} opacity={0.12} />
+            <Fold d="M214 140 C206 190 210 240 220 286" color={left.highlight} opacity={0.14} />
+            <Fold d="M346 140 C354 190 350 240 340 286" color={right.highlight} opacity={0.14} />
           </>
         )}
         {waistStyle ? (

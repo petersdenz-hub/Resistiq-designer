@@ -6,7 +6,7 @@ import { getElementsInView, getPanelById } from '@/design/selectors'
 import { useDesign } from '@/design/useDesign'
 import { GarmentSelector } from '@/garments/GarmentSelector'
 import { getGarment } from '@/garments/registry'
-import { isPrintablePanel, panelName } from '@/garments/model'
+import { isPrintablePanel, panelDisplayLabel } from '@/garments/model'
 import { GARMENT_CATEGORY_LABELS } from '@/garments/types'
 import {
   Button,
@@ -167,7 +167,7 @@ function GarmentPanel() {
                       : 'border-line text-mute hover:text-ink'
                   }`}
                 >
-                  <span className="block text-[12px]">{panelName(panel)}</span>
+                  <span className="block text-[11px] tracking-[0.06em]">{panelDisplayLabel(panel)}</span>
                   <span className="mt-0.5 block text-[10px] text-mute">
                     {isPrintablePanel(panel) ? (safe?.label ?? 'Printable') : 'Structure'}
                   </span>

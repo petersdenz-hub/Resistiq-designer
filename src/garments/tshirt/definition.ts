@@ -49,7 +49,7 @@ export const TSHIRT_PANELS: GarmentPanelDefinition[] = [
     designBounds: { x: 11, y: 10, width: 78, height: 47.14 },
     designZones: [
       { id: 'tshirt-full-front', name: 'Front print', bounds: { x: 0, y: 0, width: 100, height: 100 } },
-      { id: 'tshirt-chest', name: 'Chest', bounds: { x: 11, y: 10, width: 78, height: 47.14 } },
+      { id: 'tshirt-chest', name: 'Front chest', bounds: { x: 11, y: 10, width: 78, height: 47.14 } },
       { id: 'tshirt-center-front', name: 'Center front', bounds: { x: 30, y: 20, width: 40, height: 40 } },
     ],
     safeArea: CHEST_PRINT,
