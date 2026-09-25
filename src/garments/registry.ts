@@ -128,3 +128,42 @@ export function garmentCatalogGroups(): {
     garments: garmentsInCategory(category),
   })).filter((group) => group.garments.length > 0)
 }
+
+/**
+ * Studio picker groups. Jacket stays outerwear in the catalog, but the
+ * designer chooser lists it with the other tops.
+ */
+export const STUDIO_GARMENT_GROUPS = [
+  { id: 'tops', label: 'Tops', categories: ['tops', 'outerwear'] as const },
+  { id: 'bottoms', label: 'Bottoms', categories: ['bottoms'] as const },
+  { id: 'headwear', label: 'Headwear', categories: ['headwear'] as const },
+] as const
+
+export type StudioGarmentGroupId = (typeof STUDIO_GARMENT_GROUPS)[number]['id']
+
+export function studioGarmentGroupId(category: GarmentCategory): StudioGarmentGroupId | null {
+  if (category === 'tops' || category === 'outerwear') {
+    return 'tops'
+  }
+  if (category === 'bottoms') {
+    return 'bottoms'
+  }
+  if (category === 'headwear') {
+    return 'headwear'
+  }
+  return null
+}
+
+export function studioGarmentGroups(): {
+  id: StudioGarmentGroupId
+  label: string
+  garments: GarmentDefinition[]
+}[] {
+  return STUDIO_GARMENT_GROUPS.map((group) => ({
+    id: group.id,
+    label: group.label,
+    garments: AVAILABLE_GARMENTS.filter((garment) =>
+      (group.categories as readonly string[]).includes(garment.category),
+    ),
+  })).filter((group) => group.garments.length > 0)
+}

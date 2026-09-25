@@ -7,10 +7,8 @@ import {
   resolveActiveZone,
   SHAPE_KIND_LABELS,
   SHAPE_KINDS,
-  zonesForGarment,
 } from '@/design'
 import { useDesign } from '@/design/useDesign'
-import { useCanvasEditor } from '@/studio/canvasEditorContext'
 import { Button } from '@/ui'
 import { useRef, useState } from 'react'
 
@@ -19,7 +17,6 @@ export function DesignPanel() {
     document,
     selectedObjectIds,
     selectObject,
-    setActiveZone,
     addDesignText,
     addDesignShape,
     addDesignImageFromFile,
@@ -28,18 +25,16 @@ export function DesignPanel() {
     updateObjectById,
     applyDocument,
   } = useDesign()
-  const { gridVisible, snapToGrid, setGridVisible, setSnapToGrid } = useCanvasEditor()
   const inputRef = useRef<HTMLInputElement>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const zone = resolveActiveZone(document)
   const objects = getDesignObjectsInZone(document, zone, true)
-  const garmentZones = zonesForGarment(document.garmentType)
 
   return (
     <div className="space-y-5" data-design-panel="true">
-      <section className="space-y-2" data-design-section="true">
+      <section className="space-y-2" data-studio-section="design" data-design-section="true">
         <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Design</div>
         <div className="grid grid-cols-1 gap-1.5">
           <Button variant="accent" className="w-full" data-add-design-text="true" onClick={addDesignText}>
@@ -90,27 +85,9 @@ export function DesignPanel() {
           </div>
         </div>
         {error ? <p className="text-[12px] text-accent">{error}</p> : null}
-        <label className="flex items-center justify-between text-[12px] text-ink">
-          <span>Grid</span>
-          <input
-            type="checkbox"
-            data-toggle-grid="true"
-            checked={gridVisible}
-            onChange={(event) => setGridVisible(event.target.checked)}
-          />
-        </label>
-        <label className="flex items-center justify-between text-[12px] text-ink">
-          <span>Snap</span>
-          <input
-            type="checkbox"
-            data-toggle-snap="true"
-            checked={snapToGrid}
-            onChange={(event) => setSnapToGrid(event.target.checked)}
-          />
-        </label>
       </section>
 
-      <section className="space-y-2" data-layers-section="true">
+      <section className="space-y-2" data-studio-section="layers" data-layers-section="true">
         <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Layers</div>
         {objects.length === 0 ? (
           <p className="text-[12px] leading-5 text-mute">
@@ -132,6 +109,12 @@ export function DesignPanel() {
                     data-layer-selected={selected ? 'true' : 'false'}
                     data-layer-order={layerOrder}
                     data-layer-group={object.groupId ?? ''}
+                    onClick={(event) => {
+                      if ((event.target as HTMLElement).closest('button, input')) {
+                        return
+                      }
+                      selectObject(object.id, { toggle: event.shiftKey })
+                    }}
                   >
                     <button
                       type="button"
@@ -223,27 +206,6 @@ export function DesignPanel() {
         )}
       </section>
 
-      <section className="space-y-2" data-placement-section="true">
-        <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Panel</div>
-        <div className="flex flex-wrap gap-1">
-          {garmentZones.map((item) => (
-            <button
-              key={item}
-              type="button"
-              data-zone-option={item}
-              aria-pressed={item === zone}
-              onClick={() => setActiveZone(item)}
-              className={`h-7 rounded-md border px-2 text-[11px] ${
-                item === zone
-                  ? 'border-accent/50 bg-accent/10 text-ink'
-                  : 'border-line text-mute hover:text-ink'
-              }`}
-            >
-              {placementZoneLabel(item)}
-            </button>
-          ))}
-        </div>
-      </section>
     </div>
   )
 }

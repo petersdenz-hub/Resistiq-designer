@@ -1,4 +1,5 @@
 import type { DesignDocument } from '@/design/types'
+import { getGarment } from '@/garments/registry'
 import { Button, SegmentedControl } from '@/ui'
 import { useEffect, useState } from 'react'
 import { PreviewStage } from './PreviewStage'
@@ -10,6 +11,7 @@ interface PreviewOverlayProps {
 
 export function PreviewOverlay({ document, onClose }: PreviewOverlayProps) {
   const [viewId, setViewId] = useState(document.activeView)
+  const garment = getGarment(document.garmentType)
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -22,11 +24,18 @@ export function PreviewOverlay({ document, onClose }: PreviewOverlayProps) {
   }, [onClose])
 
   return (
-    <div className="absolute inset-0 z-20 flex flex-col bg-studio/96">
-      <div className="flex h-14 items-center justify-between border-b border-line px-4">
-        <div>
-          <div className="text-[13px] font-medium text-ink">{document.name}</div>
-          <div className="text-[10px] uppercase tracking-[0.14em] text-mute">Preview</div>
+    <div className="absolute inset-0 z-20 flex flex-col bg-[#0c0e12]">
+      <div className="flex h-14 items-center justify-between gap-3 border-b border-line px-4">
+        <div className="flex min-w-0 items-center gap-3">
+          <Button onClick={onClose} aria-label="Back">
+            Back
+          </Button>
+          <div className="min-w-0">
+            <div className="truncate text-[13px] font-medium text-ink">{document.name}</div>
+            <div className="text-[10px] uppercase tracking-[0.14em] text-mute">
+              Preview · {garment.name}
+            </div>
+          </div>
         </div>
         <SegmentedControl
           className="w-auto shrink-0"

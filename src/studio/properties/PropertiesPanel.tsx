@@ -43,10 +43,20 @@ export function PropertiesPanel({ onCollapse }: { onCollapse?: () => void }) {
   const { selectedElement, selectedObject, selectedObjectIds } = useDesign()
 
   return (
-    <aside className="flex w-60 shrink-0 flex-col border-l border-line bg-panel" data-properties-panel="true">
+    <aside className="flex h-full w-full max-w-none shrink-0 flex-col border-l border-line bg-panel sm:w-60" data-properties-panel="true">
       <div className="flex items-center justify-between border-b border-line px-3 py-3">
-        <div className="text-[10px] font-medium uppercase tracking-[0.16em] text-mute">
-          Properties
+        <div className="text-[10px] font-medium uppercase tracking-[0.16em] text-mute" data-properties-heading="true">
+          {selectedObjectIds.length > 1
+            ? 'Selection'
+            : selectedObject
+              ? selectedObject.type === 'text'
+                ? 'Text'
+                : selectedObject.type === 'image'
+                  ? 'Image'
+                  : 'Shape'
+              : selectedElement
+                ? 'Artwork'
+                : 'Garment'}
         </div>
         {onCollapse ? (
           <button
@@ -153,7 +163,7 @@ function SelectedObjectProperties() {
             </select>
           </Field>
           <LiveNumber
-            label="Font size"
+            label="Size"
             value={selectedObject.fontSize}
             min={8}
             disabled={locked}
@@ -164,7 +174,7 @@ function SelectedObjectProperties() {
               value={String(selectedObject.fontWeight)}
               options={FONT_WEIGHTS.map((weight) => ({
                 value: String(weight),
-                label: weight === 400 ? 'Reg' : weight === 500 ? 'Med' : 'Bold',
+                label: weight === 400 ? 'Regular' : weight === 500 ? 'Medium' : 'Bold',
               }))}
               onChange={(value) =>
                 updateSelectedObject({ fontWeight: Number(value) as (typeof FONT_WEIGHTS)[number] })
@@ -187,7 +197,7 @@ function SelectedObjectProperties() {
               Italic
             </button>
           </Field>
-          <Field label="Align">
+          <Field label="Alignment">
             <SegmentedControl
               value={selectedObject.textAlign}
               options={TEXT_ALIGNS.map((align) => ({
@@ -199,7 +209,7 @@ function SelectedObjectProperties() {
           </Field>
           <div data-letter-spacing="true">
             <LiveNumber
-              label="Letter spacing"
+              label="Spacing"
               value={selectedObject.letterSpacing}
               digits={1}
               disabled={locked}
@@ -302,8 +312,8 @@ function SelectedObjectProperties() {
         </div>
         <LayerButtons onMove={moveSelectedObjectLayer} />
       </section>
-      <Button className="w-full" onClick={removeSelected}>
-        Remove object
+      <Button className="w-full" data-delete-object="true" onClick={removeSelected}>
+        Delete
       </Button>
     </div>
   )
@@ -438,10 +448,13 @@ function ObjectTransformFields({
 
   return (
     <section className="space-y-2" data-properties-section="transform">
-      <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Transform</div>
+      <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Move</div>
       <div className="grid grid-cols-2 gap-2">
         <LiveNumber label="X" value={selectedObject.x} disabled={locked} onCommit={(value) => onBox({ x: value })} />
         <LiveNumber label="Y" value={selectedObject.y} disabled={locked} onCommit={(value) => onBox({ y: value })} />
+      </div>
+      <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Resize</div>
+      <div className="grid grid-cols-2 gap-2">
         <LiveNumber label="Width" value={selectedObject.width} min={8} disabled={locked} onCommit={(value) => onBox({ width: value })} />
         <LiveNumber label="Height" value={selectedObject.height} min={8} disabled={locked} onCommit={(value) => onBox({ height: value })} />
       </div>
@@ -484,7 +497,7 @@ function ObjectPlacementFields({
 
   return (
     <div className="space-y-3" data-object-placement="true" data-properties-section="placement" data-anchor-space={selectedObject.anchor.space}>
-      <Field label="Zone">
+      <Field label="Design area">
         <select
           data-object-zone="true"
           value={selectedObject.zone}
@@ -498,7 +511,7 @@ function ObjectPlacementFields({
           ))}
         </select>
       </Field>
-      <Field label="Panel">
+      <Field label="Part">
         <select
           data-object-panel="true"
           value={panelId ?? ''}
@@ -529,13 +542,13 @@ function ObjectPlacementFields({
             : 'border-line text-mute hover:text-ink'
         }`}
       >
-        {panelAnchored ? 'Attached to panel' : 'Attach to panel'}
+        {panelAnchored ? 'Kept on this part' : 'Keep on this part'}
       </button>
 
       <div className="text-[10px] font-medium uppercase tracking-[0.12em] text-mute">Position</div>
       <div className="grid grid-cols-2 gap-2">
         <LiveNumber
-          label="X %"
+          label="Left %"
           value={Number((relative.x * 100).toFixed(1))}
           digits={1}
           disabled={locked}
@@ -548,7 +561,7 @@ function ObjectPlacementFields({
           }}
         />
         <LiveNumber
-          label="Y %"
+          label="Top %"
           value={Number((relative.y * 100).toFixed(1))}
           digits={1}
           disabled={locked}
@@ -738,7 +751,7 @@ function SelectedProperties() {
       <LayerButtons onMove={moveSelectedLayer} />
 
       <Button className="w-full" onClick={removeSelected}>
-        Remove element
+        Delete
       </Button>
     </div>
   )
@@ -871,7 +884,7 @@ function TextStyleFields() {
           value={String(selectedElement.fontWeight)}
           options={FONT_WEIGHTS.map((weight) => ({
             value: String(weight),
-            label: weight === 400 ? 'Reg' : weight === 500 ? 'Med' : 'Bold',
+            label: weight === 400 ? 'Regular' : weight === 500 ? 'Medium' : 'Bold',
           }))}
           onChange={(value) =>
             updateSelected({ fontWeight: Number(value) as (typeof FONT_WEIGHTS)[number] })
@@ -892,7 +905,7 @@ function TextStyleFields() {
           Italic
         </button>
       </Field>
-      <Field label="Align">
+      <Field label="Alignment">
         <SegmentedControl
           value={selectedElement.textAlign}
           options={TEXT_ALIGNS.map((align) => ({

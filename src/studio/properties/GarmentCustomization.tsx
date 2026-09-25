@@ -17,6 +17,7 @@ import { useRef } from 'react'
 export function GarmentCustomization() {
   const {
     document,
+    setActivePanel,
     setBodyColor,
     setRegionColor,
     setRegionMaterial,
@@ -38,6 +39,7 @@ export function GarmentCustomization() {
       : undefined) ?? document.construction?.materialId
   const originRef = useRef(document)
   const body = document.colors.find((color) => color.role === 'body')?.value ?? garment.defaults.bodyColor
+  const materials = garment.capabilities.materials ? visualFinishCatalog() : []
 
   return (
     <div className="space-y-5" data-properties-kind="garment" data-garment-customization="true">
@@ -47,7 +49,7 @@ export function GarmentCustomization() {
           {garment.name}
         </div>
         <p className="text-[11px] leading-4 text-mute">
-          Color, material, and construction belong to the garment — not to artwork.
+          Choose a color and material, then add text or a logo on the canvas.
         </p>
       </section>
 
@@ -63,68 +65,78 @@ export function GarmentCustomization() {
       />
 
       <section className="space-y-2" data-color-regions="true">
-        <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Regions</div>
+        <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">
+          {selectedRegion ? 'Selected part' : 'Parts'}
+        </div>
         {selectedRegion ? (
           <div className="text-[11px] text-ink" data-selected-region={selectedRegion.id}>
-            Selected region: {selectedRegion.label}
+            {selectedRegion.label}
           </div>
         ) : null}
-        {regions.map((region) => (
-          <div
-            key={region.id}
-            data-color-region={region.id}
-            data-color-region-panels={region.panelIds.join(',')}
-            data-color-region-selected={selectedRegion?.id === region.id ? 'true' : 'false'}
-          >
-            <ColorPicker
-              label={region.label}
-              value={regionColor(document, region)}
-              onCommit={(value) => setRegionColor(region.panelIds, value)}
-              onLiveStart={() => {
-                originRef.current = document
-              }}
-              onLiveChange={(value) => setRegionColor(region.panelIds, value, 'replace')}
-              onLiveEnd={() => commitGesture(originRef.current)}
-            />
-          </div>
-        ))}
+        {regions.map((region) => {
+          const selected = selectedRegion?.id === region.id
+          return (
+            <div
+              key={region.id}
+              data-color-region={region.id}
+              data-color-region-panels={region.panelIds.join(',')}
+              data-color-region-selected={selected ? 'true' : 'false'}
+              className={selected ? 'rounded-md border border-accent/40 bg-accent/10 p-2' : undefined}
+            >
+              <ColorPicker
+                label={region.label}
+                value={regionColor(document, region)}
+                onCommit={(value) => {
+                  if (region.panelIds[0]) {
+                    setActivePanel(region.panelIds[0])
+                  }
+                  setRegionColor(region.panelIds, value)
+                }}
+                onLiveStart={() => {
+                  originRef.current = document
+                }}
+                onLiveChange={(value) => setRegionColor(region.panelIds, value, 'replace')}
+                onLiveEnd={() => commitGesture(originRef.current)}
+              />
+            </div>
+          )
+        })}
       </section>
 
-      <section className="space-y-2" data-garment-materials="true">
-        <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Material</div>
-        <div className="grid grid-cols-2 gap-1.5">
-          {visualFinishCatalog().map((material) => {
-            const selected = materialId === material.id
-            return (
-              <button
-                key={material.id}
-                type="button"
-                data-material-option={material.id}
-                aria-pressed={selected}
-                onClick={() => {
-                  setGarmentMaterial(material.id)
-                  if (selectedRegion) {
-                    setRegionMaterial(selectedRegion.panelIds, material.id)
-                  }
-                }}
-                className={`rounded-md border px-2.5 py-2 text-left ${
-                  selected
-                    ? 'border-accent/50 bg-accent/10 text-ink'
-                    : 'border-line text-mute hover:text-ink'
-                }`}
-              >
-                <span className="block text-[12px] text-ink">{material.name}</span>
-                <span className="mt-0.5 block text-[10px] capitalize">{material.finish}</span>
-              </button>
-            )
-          })}
-        </div>
-      </section>
+      {materials.length > 0 ? (
+        <section className="space-y-2" data-garment-materials="true">
+          <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Material</div>
+          <div className="grid grid-cols-2 gap-1.5">
+            {materials.map((material) => {
+              const selected = materialId === material.id
+              return (
+                <button
+                  key={material.id}
+                  type="button"
+                  data-material-option={material.id}
+                  aria-pressed={selected}
+                  onClick={() => {
+                    setGarmentMaterial(material.id)
+                    if (selectedRegion) {
+                      setRegionMaterial(selectedRegion.panelIds, material.id)
+                    }
+                  }}
+                  className={`rounded-md border px-2.5 py-2 text-left ${
+                    selected
+                      ? 'border-accent/50 bg-accent/10 text-ink'
+                      : 'border-line text-mute hover:text-ink'
+                  }`}
+                >
+                  <span className="block text-[12px] text-ink">{material.name}</span>
+                </button>
+              )
+            })}
+          </div>
+        </section>
+      ) : null}
 
       <section className="space-y-3" data-garment-construction="true">
-        <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">
-          Construction
-        </div>
+        <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Details</div>
         {controls.map((control) => {
           const value = controlValue(resolved, control)
           return (

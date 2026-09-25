@@ -32,12 +32,6 @@ export function CanvasStage({
     gridSize,
     gridVisible,
     snapToGrid,
-    showPrintArea,
-    showSafeAreas,
-    showGuides,
-    setShowPrintArea,
-    setShowSafeAreas,
-    setShowGuides,
   } = useCanvasEditor()
   const [zoom, setZoom] = useState(0.95)
   const panning = useRef<{ x: number; y: number; panX: number; panY: number } | null>(null)
@@ -167,7 +161,7 @@ export function CanvasStage({
             >
               <p className="text-[13px] font-medium text-ink">Start designing</p>
               <p className="mt-1 text-[12px] leading-5 text-mute">
-                Add text, a logo or a shape to begin.
+                Choose a garment color, then add text or a logo.
               </p>
             </div>
           ) : null}
@@ -181,10 +175,9 @@ export function CanvasStage({
             data-design-breadcrumb="true"
           >
             <span className="text-ink" data-breadcrumb-garment="true">{garment.name}</span>
-            <span aria-hidden="true">→</span>
+            <span aria-hidden="true" className="text-mute">·</span>
             <span data-breadcrumb-view="true">{viewLabel}</span>
-            <span aria-hidden="true">→</span>
-            <span className="text-ink" data-breadcrumb-zone="true">{placementZoneLabel(zone)}</span>
+            <span className="sr-only" data-breadcrumb-zone="true">{placementZoneLabel(zone)}</span>
           </div>
           <div className="flex rounded-md border border-line p-0.5">
             {document.views.map((view) => (
@@ -257,24 +250,6 @@ export function CanvasStage({
               className="h-5 w-5 cursor-pointer rounded-full border border-line bg-studio p-0"
             />
           </div>
-          <GuideToggle
-            pressed={showPrintArea}
-            label="Show print area"
-            dataAttr="print-area"
-            onClick={() => setShowPrintArea(!showPrintArea)}
-          />
-          <GuideToggle
-            pressed={showSafeAreas}
-            label="Show safe area"
-            dataAttr="safe-area"
-            onClick={() => setShowSafeAreas(!showSafeAreas)}
-          />
-          <GuideToggle
-            pressed={showGuides}
-            label="Show guides"
-            dataAttr="guides"
-            onClick={() => setShowGuides(!showGuides)}
-          />
           <span className="text-[10px] text-mute" data-grid-visible={gridVisible ? 'true' : 'false'} data-snap-enabled={snapToGrid ? 'true' : 'false'}>
             {gridVisible ? 'Grid' : 'No grid'}
             {snapToGrid ? ' · snap' : ''}
@@ -316,32 +291,5 @@ export function CanvasStage({
       </div>
       <span className="sr-only" data-visible-object-count={visibleCount} />
     </section>
-  )
-}
-
-function GuideToggle({
-  pressed,
-  label,
-  dataAttr,
-  onClick,
-}: {
-  pressed: boolean
-  label: string
-  dataAttr: string
-  onClick: () => void
-}) {
-  return (
-    <button
-      type="button"
-      data-guide-toggle={dataAttr}
-      aria-pressed={pressed}
-      title={label}
-      onClick={onClick}
-      className={`h-7 rounded-md border px-2 text-[11px] ${
-        pressed ? 'border-accent/40 bg-accent/10 text-ink' : 'border-line text-mute hover:text-ink'
-      }`}
-    >
-      {label}
-    </button>
   )
 }

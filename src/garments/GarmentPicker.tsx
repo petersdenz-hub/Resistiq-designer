@@ -1,7 +1,7 @@
 import { Dialog, DialogActions } from '@/ui'
 import { Button } from '@/ui/Button'
-import { AVAILABLE_GARMENTS } from './registry'
-import { categoryLabel } from './types'
+import { GarmentCard } from './GarmentCard'
+import { studioGarmentGroups } from './registry'
 
 interface GarmentPickerProps {
   onPick: (garmentType: string) => void
@@ -9,42 +9,29 @@ interface GarmentPickerProps {
 }
 
 export function GarmentPicker({ onPick, onClose }: GarmentPickerProps) {
+  const groups = studioGarmentGroups()
+
   return (
     <Dialog title="Choose a garment" onClose={onClose} size="lg">
-      <p className="mb-3 text-[12px] leading-5 text-mute">
-        New designs start on the garment you pick. Saved designs stay on their original type.
+      <p className="mb-4 text-[12px] leading-5 text-mute">
+        Pick a garment to start a new design. Saved designs keep the garment they were made on.
       </p>
-      <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-        {AVAILABLE_GARMENTS.map((garment) => (
-          <li key={garment.id}>
-            <button
-              type="button"
-              data-garment-option={garment.id}
-              onClick={() => onPick(garment.id)}
-              className="flex w-full flex-col overflow-hidden rounded-lg border border-line bg-canvas text-left transition-colors hover:border-accent/50"
-            >
-              <div className="flex h-28 items-center justify-center px-3 pt-3">
-                <svg
-                  viewBox={`0 0 ${garment.viewBox.width} ${garment.viewBox.height}`}
-                  className="h-full w-full"
-                  aria-hidden
-                >
-                  {garment.render({
-                    viewId: 'front',
-                    bodyColor: garment.defaults.bodyColor,
-                  })}
-                </svg>
-              </div>
-              <div className="border-t border-line bg-panel px-3 py-2">
-                <div className="text-[12px] font-medium text-ink">{garment.name}</div>
-                <div className="text-[10px] uppercase tracking-[0.12em] text-mute">
-                  {categoryLabel(garment.category)}
-                </div>
-              </div>
-            </button>
-          </li>
+      <div className="space-y-5">
+        {groups.map((group) => (
+          <section key={group.id} data-garment-group={group.id}>
+            <div className="mb-2 text-[10px] font-medium uppercase tracking-[0.14em] text-mute">
+              {group.label}
+            </div>
+            <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {group.garments.map((garment) => (
+                <li key={garment.id}>
+                  <GarmentCard garment={garment} size="lg" onSelect={() => onPick(garment.id)} />
+                </li>
+              ))}
+            </ul>
+          </section>
         ))}
-      </ul>
+      </div>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
       </DialogActions>

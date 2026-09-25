@@ -1,4 +1,31 @@
 export type ToolbarMode = 'empty' | 'single' | 'multi'
+export type StudioViewport = 'desktop' | 'tablet' | 'mobile'
+export type StudioSectionId = 'garment' | 'design' | 'layers' | 'canvas'
+
+export const STUDIO_SECTIONS: { id: StudioSectionId; label: string }[] = [
+  { id: 'garment', label: 'Garment' },
+  { id: 'design', label: 'Design' },
+  { id: 'layers', label: 'Layers' },
+  { id: 'canvas', label: 'Canvas' },
+]
+
+export function studioViewport(width: number): StudioViewport {
+  if (width < 960) {
+    return 'mobile'
+  }
+  if (width < 1180) {
+    return 'tablet'
+  }
+  return 'desktop'
+}
+
+export function studioLeftOverlay(viewport: StudioViewport): boolean {
+  return viewport === 'mobile'
+}
+
+export function studioRightOverlay(viewport: StudioViewport): boolean {
+  return viewport !== 'desktop'
+}
 
 export function toolbarMode(selectedCount: number): ToolbarMode {
   if (selectedCount <= 0) {
