@@ -9,10 +9,16 @@ import {
   getDesignObjectById,
   moveDesignObjectLayer,
   removeDesignObject,
+  defaultPanelIdForZone,
   setActiveZone as writeSetActiveZone,
-  setDesignObjectZone as writeSetDesignObjectZone,
   updateDesignObject,
 } from './designObjects'
+import {
+  assignDesignObjectZone,
+  attachObjectToZonePanel,
+  setDesignObjectAnchor,
+  setDesignObjectPanel,
+} from './objectPlacement'
 import { createId } from './ids'
 import { useCallback, useLayoutEffect, useMemo, useReducer, useRef, type ReactNode } from 'react'
 import { DesignContext, type DesignContextValue, type HistoryMode } from './context'
@@ -230,7 +236,30 @@ export function DesignProvider({
         if (!selectedObjectId) {
           return
         }
-        apply(writeSetDesignObjectZone(document, selectedObjectId, zone))
+        apply(assignDesignObjectZone(document, selectedObjectId, zone))
+      },
+      setSelectedObjectPanel: (panelId) => {
+        const { document, selectedObjectId } = current()
+        if (!selectedObjectId) {
+          return
+        }
+        apply(setDesignObjectPanel(document, selectedObjectId, panelId))
+      },
+      setSelectedObjectSpace: (space) => {
+        const { document, selectedObjectId } = current()
+        const selected = getDesignObjectById(document, selectedObjectId)
+        if (!selected) {
+          return
+        }
+        if (space === 'panel') {
+          const panelId = selected.anchor.panelId ?? defaultPanelIdForZone(document, selected.zone)
+          if (!panelId) {
+            return
+          }
+          apply(setDesignObjectAnchor(document, selected.id, { space: 'panel', panelId }, 'visual'))
+          return
+        }
+        apply(setDesignObjectAnchor(document, selected.id, { space: 'zone', panelId: selected.anchor.panelId }, 'visual'))
       },
       renameDesign: (name) => apply(setDesignName(current().document, name)),
       setBodyColor: (value, history = 'record') =>
@@ -265,13 +294,13 @@ export function DesignProvider({
       },
       addDesignText: () => {
         const document = current().document
-        const object = createTextObject(document)
+        const object = attachObjectToZonePanel(document, createTextObject(document))
         apply(addDesignObject(document, object))
         dispatch({ type: 'selectObject', objectId: object.id })
       },
       addDesignShape: () => {
         const document = current().document
-        const object = createShapeObject(document)
+        const object = attachObjectToZonePanel(document, createShapeObject(document))
         apply(addDesignObject(document, object))
         dispatch({ type: 'selectObject', objectId: object.id })
       },
@@ -290,14 +319,17 @@ export function DesignProvider({
           }
           await persistAsset(asset)
           const document = current().document
-          const object = createImageObject(document, {
-            source: asset.id,
-            fileName: ingested.name,
-            mimeType: ingested.mimeType,
-            naturalWidth: ingested.width,
-            naturalHeight: ingested.height,
-            aspectLocked: true,
-          })
+          const object = attachObjectToZonePanel(
+            document,
+            createImageObject(document, {
+              source: asset.id,
+              fileName: ingested.name,
+              mimeType: ingested.mimeType,
+              naturalWidth: ingested.width,
+              naturalHeight: ingested.height,
+              aspectLocked: true,
+            }),
+          )
           apply(addDesignObject(document, object))
           dispatch({ type: 'selectObject', objectId: object.id })
           return null

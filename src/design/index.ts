@@ -31,6 +31,25 @@ export {
   updateDesignObject,
   zonesForGarment,
 } from './designObjects'
+export {
+  assignDesignObjectZone,
+  attachObjectToPanel,
+  attachObjectToZonePanel,
+  detachObjectToZone,
+  getArtworkPanelBounds,
+  isPanelAnchored,
+  localBoxFromRelative,
+  objectRelativeBox,
+  paintDesignObject,
+  panelsForZone,
+  panelScale,
+  resolveObjectViewBox,
+  setDesignObjectAnchor,
+  setDesignObjectPanel,
+  storeObjectViewBox,
+  zoneForPanel,
+} from './objectPlacement'
+export type { ArtworkPanelBounds, RelativeBox } from './objectPlacement'
 export type {
   AnchorSpace,
   DesignObject,

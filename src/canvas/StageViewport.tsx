@@ -8,6 +8,7 @@ import {
   getSafeAreasInView,
   resolveActiveZone,
 } from '@/design/selectors'
+import { paintDesignObject } from '@/design/objectPlacement'
 import { useDesign } from '@/design/useDesign'
 import { getGarment } from '@/garments/registry'
 import { getPanelsForView } from '@/garments/coordinates'
@@ -23,6 +24,7 @@ import { toCanvasElement } from './project'
 import { TransformControls } from './TransformControls'
 import { applyPreview, useElementGesture } from './useElementGesture'
 import { applyObjectPreview, useDesignObjectGesture } from './useDesignObjectGesture'
+import { ZoneSurfaceOverlay } from './ZoneSurfaceOverlay'
 
 interface StageViewportProps {
   zoom: number
@@ -69,10 +71,12 @@ export function StageViewport({ zoom, showSafeAreas }: StageViewportProps) {
     commitGesture,
   })
 
-  const paintedObjects = objects.map((object) => applyObjectPreview(object, objectGesture.preview))
+  const paintedObjects = objects.map((object) =>
+    applyObjectPreview(paintDesignObject(document, object), objectGesture.preview),
+  )
   const selectedPainted =
     selectedObject && selectedObject.zone === zone
-      ? applyObjectPreview(selectedObject, objectGesture.preview)
+      ? applyObjectPreview(paintDesignObject(document, selectedObject), objectGesture.preview)
       : null
 
   const width = garment.viewBox.width * zoom
@@ -141,6 +145,8 @@ export function StageViewport({ zoom, showSafeAreas }: StageViewportProps) {
         onSelect={selectElement}
         onMoveStart={gesture.startMove}
       />
+
+      <ZoneSurfaceOverlay document={document} zone={zone} />
 
       <DesignObjectLayer
         objects={paintedObjects}

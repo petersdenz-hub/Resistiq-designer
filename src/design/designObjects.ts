@@ -24,13 +24,14 @@ export const ANCHOR_SPACES = ['zone', 'panel'] as const
 export type AnchorSpace = (typeof ANCHOR_SPACES)[number]
 
 /**
- * Future garment-aware placement. Coordinates stay in garment viewBox units
- * for the object's zone today. A later phase can project from `panelId`
- * without rewriting objects to screen pixels.
+ * Placement space for artwork.
+ * `zone` — x/y/width/height are garment viewBox units for the placement zone.
+ * `panel` — x/y/width/height are panel-local units for `panelId`.
+ * Neither space uses browser/screen pixels.
  */
 export interface DesignObjectAnchor {
   space: AnchorSpace
-  /** Optional garment panel this object can later be projected onto. */
+  /** Garment panel this object is attached to when space is `panel`. */
   panelId?: string
 }
 

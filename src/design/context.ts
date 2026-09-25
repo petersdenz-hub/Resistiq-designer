@@ -31,6 +31,8 @@ export interface DesignContextValue {
   setActivePanel: (panelId: string) => void
   setActiveZone: (zone: PlacementZone) => void
   setSelectedObjectZone: (zone: PlacementZone) => void
+  setSelectedObjectPanel: (panelId: string) => void
+  setSelectedObjectSpace: (space: 'zone' | 'panel') => void
   renameDesign: (name: string) => void
   setBodyColor: (value: string, history?: HistoryMode) => void
   setPanelColor: (panelId: string, value: string, history?: HistoryMode) => void

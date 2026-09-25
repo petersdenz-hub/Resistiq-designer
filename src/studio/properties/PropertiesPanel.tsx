@@ -4,6 +4,13 @@ import {
   PLACEMENT_ZONE_LABELS,
   PLACEMENT_ZONES,
 } from '@/design/designObjects'
+import {
+  getArtworkPanelBounds,
+  isPanelAnchored,
+  localBoxFromRelative,
+  objectRelativeBox,
+  panelsForZone,
+} from '@/design/objectPlacement'
 import { useAsset } from '@/persistence/useAsset'
 import { getPanelById, getPanelColor } from '@/design/selectors'
 import {
@@ -92,6 +99,8 @@ function SelectedObjectProperties() {
     moveSelectedObjectLayer,
     removeSelected,
     setSelectedObjectZone,
+    setSelectedObjectPanel,
+    setSelectedObjectSpace,
   } = useDesign()
   if (!selectedObject) {
     return null
@@ -106,7 +115,9 @@ function SelectedObjectProperties() {
         <div className="mt-1 text-[11px] text-mute">{PLACEMENT_ZONE_LABELS[selectedObject.zone]}</div>
       </div>
       <p className="text-[11px] leading-4 text-mute">
-        This is a design object on the canvas, not garment construction. Position is in garment space.
+        {isPanelAnchored(selectedObject)
+          ? 'This artwork is attached to a garment panel. Position is panel-relative, not screen pixels.'
+          : 'This artwork uses zone space in garment viewBox units. Attach it to a panel to follow that panel.'}
       </p>
 
       {selectedObject.type === 'text' ? (
@@ -194,57 +205,14 @@ function SelectedObjectProperties() {
         </div>
       ) : null}
 
-      <div className="grid grid-cols-2 gap-2">
-        <LiveNumber
-          label="X"
-          value={selectedObject.x}
-          disabled={locked}
-          onCommit={(value) => updateSelectedObject({ x: value })}
-        />
-        <LiveNumber
-          label="Y"
-          value={selectedObject.y}
-          disabled={locked}
-          onCommit={(value) => updateSelectedObject({ y: value })}
-        />
-        <LiveNumber
-          label="Width"
-          value={selectedObject.width}
-          min={8}
-          disabled={locked}
-          onCommit={(value) => updateSelectedObject({ width: value })}
-        />
-        <LiveNumber
-          label="Height"
-          value={selectedObject.height}
-          min={8}
-          disabled={locked}
-          onCommit={(value) => updateSelectedObject({ height: value })}
-        />
-      </div>
-      <LiveNumber
-        label="Rotation"
-        value={Number(selectedObject.rotation.toFixed(1))}
-        digits={1}
-        disabled={locked}
-        onCommit={(value) => updateSelectedObject({ rotation: value })}
+      <ObjectPlacementFields
+        locked={locked}
+        onZone={setSelectedObjectZone}
+        onPanel={setSelectedObjectPanel}
+        onSpace={setSelectedObjectSpace}
+        onBox={updateSelectedObject}
       />
       <ObjectOpacityField />
-
-      <Field label="Placement zone">
-        <select
-          data-object-zone="true"
-          value={selectedObject.zone}
-          onChange={(event) => setSelectedObjectZone(event.target.value as (typeof PLACEMENT_ZONES)[number])}
-          className="h-8 w-full rounded-md border border-line bg-studio px-2 text-[12px] text-ink"
-        >
-          {PLACEMENT_ZONES.map((item) => (
-            <option key={item} value={item}>
-              {PLACEMENT_ZONE_LABELS[item]}
-            </option>
-          ))}
-        </select>
-      </Field>
 
       <div className="grid grid-cols-2 gap-2">
         <button
@@ -279,6 +247,145 @@ function SelectedObjectProperties() {
       <Button className="w-full" onClick={removeSelected}>
         Remove object
       </Button>
+    </div>
+  )
+}
+
+function ObjectPlacementFields({
+  locked,
+  onZone,
+  onPanel,
+  onSpace,
+  onBox,
+}: {
+  locked: boolean
+  onZone: (zone: (typeof PLACEMENT_ZONES)[number]) => void
+  onPanel: (panelId: string) => void
+  onSpace: (space: 'zone' | 'panel') => void
+  onBox: (patch: { x?: number; y?: number; width?: number; height?: number; rotation?: number }) => void
+}) {
+  const { document, selectedObject } = useDesign()
+  if (!selectedObject) {
+    return null
+  }
+
+  const panelId = selectedObject.anchor.panelId
+  const bounds = getArtworkPanelBounds(document, panelId)
+  const relative = objectRelativeBox(document, selectedObject)
+  const panelAnchored = isPanelAnchored(selectedObject)
+  const zonePanels = panelsForZone(document, selectedObject.zone)
+
+  return (
+    <div className="space-y-3" data-object-placement="true" data-anchor-space={selectedObject.anchor.space}>
+      <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Placement</div>
+      <Field label="Zone">
+        <select
+          data-object-zone="true"
+          value={selectedObject.zone}
+          onChange={(event) => onZone(event.target.value as (typeof PLACEMENT_ZONES)[number])}
+          className="h-8 w-full rounded-md border border-line bg-studio px-2 text-[12px] text-ink"
+        >
+          {PLACEMENT_ZONES.map((item) => (
+            <option key={item} value={item}>
+              {PLACEMENT_ZONE_LABELS[item]}
+            </option>
+          ))}
+        </select>
+      </Field>
+      <Field label="Panel">
+        <select
+          data-object-panel="true"
+          value={panelId ?? ''}
+          disabled={zonePanels.length === 0}
+          onChange={(event) => {
+            if (event.target.value) {
+              onPanel(event.target.value)
+            }
+          }}
+          className="h-8 w-full rounded-md border border-line bg-studio px-2 text-[12px] text-ink"
+        >
+          {!panelId ? <option value="">Not attached</option> : null}
+          {zonePanels.map((panel) => (
+            <option key={panel.id} value={panel.id}>
+              {panel.label}
+            </option>
+          ))}
+        </select>
+      </Field>
+      <button
+        type="button"
+        data-anchor-space-toggle="true"
+        aria-pressed={panelAnchored}
+        onClick={() => onSpace(panelAnchored ? 'zone' : 'panel')}
+        className={`h-8 w-full rounded-md border text-[12px] ${
+          panelAnchored
+            ? 'border-accent/50 bg-accent/10 text-ink'
+            : 'border-line text-mute hover:text-ink'
+        }`}
+      >
+        {panelAnchored ? 'Attached to panel' : 'Attach to panel'}
+      </button>
+
+      {panelAnchored && bounds ? (
+        <div className="grid grid-cols-2 gap-2">
+          <LiveNumber
+            label="X %"
+            value={Number((relative.x * 100).toFixed(1))}
+            digits={1}
+            disabled={locked}
+            onCommit={(value) =>
+              onBox(localBoxFromRelative(document, bounds.id, { ...relative, x: value / 100 }))
+            }
+          />
+          <LiveNumber
+            label="Y %"
+            value={Number((relative.y * 100).toFixed(1))}
+            digits={1}
+            disabled={locked}
+            onCommit={(value) =>
+              onBox(localBoxFromRelative(document, bounds.id, { ...relative, y: value / 100 }))
+            }
+          />
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-2">
+          <LiveNumber
+            label="X"
+            value={selectedObject.x}
+            disabled={locked}
+            onCommit={(value) => onBox({ x: value })}
+          />
+          <LiveNumber
+            label="Y"
+            value={selectedObject.y}
+            disabled={locked}
+            onCommit={(value) => onBox({ y: value })}
+          />
+        </div>
+      )}
+      <div className="grid grid-cols-2 gap-2">
+        <LiveNumber
+          label="Width"
+          value={selectedObject.width}
+          min={8}
+          disabled={locked}
+          onCommit={(value) => onBox({ width: value })}
+        />
+        <LiveNumber
+          label="Height"
+          value={selectedObject.height}
+          min={8}
+          disabled={locked}
+          onCommit={(value) => onBox({ height: value })}
+        />
+      </div>
+      <LiveNumber
+        label="Rotation"
+        value={Number(selectedObject.rotation.toFixed(1))}
+        digits={1}
+        disabled={locked}
+        onCommit={(value) => onBox({ rotation: value })}
+      />
     </div>
   )
 }
