@@ -1,6 +1,8 @@
 import { ACCEPTED_IMAGE_ACCEPT } from '@/design/ingestImage'
 import {
   getDesignObjectsInZone,
+  objectDisplayName,
+  objectsSharePlacement,
   PLACEMENT_ZONE_LABELS,
   PLACEMENT_ZONES,
   resolveActiveZone,
@@ -15,15 +17,19 @@ export function DesignPanel() {
   const {
     document,
     selectedObjectId,
+    selectedObjectIds,
     selectObject,
     setActiveZone,
     addDesignText,
     addDesignShape,
     addDesignImageFromFile,
     removeObjectById,
+    removeSelected,
     duplicateSelectedObject,
     updateObjectById,
     moveSelectedObjectLayer,
+    groupSelectedObjects,
+    ungroupSelectedObjects,
   } = useDesign()
   const { gridVisible, snapToGrid, setGridVisible, setSnapToGrid } = useCanvasEditor()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -32,6 +38,11 @@ export function DesignPanel() {
   const zone = resolveActiveZone(document)
   const garmentZones = new Set(zonesForGarment(document.garmentType))
   const objects = getDesignObjectsInZone(document, zone, true)
+  const selectedObjects = objects.filter((object) => selectedObjectIds.includes(object.id))
+  const canGroup =
+    selectedObjects.filter((object) => !object.locked).length >= 2 &&
+    objectsSharePlacement(selectedObjects.filter((object) => !object.locked))
+  const canUngroup = selectedObjects.some((object) => object.groupId)
 
   return (
     <div className="space-y-5" data-design-panel="true">
@@ -105,8 +116,9 @@ export function DesignPanel() {
           </p>
         ) : (
           <ul className="space-y-1.5">
-            {[...objects].reverse().map((object) => {
-              const selected = object.id === selectedObjectId
+            {[...objects].reverse().map((object, order) => {
+              const selected = selectedObjectIds.includes(object.id)
+              const layerOrder = objects.length - order
               return (
                 <li key={object.id}>
                   <div
@@ -114,6 +126,9 @@ export function DesignPanel() {
                       selected ? 'border-accent/50 bg-accent/10' : 'border-line'
                     }`}
                     data-layer-row={object.id}
+                    data-layer-selected={selected ? 'true' : 'false'}
+                    data-layer-order={layerOrder}
+                    data-layer-group={object.groupId ?? ''}
                   >
                     <div className="flex items-start gap-1">
                       <button
@@ -138,22 +153,37 @@ export function DesignPanel() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => selectObject(object.id)}
-                        className="min-w-0 flex-1 text-left text-[12px] capitalize text-ink"
+                        onClick={(event) =>
+                          selectObject(object.id, { toggle: event.shiftKey })
+                        }
+                        className="min-w-0 flex-1 text-left text-[12px] text-ink"
+                        data-layer-name={object.id}
+                        title={objectDisplayName(object)}
                       >
-                        {objectLabel(object)}
+                        {objectDisplayName(object)}
                         <span className="mt-0.5 block text-[10px] text-mute">
-                          {object.visible ? 'Visible' : 'Hidden'}
+                          {object.type}
+                          {object.visible ? ' · visible' : ' · hidden'}
                           {object.locked ? ' · locked' : ''}
+                          {object.groupId ? ' · group' : ''}
+                          {` · ${layerOrder}`}
                         </span>
                       </button>
                     </div>
-                    {selected ? (
+                    {selected && object.id === selectedObjectId ? (
                       <div className="mt-1.5 flex flex-wrap gap-1">
-                        <MiniButton onClick={() => moveSelectedObjectLayer('forward')}>Up</MiniButton>
-                        <MiniButton onClick={() => moveSelectedObjectLayer('backward')}>Down</MiniButton>
+                        <MiniButton onClick={() => moveSelectedObjectLayer('forward')}>Forward</MiniButton>
+                        <MiniButton onClick={() => moveSelectedObjectLayer('backward')}>Back</MiniButton>
+                        <MiniButton onClick={() => moveSelectedObjectLayer('front')}>Front</MiniButton>
+                        <MiniButton onClick={() => moveSelectedObjectLayer('back')}>To back</MiniButton>
                         <MiniButton onClick={duplicateSelectedObject}>Duplicate</MiniButton>
                         <MiniButton onClick={() => removeObjectById(object.id)}>Delete</MiniButton>
+                        <MiniButton disabled={!canGroup} onClick={groupSelectedObjects}>
+                          Group
+                        </MiniButton>
+                        <MiniButton disabled={!canUngroup} onClick={ungroupSelectedObjects}>
+                          Ungroup
+                        </MiniButton>
                       </div>
                     ) : null}
                   </div>
@@ -162,6 +192,15 @@ export function DesignPanel() {
             })}
           </ul>
         )}
+        {selectedObjectIds.length > 1 ? (
+          <button
+            type="button"
+            className="text-[11px] text-mute hover:text-ink"
+            onClick={removeSelected}
+          >
+            Delete selected
+          </button>
+        ) : null}
       </section>
 
       <section className="space-y-2" data-placement-section="true">
@@ -199,30 +238,21 @@ export function DesignPanel() {
   )
 }
 
-function objectLabel(object: { type: string; content?: string; fileName?: string }) {
-  if (object.type === 'text') {
-    const preview = object.content?.trim() || 'Text'
-    return preview.length > 22 ? `${preview.slice(0, 22)}…` : preview
-  }
-  if (object.type === 'image') {
-    const preview = object.fileName?.trim() || 'Image'
-    return preview.length > 22 ? `${preview.slice(0, 22)}…` : preview
-  }
-  return object.type
-}
-
 function MiniButton({
   children,
   onClick,
+  disabled,
 }: {
   children: string
   onClick: () => void
+  disabled?: boolean
 }) {
   return (
     <button
       type="button"
+      disabled={disabled}
       onClick={onClick}
-      className="h-6 rounded border border-line px-1.5 text-[10px] text-mute hover:text-ink"
+      className="h-6 rounded border border-line px-1.5 text-[10px] text-mute hover:text-ink disabled:opacity-35"
     >
       {children}
     </button>

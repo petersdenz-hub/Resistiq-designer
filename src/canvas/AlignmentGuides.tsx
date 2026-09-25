@@ -5,6 +5,11 @@ interface GuideBox {
   height: number
 }
 
+interface SnapGuides {
+  vertical: number[]
+  horizontal: number[]
+}
+
 const THRESHOLD = 6
 
 export function AlignmentGuides({
@@ -12,46 +17,63 @@ export function AlignmentGuides({
   others,
   canvas,
   zoom,
+  panels = [],
+  guides,
 }: {
   moving: GuideBox | null
   others: GuideBox[]
   canvas: { width: number; height: number }
   zoom: number
+  panels?: GuideBox[]
+  guides?: SnapGuides | null
 }) {
-  if (!moving) {
+  if (!moving && !guides) {
     return null
   }
 
-  const edges = {
-    left: moving.x,
-    right: moving.x + moving.width,
-    top: moving.y,
-    bottom: moving.y + moving.height,
-    cx: moving.x + moving.width / 2,
-    cy: moving.y + moving.height / 2,
+  const vertical = new Set(guides?.vertical ?? [])
+  const horizontal = new Set(guides?.horizontal ?? [])
+
+  if (moving && !guides) {
+    const edges = {
+      left: moving.x,
+      right: moving.x + moving.width,
+      top: moving.y,
+      bottom: moving.y + moving.height,
+      cx: moving.x + moving.width / 2,
+      cy: moving.y + moving.height / 2,
+    }
+
+    const targets = [
+      ...others.flatMap((box) => [box.x, box.x + box.width, box.x + box.width / 2]),
+      ...panels.flatMap((box) => [box.x, box.x + box.width, box.x + box.width / 2]),
+      canvas.width / 2,
+    ]
+    const yTargets = [
+      ...others.flatMap((box) => [box.y, box.y + box.height, box.y + box.height / 2]),
+      ...panels.flatMap((box) => [box.y, box.y + box.height, box.y + box.height / 2]),
+      canvas.height / 2,
+    ]
+
+    for (const value of [edges.left, edges.right, edges.cx]) {
+      if (targets.some((target) => Math.abs(target - value) <= THRESHOLD)) {
+        vertical.add(value)
+      }
+    }
+    for (const value of [edges.top, edges.bottom, edges.cy]) {
+      if (yTargets.some((target) => Math.abs(target - value) <= THRESHOLD)) {
+        horizontal.add(value)
+      }
+    }
   }
 
-  const targets = [
-    ...others.flatMap((box) => [
-      box.x,
-      box.x + box.width,
-      box.x + box.width / 2,
-    ]),
-    canvas.width / 2,
-  ]
-  const yTargets = [
-    ...others.flatMap((box) => [
-      box.y,
-      box.y + box.height,
-      box.y + box.height / 2,
-    ]),
-    canvas.height / 2,
-  ]
+  if (vertical.size === 0 && horizontal.size === 0) {
+    return null
+  }
 
-  const lines = []
-  for (const value of [edges.left, edges.right, edges.cx]) {
-    if (targets.some((target) => Math.abs(target - value) <= THRESHOLD)) {
-      lines.push(
+  return (
+    <g data-alignment-guides="true" pointerEvents="none">
+      {[...vertical].map((value) => (
         <line
           key={`v-${value}`}
           x1={value}
@@ -62,13 +84,9 @@ export function AlignmentGuides({
           strokeWidth={1 / zoom}
           strokeDasharray={`${4 / zoom} ${3 / zoom}`}
           opacity="0.7"
-        />,
-      )
-    }
-  }
-  for (const value of [edges.top, edges.bottom, edges.cy]) {
-    if (yTargets.some((target) => Math.abs(target - value) <= THRESHOLD)) {
-      lines.push(
+        />
+      ))}
+      {[...horizontal].map((value) => (
         <line
           key={`h-${value}`}
           x1={0}
@@ -79,17 +97,8 @@ export function AlignmentGuides({
           strokeWidth={1 / zoom}
           strokeDasharray={`${4 / zoom} ${3 / zoom}`}
           opacity="0.7"
-        />,
-      )
-    }
-  }
-
-  if (lines.length === 0) {
-    return null
-  }
-  return (
-    <g data-alignment-guides="true" pointerEvents="none">
-      {lines}
+        />
+      ))}
     </g>
   )
 }

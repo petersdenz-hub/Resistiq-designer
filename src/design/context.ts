@@ -4,6 +4,7 @@ import type {
   DesignObjectPatch,
   PlacementZone,
 } from './designObjects'
+import type { Alignment, Distribution } from './objectEditing'
 import type {
   ConstructionKind,
   DesignConstruction,
@@ -17,16 +18,33 @@ import type {
 
 export type HistoryMode = 'record' | 'replace'
 
+export interface SelectObjectOptions {
+  toggle?: boolean
+  additive?: boolean
+  expandGroup?: boolean
+}
+
 export interface DesignContextValue {
   document: DesignDocument
   selectedElementId: string | null
   selectedElement: DesignElement | null
   selectedObjectId: string | null
+  selectedObjectIds: string[]
   selectedObject: DesignObject | null
+  selectedObjects: DesignObject[]
   canUndo: boolean
   canRedo: boolean
   selectElement: (elementId: string | null) => void
-  selectObject: (objectId: string | null) => void
+  selectObject: (objectId: string | null, options?: SelectObjectOptions) => void
+  selectObjects: (objectIds: string[]) => void
+  selectAllObjects: () => void
+  groupSelectedObjects: () => void
+  ungroupSelectedObjects: () => void
+  alignSelectedObjects: (alignment: Alignment) => void
+  distributeSelectedObjects: (axis: Distribution) => void
+  nudgeSelectedObjects: (dx: number, dy: number) => void
+  updateSelectedObjects: (patch: DesignObjectPatch, history?: HistoryMode) => void
+  applyDocument: (document: DesignDocument, history?: HistoryMode) => void
   setActiveView: (viewId: string) => void
   setActivePanel: (panelId: string) => void
   setActiveZone: (zone: PlacementZone) => void

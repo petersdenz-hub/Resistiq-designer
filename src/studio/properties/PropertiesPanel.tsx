@@ -1,9 +1,11 @@
 import { FONT_WEIGHTS, TEXT_ALIGNS, TEXT_FONT_FAMILIES } from '@/design/typography'
 import {
   imageKeepsAlpha,
+  objectDisplayName,
   PLACEMENT_ZONE_LABELS,
   PLACEMENT_ZONES,
 } from '@/design/designObjects'
+import { nudgeDesignObjects, selectionViewBox, updateDesignObjects } from '@/design/objectEditing'
 import {
   getArtworkPanelBounds,
   isPanelAnchored,
@@ -27,7 +29,7 @@ import { Button, ColorPicker, Field, NumberField, SegmentedControl } from '@/ui'
 import { useRef, useState } from 'react'
 
 export function PropertiesPanel() {
-  const { selectedElement, selectedObject } = useDesign()
+  const { selectedElement, selectedObject, selectedObjectIds } = useDesign()
 
   return (
     <aside className="flex w-64 shrink-0 flex-col border-l border-line bg-panel">
@@ -37,7 +39,9 @@ export function PropertiesPanel() {
         </div>
       </div>
       <div className="flex-1 overflow-y-auto px-4 py-4">
-        {selectedObject ? (
+        {selectedObjectIds.length > 1 ? (
+          <MultiObjectProperties />
+        ) : selectedObject ? (
           <SelectedObjectProperties />
         ) : selectedElement ? (
           <SelectedProperties />
@@ -111,9 +115,17 @@ function SelectedObjectProperties() {
   return (
     <div className="space-y-4" data-properties-kind="design-object">
       <div>
-        <div className="text-[12px] font-medium capitalize text-ink">{selectedObject.type}</div>
+        <div className="text-[12px] font-medium capitalize text-ink">{objectDisplayName(selectedObject)}</div>
         <div className="mt-1 text-[11px] text-mute">{PLACEMENT_ZONE_LABELS[selectedObject.zone]}</div>
       </div>
+      <Field label="Name">
+        <input
+          data-object-name="true"
+          value={selectedObject.name ?? ''}
+          onChange={(event) => updateSelectedObject({ name: event.target.value })}
+          className="h-8 w-full rounded-md border border-line bg-studio px-2 text-[12px] text-ink outline-none focus:border-accent/50"
+        />
+      </Field>
       <p className="text-[11px] leading-4 text-mute">
         {isPanelAnchored(selectedObject)
           ? 'This artwork is attached to a garment panel. Position is panel-relative, not screen pixels.'
@@ -249,6 +261,104 @@ function SelectedObjectProperties() {
       </Button>
     </div>
   )
+}
+
+function MultiObjectProperties() {
+  const {
+    document,
+    selectedObjects,
+    selectedObjectIds,
+    applyDocument,
+    updateSelectedObjects,
+    moveSelectedObjectLayer,
+    removeSelected,
+  } = useDesign()
+  const union = selectionViewBox(document, selectedObjectIds)
+  const unlocked = selectedObjects.filter((object) => !object.locked)
+  const sharedRotation = sharedValue(unlocked.map((object) => object.rotation))
+  const sharedOpacity = sharedValue(unlocked.map((object) => object.opacity))
+  const sharedPanel = sharedValue(selectedObjects.map((object) => object.anchor.panelId ?? ''))
+  const sharedZone = sharedValue(selectedObjects.map((object) => object.zone))
+  const panel = sharedPanel ? document.panels.find((item) => item.id === sharedPanel) : null
+
+  return (
+    <div className="space-y-4" data-properties-kind="multi-object" data-selected-count={selectedObjects.length}>
+      <div>
+        <div className="text-[12px] font-medium text-ink">{selectedObjects.length} objects</div>
+        <div className="mt-1 text-[11px] text-mute">
+          {sharedZone ? PLACEMENT_ZONE_LABELS[sharedZone] : 'Mixed zones'}
+          {panel ? ` · ${panel.label}` : sharedPanel === '' ? '' : ' · mixed panels'}
+        </div>
+      </div>
+      <p className="text-[11px] leading-4 text-mute">
+        Shared values only. Mixed fields stay blank so they are not applied as if every object matched.
+      </p>
+      {union ? (
+        <div className="grid grid-cols-2 gap-2">
+          <LiveNumber
+            label="X"
+            value={union.x}
+            disabled={unlocked.length === 0}
+            onCommit={(value) => applyDocument(nudgeDesignObjects(document, selectedObjectIds, value - union.x, 0))}
+          />
+          <LiveNumber
+            label="Y"
+            value={union.y}
+            disabled={unlocked.length === 0}
+            onCommit={(value) => applyDocument(nudgeDesignObjects(document, selectedObjectIds, 0, value - union.y))}
+          />
+        </div>
+      ) : null}
+      <LiveNumber
+        label="Rotation"
+        value={sharedRotation ?? 0}
+        digits={1}
+        disabled={unlocked.length === 0 || sharedRotation === null}
+        onCommit={(value) =>
+          applyDocument(
+            updateDesignObjects(
+              document,
+              unlocked.map((object) => ({ id: object.id, patch: { rotation: value } })),
+            ),
+          )
+        }
+      />
+      {sharedRotation === null ? (
+        <p className="text-[11px] text-mute" data-mixed-rotation="true">
+          Rotation is mixed.
+        </p>
+      ) : null}
+      <Field label="Opacity">
+        <input
+          type="range"
+          min={0}
+          max={1}
+          step={0.05}
+          data-object-opacity="true"
+          value={sharedOpacity ?? 1}
+          disabled={unlocked.length === 0 || sharedOpacity === null}
+          onChange={(event) => updateSelectedObjects({ opacity: Number(event.target.value) })}
+          className="w-full accent-accent"
+        />
+      </Field>
+      {sharedOpacity === null ? (
+        <p className="text-[11px] text-mute" data-mixed-opacity="true">
+          Opacity is mixed.
+        </p>
+      ) : null}
+      <LayerButtons onMove={moveSelectedObjectLayer} />
+      <Button className="w-full" onClick={removeSelected}>
+        Remove objects
+      </Button>
+    </div>
+  )
+}
+
+function sharedValue<T>(values: T[]): T | null {
+  if (values.length === 0) {
+    return null
+  }
+  return values.every((value) => value === values[0]) ? values[0] : null
 }
 
 function ObjectPlacementFields({

@@ -13,8 +13,21 @@ interface StudioProps {
 }
 
 export function Studio({ onClose, onNew }: StudioProps) {
-  const { document, undo, redo, removeSelected, selectedElementId, selectedObjectId, duplicateSelectedObject } =
-    useDesign()
+  const {
+    document,
+    undo,
+    redo,
+    removeSelected,
+    selectedElementId,
+    selectedObjectId,
+    selectedObjectIds,
+    duplicateSelectedObject,
+    selectAllObjects,
+    selectObjects,
+    groupSelectedObjects,
+    ungroupSelectedObjects,
+    nudgeSelectedObjects,
+  } = useDesign()
   const [previewing, setPreviewing] = useState(false)
 
   useEffect(() => {
@@ -44,9 +57,39 @@ export function Studio({ onClose, onNew }: StudioProps) {
         return
       }
 
-      if (modifier && key === 'd' && selectedObjectId) {
+      if (modifier && key === 'a' && !typing) {
+        event.preventDefault()
+        selectAllObjects()
+        return
+      }
+
+      if (modifier && key === 'g' && selectedObjectIds.length > 0) {
+        event.preventDefault()
+        if (event.shiftKey) {
+          ungroupSelectedObjects()
+        } else {
+          groupSelectedObjects()
+        }
+        return
+      }
+
+      if (modifier && key === 'd' && selectedObjectIds.length > 0) {
         event.preventDefault()
         duplicateSelectedObject()
+        return
+      }
+
+      if (!typing && event.key === 'Escape') {
+        selectObjects([])
+        return
+      }
+
+      if (!typing && selectedObjectIds.length > 0 && ['arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(key)) {
+        event.preventDefault()
+        const step = event.shiftKey ? 16 : 1
+        const dx = key === 'arrowleft' ? -step : key === 'arrowright' ? step : 0
+        const dy = key === 'arrowup' ? -step : key === 'arrowdown' ? step : 0
+        nudgeSelectedObjects(dx, dy)
         return
       }
 
@@ -58,7 +101,20 @@ export function Studio({ onClose, onNew }: StudioProps) {
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [duplicateSelectedObject, redo, removeSelected, selectedElementId, selectedObjectId, undo])
+  }, [
+    duplicateSelectedObject,
+    groupSelectedObjects,
+    nudgeSelectedObjects,
+    redo,
+    removeSelected,
+    selectAllObjects,
+    selectObjects,
+    selectedElementId,
+    selectedObjectId,
+    selectedObjectIds.length,
+    undo,
+    ungroupSelectedObjects,
+  ])
 
   return (
     <CanvasEditorProvider>

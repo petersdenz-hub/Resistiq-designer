@@ -1,4 +1,5 @@
 import type { DesignSafeArea } from '@/design/types'
+import type { PointerEvent as ReactPointerEvent } from 'react'
 import { localRectToCanvas } from '../coordinates'
 import type { GarmentPanelDefinition } from '../types'
 
@@ -10,6 +11,7 @@ interface PanelGuidesProps {
   /** Panel highlight is selection when no design element is selected. */
   selectionKind?: 'panel' | 'element'
   onSelectPanel: (panelId: string) => void
+  onPanelPointerDown?: (panelId: string, event: ReactPointerEvent<SVGElement>) => void
 }
 
 export function PanelGuides({
@@ -19,6 +21,7 @@ export function PanelGuides({
   showSafeAreas,
   selectionKind = 'panel',
   onSelectPanel,
+  onPanelPointerDown,
 }: PanelGuidesProps) {
   return (
     <g data-editor-chrome="true">
@@ -54,6 +57,10 @@ export function PanelGuides({
               rx="3"
               onPointerDown={(event) => {
                 event.stopPropagation()
+                if (onPanelPointerDown) {
+                  onPanelPointerDown(panel.id, event)
+                  return
+                }
                 onSelectPanel(panel.id)
               }}
               style={{ cursor: 'pointer' }}
