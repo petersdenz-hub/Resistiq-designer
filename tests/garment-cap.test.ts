@@ -2,6 +2,7 @@ import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import {
   addDesignObject,
+  createImageObject,
   createTextObject,
   defaultPanelIdForZone,
   getBodyColor,
@@ -9,6 +10,7 @@ import {
   getPanelColor,
   getResolvedConstruction,
   objectClipPaths,
+  setActivePanel,
   setGarmentMaterial,
   setRegionColor,
   switchGarment,
@@ -26,6 +28,7 @@ import {
   hasGarment,
   panelDesignZones,
   panelSilhouetteFor,
+  regionForPanel,
 } from '@/garments'
 import { PreviewStage } from '@/preview/PreviewStage'
 import { normalizeDocument } from '@/persistence/validateDocument'
@@ -145,8 +148,37 @@ describe('Phase 11 cap garment', () => {
 
     const artwork = createTextObject(document, 'front')
     const withArt = addDesignObject(document, artwork)
-    expect(objectClipPaths(withArt, artwork)).toEqual(panelSilhouetteFor('cap', 'front_panel'))
-    expect(objectClipPaths(withArt, artwork)[0]?.startsWith('M')).toBe(true)
+    const clip = objectClipPaths(withArt, artwork)
+    expect(clip).toEqual(panelSilhouetteFor('cap', 'front_panel'))
+    expect(clip[0]?.startsWith('M')).toBe(true)
+    expect(clip[0]).not.toMatch(/^M[\d.]+ [\d.]+ H[\d.]+ V[\d.]+ H[\d.]+ Z$/)
+  })
+
+  it('selects regions through the existing panel/region contract', () => {
+    let document = createNewDesign('cap')
+    expect(regionForPanel('cap', document.activePanelId)?.id).toBe('front-panel')
+    document = setActivePanel(document, 'brim')
+    expect(regionForPanel('cap', document.activePanelId)?.id).toBe('brim')
+    document = setActivePanel(document, 'crown')
+    expect(regionForPanel('cap', document.activePanelId)?.id).toBe('crown')
+    document = setActivePanel(document, 'left_side')
+    expect(regionForPanel('cap', document.activePanelId)?.id).toBe('left-side')
+  })
+
+  it('clips image/logo artwork to the same front-panel silhouette', () => {
+    const document = createNewDesign('cap')
+    const logo = createImageObject(
+      document,
+      {
+        source: 'data:image/png;base64,aaaa',
+        fileName: 'logo.png',
+        mimeType: 'image/png',
+      },
+      'front',
+    )
+    const withLogo = addDesignObject(document, logo)
+    expect(objectClipPaths(withLogo, logo)).toEqual(panelSilhouetteFor('cap', 'front_panel'))
+    expect(getDesignObjectById(withLogo, logo.id)?.anchor.panelId).toBe('front_panel')
   })
 
   it('persists region colors, materials, and artwork through save/load', () => {
@@ -168,6 +200,15 @@ describe('Phase 11 cap garment', () => {
     expect(getDesignObjectById(reopened, mark.id)?.anchor.panelId).toBe('front_panel')
   })
 
+  it('applies catalog materials through the shared construction path', () => {
+    let document = createNewDesign('cap')
+    document = setGarmentMaterial(document, 'nylon')
+    const html = renderCap('front', document)
+    expect(html).toContain('data-fabric="nylon"')
+    expect(html).toContain('url(#cap-front-fabric)')
+    expect(getResolvedConstruction(document).materialId).toBe('nylon')
+  })
+
   it('renders construction details through existing primitives', () => {
     expect(constructionControlsFor('cap').map((control) => control.id)).toEqual(['hem', 'waistband', 'button'])
     expect(constructionKindsOf(getResolvedConstruction(createNewDesign('cap')))).toEqual([
@@ -181,11 +222,15 @@ describe('Phase 11 cap garment', () => {
     expect(front).toContain('data-construction-kind="waistband"')
     expect(front).toContain('data-flat-seam="true"')
     expect(front).toContain('data-flat-stitch="true"')
+    expect(front).toContain('data-construction-detail="eyelet"')
     expect(front).toContain('data-region-id="front-panel"')
     expect(front).toContain('data-region-id="brim"')
+    expect(front).toContain('data-region-id="crown"')
+    expect(front).toContain('data-region-id="band"')
     const back = renderCap('back')
     expect(back).toContain('data-construction-kind="button"')
     expect(back).toContain('data-region-id="closure"')
+    expect(back).not.toContain('data-region-id="brim"')
   })
 
   it('uses the shared preview renderer for the cap definition', () => {
@@ -214,6 +259,22 @@ describe('Phase 11 cap garment', () => {
     expect(document.garmentType).toBe('tshirt')
     expect(document.designObjects).toEqual(snapshot)
     expect(getDesignObjectById(document, mark.id)?.content).toBe(mark.content)
+  })
+
+  it('switches Cap → Hoodie → Cap without rewriting artwork', () => {
+    let document = createNewDesign('cap')
+    const mark = createTextObject(document, 'front')
+    document = addDesignObject(document, mark)
+    const snapshot = structuredClone(document.designObjects)
+
+    document = switchGarment(document, 'hoodie')
+    expect(document.garmentType).toBe('hoodie')
+    expect(document.designObjects).toEqual(snapshot)
+
+    document = switchGarment(document, 'cap')
+    expect(document.garmentType).toBe('cap')
+    expect(document.designObjects).toEqual(snapshot)
+    expect(getDesignObjectById(document, mark.id)?.anchor.panelId).toBe('front_panel')
   })
 
   it('leaves the original six garments unchanged', () => {
