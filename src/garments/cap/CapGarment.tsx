@@ -2,7 +2,7 @@ import type { GarmentRenderProps } from '../types'
 import { clothFor } from '../render/cloth'
 import { FabricFinish, FabricSheen } from '../render/constructionDraw'
 import { constructionStyle, fabricFilter, visibleParts } from '../render/constructionState'
-import { ClothGradient, FlatPart, FlatShadow, Fold, RibMarks, Seam, Stitch } from '../render/flatStyle'
+import { ClothWash, FlatPart, FlatShadow, Fold, RibMarks, Seam, Stitch } from '../render/flatStyle'
 import {
   BACK_PANEL,
   BAND,
@@ -16,9 +16,11 @@ import {
   BRIM_STITCH_MID,
   BRIM_STITCH_OUTER,
   CLOSURE,
+  CLOSURE_STRAP,
   CLOSURE_STITCH,
   CROWN,
   CROWN_BACK,
+  CROWN_CENTER_SEAM,
   CROWN_FRONT_SEAM_LEFT,
   CROWN_FRONT_SEAM_RIGHT,
   CROWN_TOP_SEAM,
@@ -47,7 +49,7 @@ function Eyelet({
   return (
     <g data-construction-detail="eyelet">
       <circle cx={cx} cy={cy} r={r} fill={fill} />
-      <circle cx={cx} cy={cy} r={r - 1.4} fill="none" stroke={stroke} strokeWidth="0.9" opacity="0.55" />
+      <circle cx={cx} cy={cy} r={r - 1.2} fill="none" stroke={stroke} strokeWidth="0.8" opacity="0.5" />
     </g>
   )
 }
@@ -81,13 +83,13 @@ export function CapGarment({ viewId, bodyColor, panelColors, construction }: Gar
   return (
     <g pointerEvents="none">
       <defs>
-        <ClothGradient id={`${id}-crown`} color={crown} x1={280} y1={148} x2={280} y2={232} />
-        <ClothGradient id={`${id}-face`} color={face} x1={280} y1={162} x2={280} y2={332} />
-        <ClothGradient id={`${id}-right`} color={right} x1={220} y1={160} x2={158} y2={340} />
-        <ClothGradient id={`${id}-left`} color={left} x1={340} y1={160} x2={402} y2={340} />
-        <ClothGradient id={`${id}-brim`} color={brim} x1={280} y1={328} x2={280} y2={458} />
-        <ClothGradient id={`${id}-band`} color={band} x1={280} y1={322} x2={280} y2={370} />
-        <ClothGradient id={`${id}-closure`} color={closure} x1={280} y1={324} x2={280} y2={380} />
+        <ClothWash id={`${id}-crown`} color={crown} x1={280} y1={198} x2={280} y2={248} />
+        <ClothWash id={`${id}-face`} color={face} x1={280} y1={210} x2={280} y2={372} />
+        <ClothWash id={`${id}-right`} color={right} x1={220} y1={210} x2={148} y2={372} />
+        <ClothWash id={`${id}-left`} color={left} x1={340} y1={210} x2={412} y2={372} />
+        <ClothWash id={`${id}-brim`} color={brim} x1={280} y1={368} x2={280} y2={482} />
+        <ClothWash id={`${id}-band`} color={band} x1={280} y1={364} x2={280} y2={402} />
+        <ClothWash id={`${id}-closure`} color={closure} x1={280} y1={348} x2={280} y2={408} />
         <FlatShadow id={id} />
       </defs>
       <FabricFinish id={id} materialId={materialId} />
@@ -102,15 +104,15 @@ export function CapGarment({ viewId, bodyColor, panelColors, construction }: Gar
                 <Seam
                   d={BRIM_SEAM}
                   color={brimFinish === 'rib' ? brim.rib : brim.stitch}
-                  width={brimFinish === 'rib' ? 4.2 : brimFinish === 'raw' ? 1 : 1.7}
-                  opacity={brimFinish === 'raw' ? 0.22 : 0.48}
+                  width={brimFinish === 'rib' ? 3.6 : brimFinish === 'raw' ? 1 : 1.5}
+                  opacity={brimFinish === 'raw' ? 0.22 : 0.46}
                 />
-                <Seam d={BRIM_EDGE} color={brim.stitch} width={1.35} opacity={0.4} />
+                <Seam d={BRIM_EDGE} color={brim.stitch} width={1.2} opacity={0.38} />
                 {brimFinish === 'coverstitch' ? (
                   <>
-                    <Stitch d={BRIM_STITCH_INNER} color={brim.highlight} width={0.95} opacity={0.5} />
-                    <Stitch d={BRIM_STITCH_MID} color={brim.highlight} width={0.95} opacity={0.46} />
-                    <Stitch d={BRIM_STITCH_OUTER} color={brim.highlight} width={0.95} opacity={0.42} />
+                    <Stitch d={BRIM_STITCH_INNER} color={brim.highlight} width={0.85} opacity={0.48} />
+                    <Stitch d={BRIM_STITCH_MID} color={brim.highlight} width={0.85} opacity={0.42} />
+                    <Stitch d={BRIM_STITCH_OUTER} color={brim.highlight} width={0.85} opacity={0.38} />
                   </>
                 ) : null}
               </g>
@@ -149,12 +151,15 @@ export function CapGarment({ viewId, bodyColor, panelColors, construction }: Gar
           <FlatPart d={crownPath} fill={`url(#${id}-crown)`} stroke={crown.stitch} />
         </g>
 
-        <Seam d={CROWN_FRONT_SEAM_LEFT} color={face.stitch} width={1.25} opacity={0.42} />
-        <Seam d={CROWN_FRONT_SEAM_RIGHT} color={face.stitch} width={1.25} opacity={0.42} />
-        <Seam d={CROWN_TOP_SEAM} color={crown.stitch} width={1.15} opacity={0.36} />
+        {!isBack ? <Seam d={CROWN_CENTER_SEAM} color={face.stitch} width={1.15} opacity={0.4} /> : null}
+        <Seam d={CROWN_FRONT_SEAM_LEFT} color={face.stitch} width={1.2} opacity={0.4} />
+        <Seam d={CROWN_FRONT_SEAM_RIGHT} color={face.stitch} width={1.2} opacity={0.4} />
+        <Seam d={CROWN_TOP_SEAM} color={crown.stitch} width={1.05} opacity={0.32} />
         <Stitch d={CROWN_FRONT_SEAM_LEFT} color={face.highlight} />
         <Stitch d={CROWN_FRONT_SEAM_RIGHT} color={face.highlight} />
-        <Fold d="M248 206 C268 192 292 192 312 206" color={crown.highlight} />
+        {!isBack ? <Stitch d={CROWN_CENTER_SEAM} color={face.highlight} /> : null}
+        <Fold d="M248 236 C268 222 292 222 312 236" color={crown.highlight} opacity={0.14} />
+        {!isBack ? <Fold d="M214 404 C248 420 312 420 346 404" color={brim.highlight} opacity={0.12} /> : null}
 
         {bandStyle ? (
           <g
@@ -165,7 +170,7 @@ export function CapGarment({ viewId, bodyColor, panelColors, construction }: Gar
             data-construction-style={bandStyle}
           >
             <FlatPart d={bandPath} fill={bandStyle === 'rib' ? band.rib : `url(#${id}-band)`} stroke={band.stitch} />
-            {bandStyle === 'rib' ? <RibMarks x={172} y={328} width={216} height={30} color={band.stitch} /> : null}
+            {bandStyle === 'rib' ? <RibMarks x={164} y={352} width={232} height={28} color={band.stitch} /> : null}
             <Stitch d={BAND_STITCH} color={band.highlight} />
           </g>
         ) : (
@@ -186,14 +191,14 @@ export function CapGarment({ viewId, bodyColor, panelColors, construction }: Gar
             <Stitch d={CLOSURE_STITCH} color={closure.highlight} />
             {closureStyle ? (
               <>
-                <rect x="232" y="350" width="96" height="20" rx="3" fill={closure.tape} opacity="0.92" />
+                <path d={CLOSURE_STRAP} fill={closure.tape} opacity="0.92" />
                 {closureStyle === 'snap' ? (
                   <>
-                    <circle cx="246" cy="360" r="4.2" fill={closure.metal} />
-                    <circle cx="314" cy="360" r="4.2" fill={closure.metal} />
+                    <circle cx="248" cy="382" r="3.6" fill={closure.metal} />
+                    <circle cx="312" cy="382" r="3.6" fill={closure.metal} />
                   </>
                 ) : (
-                  <circle cx="280" cy="360" r="5" fill={closure.metal} />
+                  <circle cx="280" cy="382" r="4.2" fill={closure.metal} />
                 )}
               </>
             ) : null}
@@ -202,8 +207,8 @@ export function CapGarment({ viewId, bodyColor, panelColors, construction }: Gar
 
         {!isBack ? (
           <g data-garment-part="top_button" data-construction-kind="button" data-construction-style={closureStyle ?? 'none'}>
-            <circle cx="280" cy="156" r="6.4" fill={crown.clothDark} />
-            <circle cx="280" cy="156" r="3.4" fill={crown.metal} />
+            <circle cx="280" cy="206" r="4.2" fill={crown.clothDark} />
+            <circle cx="280" cy="206" r="2.1" fill={crown.metal} />
           </g>
         ) : null}
       </g>
