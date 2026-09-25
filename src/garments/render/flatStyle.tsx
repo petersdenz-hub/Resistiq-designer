@@ -1,11 +1,7 @@
 import type { ReactNode } from 'react'
 
-/** Shared fashion-flat stroke. Technical, not decorative. */
-export const FLAT_STROKE = {
-  width: 1.35,
-  join: 'round' as const,
-  opacity: 0.46,
-}
+const STROKE_WIDTH = 1.35
+const STROKE_OPACITY = 0.46
 
 export function FlatPart({
   d,
@@ -25,10 +21,10 @@ export function FlatPart({
         d={d}
         fill="none"
         stroke={stroke}
-        strokeWidth={FLAT_STROKE.width}
-        strokeLinejoin={FLAT_STROKE.join}
+        strokeWidth={STROKE_WIDTH}
+        strokeLinejoin="round"
         strokeLinecap="round"
-        opacity={FLAT_STROKE.opacity}
+        opacity={STROKE_OPACITY}
       />
       {children}
     </>
@@ -43,12 +39,17 @@ export function FlatShadow({ id }: { id: string }) {
   )
 }
 
-export function seam(
-  d: string,
-  color: string,
+export function Seam({
+  d,
+  color,
   width = 1,
   opacity = 0.28,
-) {
+}: {
+  d: string
+  color: string
+  width?: number
+  opacity?: number
+}) {
   return (
     <path
       d={d}

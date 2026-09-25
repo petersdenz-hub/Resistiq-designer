@@ -2,7 +2,7 @@ import type { GarmentRenderProps } from '../types'
 import { clothFor } from '../render/cloth'
 import { FabricFinish, FabricSheen, HemBand } from '../render/constructionDraw'
 import { constructionStyle, cuffStyle, fabricFilter } from '../render/constructionState'
-import { FlatPart, FlatShadow, seam } from '../render/flatStyle'
+import { FlatPart, FlatShadow, Seam } from '../render/flatStyle'
 
 /**
  * Fashion-flat crewneck sweatshirt. Set-in shoulders and a rib collar,
@@ -127,12 +127,12 @@ export function SweatshirtGarment({
               fill={collarStyle === 'rib' ? collar.rib : `url(#${id}-collar)`}
               stroke={collar.stitch}
             />
-            {seam(
-              isBack ? 'M240 184 C250 198 310 198 320 184' : 'M236 186 C248 210 312 210 324 186',
-              collar.highlight,
-              1.5,
-              0.32,
-            )}
+            <Seam
+              d={isBack ? 'M240 184 C250 198 310 198 320 184' : 'M236 186 C248 210 312 210 324 186'}
+              color={collar.highlight}
+              width={1.5}
+              opacity={0.32}
+            />
           </g>
         ) : null}
         {cuffs ? (
@@ -148,7 +148,7 @@ export function SweatshirtGarment({
                 fill={cuffs === 'rib' ? cuffRight.rib : cuffRight.clothDeep}
                 stroke={cuffRight.stitch}
               />
-              {seam('M40 380 H70', cuffRight.stitch, 1.6, 0.4)}
+              <Seam d="M40 380 H70" color={cuffRight.stitch} width={1.6} opacity={0.4} />
             </g>
             <g
               data-garment-part={cuffLeftId}
@@ -161,14 +161,14 @@ export function SweatshirtGarment({
                 fill={cuffs === 'rib' ? cuffLeft.rib : cuffLeft.clothDeep}
                 stroke={cuffLeft.stitch}
               />
-              {seam('M490 380 H520', cuffLeft.stitch, 1.6, 0.4)}
+              <Seam d="M490 380 H520" color={cuffLeft.stitch} width={1.6} opacity={0.4} />
             </g>
           </>
         ) : null}
       </g>
 
-      {seam('M178 230 L186 514', body.stitch, 1, 0.2)}
-      {seam('M382 230 L374 514', body.stitch, 1, 0.2)}
+      <Seam d="M178 230 L186 514" color={body.stitch} width={1} opacity={0.2} />
+      <Seam d="M382 230 L374 514" color={body.stitch} width={1} opacity={0.2} />
       {hemStyle ? <HemBand style={hemStyle} y={530} left={218} right={342} color={body} /> : null}
       <FabricSheen id={id} materialId={materialId} path={isBack ? BODY_BACK : BODY_FRONT} />
     </g>

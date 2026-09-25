@@ -8,7 +8,7 @@ import {
   fabricFilter,
   pocketStyle,
 } from '../render/constructionState'
-import { FlatPart, FlatShadow, seam } from '../render/flatStyle'
+import { FlatPart, FlatShadow, Seam } from '../render/flatStyle'
 
 /**
  * Fashion-flat hoodie. Hood, body, sleeves, and cuffs are separate parts.
@@ -104,7 +104,7 @@ export function HoodieGarment({ viewId, bodyColor, panelColors, construction }: 
           >
             <FlatPart d={isBack ? HOOD_BACK : HOOD_SHELL} fill={`url(#${id}-hood)`} stroke={hood.stitch} />
             {isBack ? (
-              seam('M280 78 L280 192', hood.stitch, 1.4, 0.38)
+              <Seam d="M280 78 L280 192" color={hood.stitch} width={1.4} opacity={0.38} />
             ) : (
               <>
                 <path
@@ -112,12 +112,12 @@ export function HoodieGarment({ viewId, bodyColor, panelColors, construction }: 
                   fill={hood.tape}
                   opacity="0.92"
                 />
-                {seam(
-                  `M${230 + opening} 192 C${240 + opening} 164 ${320 - opening} 164 ${330 - opening} 192`,
-                  hood.highlight,
-                  1.6,
-                  0.32,
-                )}
+                <Seam
+                  d={`M${230 + opening} 192 C${240 + opening} 164 ${320 - opening} 164 ${330 - opening} 192`}
+                  color={hood.highlight}
+                  width={1.6}
+                  opacity={0.32}
+                />
                 {hoodStyle === 'zip' ? (
                   <g data-garment-part="hood_zipper">
                     <rect x="276" y="188" width="8" height="52" rx="1.5" fill={zipper.tape} />
@@ -163,8 +163,8 @@ export function HoodieGarment({ viewId, bodyColor, panelColors, construction }: 
         <g data-garment-part={bodyId} data-panel-color={body.cloth}>
           <FlatPart d={isBack ? BODY_BACK : BODY_FRONT} fill={`url(#${id}-body)`} stroke={body.stitch} />
         </g>
-        {seam('M168 224 L152 186', body.stitch, 1.1, 0.3)}
-        {seam('M392 224 L408 186', body.stitch, 1.1, 0.3)}
+        <Seam d="M168 224 L152 186" color={body.stitch} width={1.1} opacity={0.3} />
+        <Seam d="M392 224 L408 186" color={body.stitch} width={1.1} opacity={0.3} />
 
         {cuffs ? (
           <>
@@ -179,7 +179,7 @@ export function HoodieGarment({ viewId, bodyColor, panelColors, construction }: 
                 fill={cuffs === 'rib' ? cuffRight.rib : cuffRight.clothDeep}
                 stroke={cuffRight.stitch}
               />
-              {seam('M40 380 H70', cuffRight.stitch, cuffs === 'rib' ? 1.6 : 2.4, 0.4)}
+              <Seam d="M40 380 H70" color={cuffRight.stitch} width={cuffs === 'rib' ? 1.6 : 2.4} opacity={0.4} />
             </g>
             <g
               data-garment-part={cuffLeftId}
@@ -192,18 +192,18 @@ export function HoodieGarment({ viewId, bodyColor, panelColors, construction }: 
                 fill={cuffs === 'rib' ? cuffLeft.rib : cuffLeft.clothDeep}
                 stroke={cuffLeft.stitch}
               />
-              {seam('M490 380 H520', cuffLeft.stitch, cuffs === 'rib' ? 1.6 : 2.4, 0.4)}
+              <Seam d="M490 380 H520" color={cuffLeft.stitch} width={cuffs === 'rib' ? 1.6 : 2.4} opacity={0.4} />
             </g>
           </>
         ) : null}
       </g>
 
-      {seam('M174 232 L184 516', body.stitch, 1, 0.22)}
-      {seam('M386 232 L376 516', body.stitch, 1, 0.22)}
+      <Seam d="M174 232 L184 516" color={body.stitch} width={1} opacity={0.22} />
+      <Seam d="M386 232 L376 516" color={body.stitch} width={1} opacity={0.22} />
       {hemStyle ? <HemBand style={hemStyle} y={532} left={216} right={344} color={body} /> : null}
 
       {isBack ? (
-        seam('M232 196 C246 226 314 226 328 196', body.highlight, 1.6, 0.22)
+        <Seam d="M232 196 C246 226 314 226 328 196" color={body.highlight} width={1.6} opacity={0.22} />
       ) : pocket ? (
         <PocketSet
           style={pocket}

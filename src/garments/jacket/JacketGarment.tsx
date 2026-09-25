@@ -15,7 +15,7 @@ import {
   fabricFilter,
   pocketStyle,
 } from '../render/constructionState'
-import { FlatPart, FlatShadow, seam } from '../render/flatStyle'
+import { FlatPart, FlatShadow, Seam } from '../render/flatStyle'
 
 /**
  * Fashion-flat outdoor jacket. Front is two body panels plus a zipper.
@@ -154,7 +154,7 @@ export function JacketGarment({ viewId, bodyColor, panelColors, construction }: 
               data-construction-style={cuffs}
             />
           ) : null}
-          {seam('M86 248 L156 236', right.stitch, 1, 0.22)}
+          <Seam d="M86 248 L156 236" color={right.stitch} width={1} opacity={0.22} />
         </g>
         <g data-garment-part={leftId} data-panel-color={left.cloth}>
           <FlatPart d={LEFT_SLEEVE} fill={`url(#${id}-sleeve-l)`} stroke={left.stitch} />
@@ -170,13 +170,13 @@ export function JacketGarment({ viewId, bodyColor, panelColors, construction }: 
               data-construction-style={cuffs}
             />
           ) : null}
-          {seam('M474 248 L404 236', left.stitch, 1, 0.22)}
+          <Seam d="M474 248 L404 236" color={left.stitch} width={1} opacity={0.22} />
         </g>
 
         {isBack ? (
           <g data-garment-part="back_body" data-panel-color={back.cloth}>
             <FlatPart d={BODY_BACK} fill={`url(#${id}-body-b)`} stroke={back.stitch} />
-            {seam('M196 176 H364', back.stitch, 1.1, 0.28)}
+            <Seam d="M196 176 H364" color={back.stitch} width={1.1} opacity={0.28} />
           </g>
         ) : (
           <>
@@ -250,8 +250,8 @@ export function JacketGarment({ viewId, bodyColor, panelColors, construction }: 
         ) : null}
       </g>
 
-      {seam('M170 214 L182 516', (isBack ? back : leftBody).stitch, 1, 0.2)}
-      {seam('M390 214 L378 516', (isBack ? back : rightBody).stitch, 1, 0.2)}
+      <Seam d="M170 214 L182 516" color={(isBack ? back : leftBody).stitch} width={1} opacity={0.2} />
+      <Seam d="M390 214 L378 516" color={(isBack ? back : rightBody).stitch} width={1} opacity={0.2} />
       {hemStyle ? (
         <HemBand style={hemStyle} y={528} left={208} right={352} color={isBack ? back : leftBody} />
       ) : null}

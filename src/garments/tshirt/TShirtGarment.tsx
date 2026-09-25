@@ -2,7 +2,7 @@ import type { GarmentRenderProps } from '../types'
 import { clothFor } from '../render/cloth'
 import { FabricFinish, FabricSheen, HemBand } from '../render/constructionDraw'
 import { constructionStyle, cuffStyle, fabricFilter } from '../render/constructionState'
-import { FlatPart, FlatShadow, seam } from '../render/flatStyle'
+import { FlatPart, FlatShadow, Seam } from '../render/flatStyle'
 
 /**
  * Fashion-flat T-shirt. Body, sleeves, and collar are separate parts so
@@ -149,8 +149,8 @@ export function TShirtGarment({ viewId, bodyColor, panelColors, construction }: 
           />
         </g>
 
-        {seam('M180 236 L190 492', body.stitch)}
-        {seam('M380 236 L370 492', body.stitch)}
+        <Seam d="M180 236 L190 492" color={body.stitch} />
+        <Seam d="M380 236 L370 492" color={body.stitch} />
         {hemStyle ? <HemBand style={hemStyle} y={500} left={216} right={344} color={body} /> : null}
 
         {collarStyle ? (

@@ -2,7 +2,7 @@ import type { GarmentRenderProps } from '../types'
 import { clothFor } from '../render/cloth'
 import { BeltLoops, FabricFinish, FabricSheen, HemBand, PocketSet } from '../render/constructionDraw'
 import { constructionStyle, fabricFilter, pocketStyle } from '../render/constructionState'
-import { FlatPart, FlatShadow, seam } from '../render/flatStyle'
+import { FlatPart, FlatShadow, Seam } from '../render/flatStyle'
 import type { BottomsKind } from './definition'
 
 /**
@@ -70,8 +70,8 @@ export function BottomsGarment({
         </g>
         {long ? (
           <>
-            {seam('M188 330 L248 330', left.stitch, 1, 0.16)}
-            {seam('M372 330 L312 330', right.stitch, 1, 0.16)}
+            <Seam d="M188 330 L248 330" color={left.stitch} width={1} opacity={0.16} />
+            <Seam d="M372 330 L312 330" color={right.stitch} width={1} opacity={0.16} />
           </>
         ) : null}
         {waistStyle ? (
@@ -86,7 +86,7 @@ export function BottomsGarment({
               fill={waistStyle === 'rib' ? waist.rib : waistStyle === 'elastic' ? waist.clothDeep : waist.rib}
               stroke={waist.stitch}
             />
-            {seam('M214 80 H346', waist.stitch, 1.5, 0.4)}
+            <Seam d="M214 80 H346" color={waist.stitch} width={1.5} opacity={0.4} />
             {waistStyle === 'elastic' ? (
               <path
                 d="M206 70 Q220 86 234 70 Q248 86 262 70 Q276 86 290 70 Q304 86 318 70 Q332 86 346 70"
@@ -96,7 +96,7 @@ export function BottomsGarment({
                 opacity="0.45"
               />
             ) : (
-              seam('M218 56 V110 M280 56 V110 M342 56 V110', waist.stitch, 1.3, 0.3)
+              <Seam d="M218 56 V110 M280 56 V110 M342 56 V110" color={waist.stitch} width={1.3} opacity={0.3} />
             )}
             {beltLoops ? <BeltLoops color={waist} /> : null}
           </g>
@@ -106,7 +106,7 @@ export function BottomsGarment({
 
       {isBack ? (
         <>
-          {seam('M216 128 H344', waist.stitch, 1.5, 0.3)}
+          <Seam d="M216 128 H344" color={waist.stitch} width={1.5} opacity={0.3} />
           {backPocket ? (
             <PocketSet
               style={backPocket}
@@ -119,8 +119,8 @@ export function BottomsGarment({
         </>
       ) : (
         <>
-          {seam('M280 110 L280 198', waist.stitch, 1.8, 0.45)}
-          {seam('M268 140 C274 150 274 176 268 190', left.highlight, 1.3, 0.22)}
+          <Seam d="M280 110 L280 198" color={waist.stitch} width={1.8} opacity={0.45} />
+          <Seam d="M268 140 C274 150 274 176 268 190" color={left.highlight} width={1.3} opacity={0.22} />
           {frontPocket ? (
             <PocketSet
               style={frontPocket}
