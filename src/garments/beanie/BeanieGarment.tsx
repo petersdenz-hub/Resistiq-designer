@@ -53,11 +53,11 @@ export function BeanieGarment({ viewId, bodyColor, panelColors, construction }: 
   return (
     <g pointerEvents="none">
       <defs>
-        <ClothWash id={`${id}-peak`} color={peak} x1={280} y1={162} x2={280} y2={214} />
-        <ClothWash id={`${id}-face`} color={face} x1={280} y1={178} x2={280} y2={404} />
-        <ClothWash id={`${id}-right`} color={right} x1={220} y1={178} x2={160} y2={404} />
-        <ClothWash id={`${id}-left`} color={left} x1={340} y1={178} x2={400} y2={404} />
-        <ClothWash id={`${id}-cuff`} color={cuff} x1={280} y1={396} x2={280} y2={506} />
+        <ClothWash id={`${id}-peak`} color={peak} x1={280} y1={156} x2={280} y2={196} />
+        <ClothWash id={`${id}-face`} color={face} x1={280} y1={168} x2={280} y2={404} />
+        <ClothWash id={`${id}-right`} color={right} x1={220} y1={168} x2={156} y2={404} />
+        <ClothWash id={`${id}-left`} color={left} x1={340} y1={168} x2={404} y2={404} />
+        <ClothWash id={`${id}-cuff`} color={cuff} x1={280} y1={394} x2={280} y2={510} />
         <FlatShadow id={id} />
       </defs>
       <FabricFinish id={id} materialId={materialId} />
@@ -87,7 +87,7 @@ export function BeanieGarment({ viewId, bodyColor, panelColors, construction }: 
           <Stitch d={CROWN_SEAM_LEFT} color={face.highlight} />
           <Stitch d={CROWN_SEAM_RIGHT} color={face.highlight} />
         </g>
-        <Fold d="M248 230 C268 214 292 214 312 230" color={peak.highlight} opacity={0.14} />
+        <Fold d="M248 220 C268 204 292 204 312 220" color={peak.highlight} opacity={0.14} />
 
         {cuffStyle ? (
           <g

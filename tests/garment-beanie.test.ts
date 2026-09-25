@@ -285,7 +285,7 @@ describe('Phase 13 beanie garment', () => {
     expect(cuff!.height).toBeGreaterThan(60)
     expect(peak!.height).toBeLessThan(front!.height)
     const html = renderBeanie('front')
-    expect(html).toContain('M280 178 L280 404')
+    expect(html).toContain('M280 168 L280 404')
     expect(html).toContain('data-flat-rib="true"')
     expect(html).not.toContain('data-region-id="brim"')
   })

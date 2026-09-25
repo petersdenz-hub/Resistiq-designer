@@ -1,37 +1,36 @@
 import { rectPath } from '../topology'
 
 /**
- * Soft crown peak — gathered knit, not a cap button.
- * Kept as a small plate so the top reads as beanie shaping.
+ * Soft gathered peak — knit shaping, not a cap button or helmet lid.
  */
 export const CROWN =
-  'M280 162 C246 164 216 182 200 214 C230 194 330 194 360 214 C344 182 314 164 280 162 Z'
+  'M280 156 C252 158 226 172 214 196 C242 180 318 180 346 196 C334 172 308 158 280 156 Z'
 
 /**
  * Front face — printable knit panel.
- * Taller than a cap front so marks sit on a hat body, not a visor.
+ * Taller and more vertical than a dome so it reads as a watch-cap body.
  */
 export const FRONT_CROWN =
-  'M280 178 C246 190 226 232 216 304 L204 404 L356 404 L344 304 C334 232 314 190 280 178 Z'
+  'M280 168 C244 180 224 228 214 300 L202 404 L358 404 L346 300 C336 228 316 180 280 168 Z'
 
 /** Wearer's right side gore (drawn on the left). */
 export const RIGHT_SIDE =
-  'M160 404 C150 338 156 268 188 214 C210 188 242 176 266 180 L216 304 L204 404 Z'
+  'M156 404 C148 330 150 250 174 198 C196 172 230 164 262 172 L214 300 L202 404 Z'
 
 /** Wearer's left side gore (drawn on the right). */
 export const LEFT_SIDE =
-  'M400 404 C410 338 404 268 372 214 C350 188 318 176 294 180 L344 304 L356 404 Z'
+  'M404 404 C412 330 410 250 386 198 C364 172 330 164 298 172 L346 300 L358 404 Z'
 
 /**
  * Folded rib cuff — the part that makes this a beanie, not a dome.
  * Wider and thicker than a cap sweatband. No visor.
  */
 export const CUFF =
-  'M148 396 C176 418 384 418 412 396 L406 470 C376 492 184 492 154 470 Z'
+  'M144 394 C174 420 386 420 416 394 L408 474 C376 498 184 498 152 474 Z'
 
 /** Bottom fold so the cuff has an edge, not a flat strip. */
 export const CUFF_LIP =
-  'M154 470 C184 492 376 492 406 470 C404 480 360 504 280 506 C200 504 156 480 154 470 Z'
+  'M152 474 C184 498 376 498 408 474 C406 484 360 508 280 510 C200 508 154 484 152 474 Z'
 
 export const BACK_CROWN = FRONT_CROWN
 export const CROWN_BACK = CROWN
@@ -52,14 +51,14 @@ export const BEANIE_PATHS: Record<string, string> = {
   cuff_back: CUFF_BACK,
 }
 
-export const CROWN_CENTER_SEAM = 'M280 178 L280 404'
-export const CROWN_SEAM_LEFT = 'M266 180 L216 304 L204 404'
-export const CROWN_SEAM_RIGHT = 'M294 180 L344 304 L356 404'
-export const CROWN_TOP_DART = 'M218 214 C246 184 314 184 342 214'
-export const KNIT_LEFT = 'M246 198 L232 404'
-export const KNIT_RIGHT = 'M314 198 L328 404'
-export const CUFF_SEAM = 'M156 402 C186 420 374 420 404 402'
-export const CUFF_FOLD = 'M162 428 C190 444 370 444 398 428'
-export const CUFF_STITCH = 'M160 454 C190 470 370 470 400 454'
-export const CUFF_RIB_BOX = { x: 156, y: 404, width: 248, height: 72 }
-export const CUFF_RIB_PATH = rectPath(156, 404, 248, 72)
+export const CROWN_CENTER_SEAM = 'M280 168 L280 404'
+export const CROWN_SEAM_LEFT = 'M262 172 L214 300 L202 404'
+export const CROWN_SEAM_RIGHT = 'M298 172 L346 300 L358 404'
+export const CROWN_TOP_DART = 'M214 196 C246 172 314 172 346 196'
+export const KNIT_LEFT = 'M246 188 L230 404'
+export const KNIT_RIGHT = 'M314 188 L330 404'
+export const CUFF_SEAM = 'M152 400 C184 422 376 422 408 400'
+export const CUFF_FOLD = 'M160 430 C190 448 370 448 400 430'
+export const CUFF_STITCH = 'M158 456 C190 474 370 474 402 456'
+export const CUFF_RIB_BOX = { x: 152, y: 404, width: 256, height: 76 }
+export const CUFF_RIB_PATH = rectPath(152, 404, 256, 76)
