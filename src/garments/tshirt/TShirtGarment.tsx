@@ -2,6 +2,7 @@ import type { GarmentRenderProps } from '../types'
 import { clothFor } from '../render/cloth'
 import { FabricFinish, FabricSheen, HemBand } from '../render/constructionDraw'
 import { constructionStyle, cuffStyle, fabricFilter } from '../render/constructionState'
+import { FlatPart, FlatShadow, seam } from '../render/flatStyle'
 
 /**
  * Fashion-flat T-shirt. Body, sleeves, and collar are separate parts so
@@ -103,15 +104,13 @@ export function TShirtGarment({ viewId, bodyColor, panelColors, construction }: 
           <stop offset="0" stopColor={collar.highlight} />
           <stop offset="1" stopColor={collar.rib} />
         </linearGradient>
-        <filter id={`${id}-soft`} x="-8%" y="-4%" width="116%" height="110%">
-          <feDropShadow dx="0" dy="8" stdDeviation="8" floodColor="#000" floodOpacity="0.22" />
-        </filter>
+        <FlatShadow id={id} />
       </defs>
       <FabricFinish id={id} materialId={materialId} />
 
-      <g filter={fabricFilter(id, materialId) ?? `url(#${id}-soft)`}>
+      <g filter={fabricFilter(id, materialId) ?? `url(#${id}-soft)`} data-garment-template="tshirt">
         <g data-garment-part={rightId} data-panel-color={right.cloth}>
-          <path d={RIGHT_SLEEVE} fill={`url(#${id}-sleeve-r)`} />
+          <FlatPart d={RIGHT_SLEEVE} fill={`url(#${id}-sleeve-r)`} stroke={right.stitch} />
           {sleeveHem ? (
             <path
               d="M72 226 L170 224"
@@ -127,7 +126,7 @@ export function TShirtGarment({ viewId, bodyColor, panelColors, construction }: 
         </g>
 
         <g data-garment-part={leftId} data-panel-color={left.cloth}>
-          <path d={LEFT_SLEEVE} fill={`url(#${id}-sleeve-l)`} />
+          <FlatPart d={LEFT_SLEEVE} fill={`url(#${id}-sleeve-l)`} stroke={left.stitch} />
           {sleeveHem ? (
             <path
               d="M390 224 L488 226"
@@ -143,14 +142,15 @@ export function TShirtGarment({ viewId, bodyColor, panelColors, construction }: 
         </g>
 
         <g data-garment-part={bodyId} data-panel-color={body.cloth}>
-          <path
+          <FlatPart
             d={isBack ? BODY_BACK : collarStyle === 'vneck' ? BODY_FRONT_VNECK : BODY_FRONT}
             fill={`url(#${id}-body)`}
+            stroke={body.stitch}
           />
         </g>
 
-        <path d="M180 236 L190 492" fill="none" stroke={body.stitch} strokeWidth="1" opacity="0.22" />
-        <path d="M380 236 L370 492" fill="none" stroke={body.stitch} strokeWidth="1" opacity="0.22" />
+        {seam('M180 236 L190 492', body.stitch)}
+        {seam('M380 236 L370 492', body.stitch)}
         {hemStyle ? <HemBand style={hemStyle} y={500} left={216} right={344} color={body} /> : null}
 
         {collarStyle ? (
@@ -160,7 +160,11 @@ export function TShirtGarment({ viewId, bodyColor, panelColors, construction }: 
             data-construction-kind="collar"
             data-construction-style={collarStyle}
           >
-            <path d={collarPath} fill={collarStyle === 'vneck' ? collar.rib : `url(#${id}-collar)`} />
+            <FlatPart
+              d={collarPath}
+              fill={collarStyle === 'vneck' ? collar.rib : `url(#${id}-collar)`}
+              stroke={collar.stitch}
+            />
             <path
               d={
                 collarStyle === 'stand'
