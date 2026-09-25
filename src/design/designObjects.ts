@@ -163,7 +163,12 @@ export function imageKeepsAlpha(mimeType?: string): boolean {
   return mimeType !== 'image/jpeg' && mimeType !== 'image/jpg'
 }
 
-export function objectAspect(object: Pick<DesignObject, 'width' | 'height'> & Partial<ImageDesignObject>): number {
+export function objectAspect(object: {
+  width: number
+  height: number
+  naturalWidth?: number
+  naturalHeight?: number
+}): number {
   if (object.naturalWidth && object.naturalHeight) {
     return object.naturalWidth / Math.max(object.naturalHeight, 1)
   }
