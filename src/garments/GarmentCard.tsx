@@ -25,13 +25,13 @@ export function GarmentCard({
       onClick={onSelect}
       className={`flex w-full flex-col overflow-hidden rounded-md border text-left transition-colors ${
         selected
-          ? 'border-accent bg-accent/12 ring-1 ring-accent/40'
-          : 'border-line hover:border-accent/40'
+          ? 'border-accent bg-accent/15 ring-1 ring-accent/50'
+          : 'border-line hover:border-accent/40 hover:bg-panel-hover'
       }`}
     >
       <div
         className={`flex items-center justify-center bg-canvas ${
-          size === 'lg' ? 'h-28 px-3 pt-3' : 'h-14 px-2 pt-1.5'
+          size === 'lg' ? 'h-28 px-3 pt-3' : 'h-12 px-2 pt-1'
         }`}
       >
         <svg
@@ -45,13 +45,11 @@ export function GarmentCard({
           })}
         </svg>
       </div>
-      <div className={`border-t border-line ${size === 'lg' ? 'bg-panel px-3 py-2' : 'px-2 py-1.5'}`}>
+      <div className={`border-t border-line ${size === 'lg' ? 'bg-panel px-3 py-2' : 'px-2 py-1'}`}>
         <div className={`${size === 'lg' ? 'text-[12px]' : 'text-[11px]'} font-medium text-ink`}>
           {garment.name}
         </div>
-        <div className="text-[9px] uppercase tracking-[0.12em] text-mute">
-          {categoryLabel(garment.category)}
-        </div>
+        <div className="sr-only">{categoryLabel(garment.category)}</div>
       </div>
     </button>
   )

@@ -124,7 +124,9 @@ function SelectedObjectProperties() {
       data-property-sections={objectPropertySections(selectedObject.type).join(',')}
     >
       <section className="space-y-2" data-properties-section="object" data-artwork-properties="true">
-        <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Artwork</div>
+        <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">
+          {selectedObject.type === 'image' ? 'Image / Logo' : selectedObject.type === 'text' ? 'Text' : 'Artwork'}
+        </div>
         <Field label="Name">
           <input
             data-object-name="true"
@@ -133,21 +135,17 @@ function SelectedObjectProperties() {
             className="h-8 w-full rounded-md border border-line bg-studio px-2 text-[12px] text-ink outline-none focus:border-accent/50"
           />
         </Field>
-        <div className="text-[11px] capitalize text-mute">{selectedObject.type}</div>
       </section>
 
       {selectedObject.type === 'text' ? (
         <div className="space-y-2" data-properties-section="text">
-          <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Text</div>
-          <Field label="Content">
-            <textarea
-              data-text-content="true"
-              value={selectedObject.content}
-              disabled={locked}
-              onChange={(event) => updateSelectedObject({ content: event.target.value })}
-              className="min-h-16 w-full rounded-md border border-line bg-studio px-2 py-1.5 text-[12px] text-ink outline-none focus:border-accent/50"
-            />
-          </Field>
+          <textarea
+            data-text-content="true"
+            value={selectedObject.content}
+            disabled={locked}
+            onChange={(event) => updateSelectedObject({ content: event.target.value })}
+            className="min-h-16 w-full rounded-md border border-line bg-studio px-2 py-1.5 text-[13px] text-ink outline-none focus:border-accent/50"
+          />
           <Field label="Font">
             <select
               value={selectedObject.fontFamily}
@@ -221,6 +219,7 @@ function SelectedObjectProperties() {
             value={selectedObject.color}
             onCommit={(value) => updateSelectedObject({ color: value })}
           />
+          <ObjectOpacityField />
         </div>
       ) : null}
 
@@ -271,14 +270,34 @@ function SelectedObjectProperties() {
         </div>
       ) : null}
 
-      <ObjectTransformFields locked={locked} onBox={updateSelectedObject} />
-      <ObjectPlacementFields
-        locked={locked}
-        onZone={setSelectedObjectZone}
-        onPanel={setSelectedObjectPanel}
-        onSpace={setSelectedObjectSpace}
-        onBox={updateSelectedObject}
-      />
+      {selectedObject.type === 'text' ? (
+        <details className="space-y-2">
+          <summary className="cursor-pointer text-[10px] font-medium uppercase tracking-[0.14em] text-mute">
+            Position & size
+          </summary>
+          <div className="mt-2 space-y-3">
+            <ObjectTransformFields locked={locked} hideOpacity onBox={updateSelectedObject} />
+            <ObjectPlacementFields
+              locked={locked}
+              onZone={setSelectedObjectZone}
+              onPanel={setSelectedObjectPanel}
+              onSpace={setSelectedObjectSpace}
+              onBox={updateSelectedObject}
+            />
+          </div>
+        </details>
+      ) : (
+        <>
+          <ObjectTransformFields locked={locked} onBox={updateSelectedObject} />
+          <ObjectPlacementFields
+            locked={locked}
+            onZone={setSelectedObjectZone}
+            onPanel={setSelectedObjectPanel}
+            onSpace={setSelectedObjectSpace}
+            onBox={updateSelectedObject}
+          />
+        </>
+      )}
 
       <section className="space-y-2" data-properties-section="layer">
         <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Layer</div>
@@ -436,9 +455,11 @@ function sharedValue<T>(values: T[]): T | null {
 
 function ObjectTransformFields({
   locked,
+  hideOpacity = false,
   onBox,
 }: {
   locked: boolean
+  hideOpacity?: boolean
   onBox: (patch: { x?: number; y?: number; width?: number; height?: number; rotation?: number }) => void
 }) {
   const { selectedObject } = useDesign()
@@ -465,7 +486,7 @@ function ObjectTransformFields({
         disabled={locked}
         onCommit={(value) => onBox({ rotation: value })}
       />
-      <ObjectOpacityField />
+      {hideOpacity ? null : <ObjectOpacityField />}
     </section>
   )
 }

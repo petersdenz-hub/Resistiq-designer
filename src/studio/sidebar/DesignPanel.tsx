@@ -12,200 +12,225 @@ import { useDesign } from '@/design/useDesign'
 import { Button } from '@/ui'
 import { useRef, useState } from 'react'
 
-export function DesignPanel() {
+export function DesignPanel({ mode = 'all' }: { mode?: 'all' | 'design' | 'layers' }) {
+  return (
+    <div className="space-y-5" data-design-panel="true">
+      {mode !== 'layers' ? <DesignActions /> : null}
+      {mode !== 'design' ? <LayerList /> : null}
+    </div>
+  )
+}
+
+export function DesignActions() {
+  const { addDesignText, addDesignShape, addDesignImageFromFile } = useDesign()
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [shapeOpen, setShapeOpen] = useState(false)
+
+  return (
+    <div className="space-y-2" data-design-section="true" data-design-panel="true">
+      <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Add</div>
+      <div className="grid grid-cols-1 gap-1.5">
+        <Button variant="accent" className="w-full" data-add-design-text="true" onClick={addDesignText}>
+          Text
+        </Button>
+        <input
+          ref={inputRef}
+          type="file"
+          accept={ACCEPTED_IMAGE_ACCEPT}
+          className="absolute h-px w-px overflow-hidden opacity-0"
+          onChange={(event) => {
+            const file = event.target.files?.[0]
+            event.target.value = ''
+            if (!file) {
+              return
+            }
+            setBusy(true)
+            setError(null)
+            void addDesignImageFromFile(file).then((message) => {
+              setBusy(false)
+              setError(message)
+            })
+          }}
+        />
+        <Button
+          className="w-full"
+          data-add-design-image="true"
+          disabled={busy}
+          onClick={() => inputRef.current?.click()}
+        >
+          {busy ? 'Uploading…' : 'Logo / Image'}
+        </Button>
+        <div className="flex gap-1">
+          <Button className="flex-1" data-add-design-shape="true" onClick={() => addDesignShape()}>
+            Shape
+          </Button>
+          <button
+            type="button"
+            data-shape-menu="true"
+            aria-expanded={shapeOpen}
+            aria-label="Shape kinds"
+            title="Shape kinds"
+            onClick={() => setShapeOpen((value) => !value)}
+            className="h-8 rounded-md border border-line px-2 text-[11px] text-mute hover:text-ink"
+          >
+            ▾
+          </button>
+        </div>
+        <div className={shapeOpen ? 'grid grid-cols-2 gap-1' : 'hidden'} data-shape-kinds="true">
+          {SHAPE_KINDS.map((kind) => (
+            <button
+              key={kind}
+              type="button"
+              data-shape-kind={kind}
+              onClick={() => {
+                setShapeOpen(false)
+                addDesignShape(kind)
+              }}
+              className="h-7 rounded-md border border-line px-2 text-[10px] text-mute hover:text-ink"
+            >
+              {SHAPE_KIND_LABELS[kind]}
+            </button>
+          ))}
+        </div>
+      </div>
+      {error ? <p className="text-[12px] text-accent">{error}</p> : null}
+    </div>
+  )
+}
+
+export function LayerList() {
   const {
     document,
     selectedObjectIds,
     selectObject,
-    addDesignText,
-    addDesignShape,
-    addDesignImageFromFile,
     removeObjectById,
     duplicateSelectedObject,
     updateObjectById,
     applyDocument,
   } = useDesign()
-  const inputRef = useRef<HTMLInputElement>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [busy, setBusy] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const zone = resolveActiveZone(document)
   const objects = getDesignObjectsInZone(document, zone, true)
 
   return (
-    <div className="space-y-5" data-design-panel="true">
-      <section className="space-y-2" data-studio-section="design" data-design-section="true">
-        <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Design</div>
-        <div className="grid grid-cols-1 gap-1.5">
-          <Button variant="accent" className="w-full" data-add-design-text="true" onClick={addDesignText}>
-            Add text
-          </Button>
-          <input
-            ref={inputRef}
-            type="file"
-            accept={ACCEPTED_IMAGE_ACCEPT}
-            className="absolute h-px w-px overflow-hidden opacity-0"
-            onChange={(event) => {
-              const file = event.target.files?.[0]
-              event.target.value = ''
-              if (!file) {
-                return
-              }
-              setBusy(true)
-              setError(null)
-              void addDesignImageFromFile(file).then((message) => {
-                setBusy(false)
-                setError(message)
-              })
-            }}
-          />
-          <Button
-            className="w-full"
-            data-add-design-image="true"
-            disabled={busy}
-            onClick={() => inputRef.current?.click()}
-          >
-            {busy ? 'Uploading…' : 'Add logo / image'}
-          </Button>
-          <Button className="w-full" data-add-design-shape="true" onClick={() => addDesignShape()}>
-            Add shape
-          </Button>
-          <div className="grid grid-cols-2 gap-1" data-shape-kinds="true">
-            {SHAPE_KINDS.map((kind) => (
-              <button
-                key={kind}
-                type="button"
-                data-shape-kind={kind}
-                onClick={() => addDesignShape(kind)}
-                className="h-7 rounded-md border border-line px-2 text-[10px] text-mute hover:text-ink"
-              >
-                {SHAPE_KIND_LABELS[kind]}
-              </button>
-            ))}
-          </div>
-        </div>
-        {error ? <p className="text-[12px] text-accent">{error}</p> : null}
-      </section>
-
-      <section className="space-y-2" data-studio-section="layers" data-layers-section="true">
-        <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Layers</div>
-        {objects.length === 0 ? (
-          <p className="text-[12px] leading-5 text-mute">
-            No artwork on {placementZoneLabel(zone)} yet.
-          </p>
-        ) : (
-          <ul className="space-y-1">
-            {[...objects].reverse().map((object, order) => {
-              const selected = selectedObjectIds.includes(object.id)
-              const layerOrder = objects.length - order
-              const renaming = editingId === object.id
-              return (
-                <li key={object.id}>
-                  <div
-                    className={`flex items-center gap-1 rounded-md border px-1.5 py-1 ${
-                      selected ? 'border-accent/50 bg-accent/10' : 'border-line'
-                    }`}
-                    data-layer-row={object.id}
-                    data-layer-selected={selected ? 'true' : 'false'}
-                    data-layer-order={layerOrder}
-                    data-layer-group={object.groupId ?? ''}
-                    onClick={(event) => {
-                      if ((event.target as HTMLElement).closest('button, input')) {
-                        return
-                      }
-                      selectObject(object.id, { toggle: event.shiftKey })
-                    }}
+    <div className="space-y-2" data-layers-section="true">
+      {objects.length === 0 ? (
+        <p className="text-[12px] leading-5 text-mute">
+          No artwork on {placementZoneLabel(zone)} yet.
+        </p>
+      ) : (
+        <ul className="space-y-1">
+          {[...objects].reverse().map((object, order) => {
+            const selected = selectedObjectIds.includes(object.id)
+            const layerOrder = objects.length - order
+            const renaming = editingId === object.id
+            return (
+              <li key={object.id}>
+                <div
+                  className={`flex items-center gap-1 rounded-md border px-1.5 py-1 ${
+                    selected ? 'border-accent/50 bg-accent/10' : 'border-line'
+                  }`}
+                  data-layer-row={object.id}
+                  data-layer-selected={selected ? 'true' : 'false'}
+                  data-layer-order={layerOrder}
+                  data-layer-group={object.groupId ?? ''}
+                  onClick={(event) => {
+                    if ((event.target as HTMLElement).closest('button, input')) {
+                      return
+                    }
+                    selectObject(object.id, { toggle: event.shiftKey })
+                  }}
+                >
+                  <button
+                    type="button"
+                    data-layer-visibility={object.id}
+                    aria-pressed={object.visible}
+                    title={object.visible ? 'Hide' : 'Show'}
+                    aria-label={object.visible ? 'Hide' : 'Show'}
+                    onClick={() => updateObjectById(object.id, { visible: !object.visible })}
+                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-mute hover:text-ink"
                   >
-                    <button
-                      type="button"
-                      data-layer-visibility={object.id}
-                      aria-pressed={object.visible}
-                      title={object.visible ? 'Hide' : 'Show'}
-                      aria-label={object.visible ? 'Hide' : 'Show'}
-                      onClick={() => updateObjectById(object.id, { visible: !object.visible })}
-                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-mute hover:text-ink"
-                    >
-                      {object.visible ? <EyeIcon /> : <EyeOffIcon />}
-                    </button>
-                    {renaming ? (
-                      <input
-                        data-layer-rename={object.id}
-                        autoFocus
-                        defaultValue={objectDisplayName(object)}
-                        onBlur={(event) => {
-                          const name = event.target.value.trim()
-                          if (name) {
-                            updateObjectById(object.id, { name })
-                          }
+                    {object.visible ? <EyeIcon /> : <EyeOffIcon />}
+                  </button>
+                  {renaming ? (
+                    <input
+                      data-layer-rename={object.id}
+                      autoFocus
+                      defaultValue={objectDisplayName(object)}
+                      onBlur={(event) => {
+                        const name = event.target.value.trim()
+                        if (name) {
+                          updateObjectById(object.id, { name })
+                        }
+                        setEditingId(null)
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter') {
+                          event.currentTarget.blur()
+                        }
+                        if (event.key === 'Escape') {
                           setEditingId(null)
-                        }}
-                        onKeyDown={(event) => {
-                          if (event.key === 'Enter') {
-                            event.currentTarget.blur()
-                          }
-                          if (event.key === 'Escape') {
-                            setEditingId(null)
-                          }
-                        }}
-                        className="h-6 min-w-0 flex-1 rounded border border-line bg-studio px-1 text-[12px] text-ink"
-                      />
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={(event) => selectObject(object.id, { toggle: event.shiftKey })}
-                        onDoubleClick={() => setEditingId(object.id)}
-                        className="min-w-0 flex-1 truncate text-left text-[12px] text-ink"
-                        data-layer-name={object.id}
-                        title={`${objectDisplayName(object)} — double-click to rename`}
-                      >
-                        {objectDisplayName(object)}
-                      </button>
-                    )}
+                        }
+                      }}
+                      className="h-6 min-w-0 flex-1 rounded border border-line bg-studio px-1 text-[12px] text-ink"
+                    />
+                  ) : (
                     <button
                       type="button"
-                      title="Bring forward"
-                      aria-label="Bring forward"
-                      onClick={() => applyDocument(moveDesignObjectLayer(document, object.id, 'forward'))}
-                      className="flex h-6 w-5 items-center justify-center text-[10px] text-mute hover:text-ink"
+                      onClick={(event) => selectObject(object.id, { toggle: event.shiftKey })}
+                      onDoubleClick={() => setEditingId(object.id)}
+                      className="min-w-0 flex-1 truncate text-left text-[12px] text-ink"
+                      data-layer-name={object.id}
+                      title={`${objectDisplayName(object)} — double-click to rename`}
                     >
-                      ▲
+                      {objectDisplayName(object)}
                     </button>
-                    <button
-                      type="button"
-                      title="Send backward"
-                      aria-label="Send backward"
-                      onClick={() => applyDocument(moveDesignObjectLayer(document, object.id, 'backward'))}
-                      className="flex h-6 w-5 items-center justify-center text-[10px] text-mute hover:text-ink"
-                    >
-                      ▼
-                    </button>
-                    <button
-                      type="button"
-                      data-layer-lock={object.id}
-                      aria-pressed={object.locked}
-                      title={object.locked ? 'Unlock' : 'Lock'}
-                      aria-label={object.locked ? 'Unlock' : 'Lock'}
-                      onClick={() => updateObjectById(object.id, { locked: !object.locked })}
-                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded ${
-                        object.locked ? 'text-accent' : 'text-mute hover:text-ink'
-                      }`}
-                    >
-                      {object.locked ? <LockIcon /> : <UnlockIcon />}
-                    </button>
+                  )}
+                  <button
+                    type="button"
+                    title="Bring forward"
+                    aria-label="Bring forward"
+                    onClick={() => applyDocument(moveDesignObjectLayer(document, object.id, 'forward'))}
+                    className="flex h-6 w-5 items-center justify-center text-[10px] text-mute hover:text-ink"
+                  >
+                    ▲
+                  </button>
+                  <button
+                    type="button"
+                    title="Send backward"
+                    aria-label="Send backward"
+                    onClick={() => applyDocument(moveDesignObjectLayer(document, object.id, 'backward'))}
+                    className="flex h-6 w-5 items-center justify-center text-[10px] text-mute hover:text-ink"
+                  >
+                    ▼
+                  </button>
+                  <button
+                    type="button"
+                    data-layer-lock={object.id}
+                    aria-pressed={object.locked}
+                    title={object.locked ? 'Unlock' : 'Lock'}
+                    aria-label={object.locked ? 'Unlock' : 'Lock'}
+                    onClick={() => updateObjectById(object.id, { locked: !object.locked })}
+                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded ${
+                      object.locked ? 'text-accent' : 'text-mute hover:text-ink'
+                    }`}
+                  >
+                    {object.locked ? <LockIcon /> : <UnlockIcon />}
+                  </button>
+                </div>
+                {selected && selectedObjectIds.length === 1 ? (
+                  <div className="mt-1 flex flex-wrap gap-1 px-1">
+                    <MiniButton onClick={duplicateSelectedObject}>Duplicate</MiniButton>
+                    <MiniButton onClick={() => removeObjectById(object.id)}>Delete</MiniButton>
                   </div>
-                  {selected && selectedObjectIds.length === 1 ? (
-                    <div className="mt-1 flex flex-wrap gap-1 px-1">
-                      <MiniButton onClick={duplicateSelectedObject}>Duplicate</MiniButton>
-                      <MiniButton onClick={() => removeObjectById(object.id)}>Delete</MiniButton>
-                    </div>
-                  ) : null}
-                </li>
-              )
-            })}
-          </ul>
-        )}
-      </section>
-
+                ) : null}
+              </li>
+            )
+          })}
+        </ul>
+      )}
     </div>
   )
 }

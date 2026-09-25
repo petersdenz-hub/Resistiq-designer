@@ -38,10 +38,40 @@ export function isLogoFileName(fileName: string): boolean {
   return /logo/i.test(fileName)
 }
 
+export const DEFAULT_OPEN_SECTIONS: StudioSectionId[] = ['garment', 'design']
+
+export function toggleStudioSections(
+  open: readonly StudioSectionId[],
+  id: StudioSectionId,
+  maxOpen = 2,
+): StudioSectionId[] {
+  if (open.includes(id)) {
+    return open.filter((item) => item !== id)
+  }
+  return [...open, id].slice(-maxOpen)
+}
+
+export function saveStatusLabel(dirty: boolean, saving = false): 'saved' | 'unsaved' | 'saving' {
+  if (saving) {
+    return 'saving'
+  }
+  return dirty ? 'unsaved' : 'saved'
+}
+
+export const MATERIAL_BLURBS: Record<string, string> = {
+  cotton: 'Soft everyday fabric',
+  heavy_cotton: 'Thick everyday fabric',
+  fleece: 'Soft brushed knit',
+  nylon: 'Lightweight performance fabric',
+  softshell: 'Weather-resistant outer fabric',
+  polyester: 'Smooth everyday fabric',
+  denim: 'Durable twill',
+}
+
 export function fitCanvasZoom(
   viewBox: { width: number; height: number },
   area: { width: number; height: number },
-  padding = 56,
+  padding = 32,
   min = 0.4,
   max = 2.4,
 ): number {

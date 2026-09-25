@@ -1,11 +1,13 @@
 import { getBodyColor, getDesignObjectsInZone, getElementsInView, resolveActiveZone } from '@/design/selectors'
-import { placementZoneLabel, zonesForGarment } from '@/design/designObjects'
+import { placementZoneLabel } from '@/design/designObjects'
 import { useDesign } from '@/design/useDesign'
 import { StageViewport } from '@/canvas/StageViewport'
 import { CanvasRulers, RULER_SIZE } from '@/canvas/CanvasRulers'
 import { EditToolbar } from '@/studio/EditToolbar'
 import { fitCanvasZoom } from '@/studio/editorChrome'
 import { useCanvasEditor } from '@/studio/canvasEditorContext'
+import { ViewToggle } from '@/studio/ViewToggle'
+import { ZoneChips } from '@/studio/ZoneChips'
 import { getGarment } from '@/garments/registry'
 import { GARMENT_COLOR_PRESETS } from '@/ui'
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type WheelEvent } from 'react'
@@ -17,22 +19,18 @@ const ZOOM_STEP = 0.15
 export function CanvasStage({
   leftOpen,
   rightOpen,
+  compactChrome = false,
   onToggleLeft,
   onToggleRight,
 }: {
   leftOpen: boolean
   rightOpen: boolean
+  compactChrome?: boolean
   onToggleLeft: () => void
   onToggleRight: () => void
 }) {
-  const { document, setActiveView, setActiveZone, setBodyColor, commitGesture } = useDesign()
-  const {
-    pan,
-    setPan,
-    gridSize,
-    gridVisible,
-    snapToGrid,
-  } = useCanvasEditor()
+  const { document, setBodyColor, commitGesture } = useDesign()
+  const { pan, setPan, gridSize, gridVisible, snapToGrid, setGridVisible, setSnapToGrid } = useCanvasEditor()
   const [zoom, setZoom] = useState(0.95)
   const panning = useRef<{ x: number; y: number; panX: number; panY: number } | null>(null)
   const areaRef = useRef<HTMLDivElement | null>(null)
@@ -41,7 +39,6 @@ export function CanvasStage({
   const objectCount = getDesignObjectsInZone(document, zone, true).length
   const visibleCount = getDesignObjectsInZone(document, zone).length
   const garment = getGarment(document.garmentType)
-  const garmentZones = zonesForGarment(document.garmentType)
   const viewLabel = document.views.find((view) => view.id === document.activeView)?.label ?? document.activeView
   const bodyColor = getBodyColor(document)
   const colorOrigin = useRef(document)
@@ -109,52 +106,47 @@ export function CanvasStage({
 
   return (
     <section className="relative flex min-w-0 flex-1 flex-col bg-canvas">
-      <div className="pointer-events-none absolute inset-0 opacity-40 [background-image:linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] [background-size:32px 32px]" />
+      <div className="pointer-events-none absolute inset-0 opacity-30 [background-image:linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)] [background-size:32px 32px]" />
 
-      <div className="relative z-10 flex items-center gap-2 px-3 pt-2">
-        <button
-          type="button"
-          title={leftOpen ? 'Hide tools' : 'Show tools'}
-          aria-label={leftOpen ? 'Hide tools' : 'Show tools'}
-          onClick={onToggleLeft}
-          className="flex h-7 w-7 items-center justify-center rounded-md border border-line text-[11px] text-mute hover:text-ink"
-        >
-          {leftOpen ? '‹' : '›'}
-        </button>
-        <div className="min-w-0 flex-1">
+      {!compactChrome ? (
+        <div className="relative z-10 flex items-center gap-2 px-3 pt-2">
+          <button
+            type="button"
+            title={leftOpen ? 'Hide tools' : 'Show tools'}
+            aria-label={leftOpen ? 'Hide tools' : 'Show tools'}
+            onClick={onToggleLeft}
+            className="flex h-7 w-7 items-center justify-center rounded-md border border-line text-[11px] text-mute hover:text-ink"
+          >
+            {leftOpen ? '‹' : '›'}
+          </button>
+          <div className="min-w-0 flex-1">
+            <EditToolbar />
+          </div>
+          <button
+            type="button"
+            title={rightOpen ? 'Hide properties' : 'Show properties'}
+            aria-label={rightOpen ? 'Hide properties' : 'Show properties'}
+            onClick={onToggleRight}
+            className="flex h-7 w-7 items-center justify-center rounded-md border border-line text-[11px] text-mute hover:text-ink"
+          >
+            {rightOpen ? '›' : '‹'}
+          </button>
+        </div>
+      ) : (
+        <div className="sr-only">
           <EditToolbar />
         </div>
-        <button
-          type="button"
-          title={rightOpen ? 'Hide properties' : 'Show properties'}
-          aria-label={rightOpen ? 'Hide properties' : 'Show properties'}
-          onClick={onToggleRight}
-          className="flex h-7 w-7 items-center justify-center rounded-md border border-line text-[11px] text-mute hover:text-ink"
-        >
-          {rightOpen ? '›' : '‹'}
-        </button>
-      </div>
+      )}
 
       <div
         ref={areaRef}
-        className="relative flex flex-1 items-center justify-center overflow-hidden p-4"
+        className="relative flex flex-1 items-center justify-center overflow-hidden p-3"
         onWheel={onWheel}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
       >
-        {elementCount === 0 && objectCount === 0 ? (
-          <div
-            className="pointer-events-none absolute left-1/2 top-3 z-10 w-[18rem] -translate-x-1/2 rounded-md border border-line/80 bg-panel/80 px-3 py-2 text-center backdrop-blur-sm"
-            data-empty-state="true"
-          >
-            <p className="text-[13px] font-medium text-ink">Start designing</p>
-            <p className="mt-1 text-[12px] leading-5 text-mute">
-              Choose a garment color, then add text or a logo.
-            </p>
-          </div>
-        ) : null}
         <div className="relative" style={{ transform: `translate(${pan.x}px, ${pan.y}px)` }}>
           <div className="relative" style={{ paddingLeft: RULER_SIZE, paddingTop: RULER_SIZE }}>
             <CanvasRulers
@@ -168,73 +160,56 @@ export function CanvasStage({
         </div>
       </div>
 
-      <div className="relative flex min-h-12 flex-wrap items-center justify-between gap-2 border-t border-line bg-panel/90 px-3 py-2">
+      {elementCount === 0 && objectCount === 0 ? (
+        <div className="relative z-10 px-3 pb-1 text-center" data-empty-state="true">
+          <p className="text-[12px] font-medium text-ink">Start designing</p>
+          <p className="text-[11px] leading-4 text-mute">Choose a color, then add text or a logo.</p>
+        </div>
+      ) : null}
+
+      <div className="relative z-10 flex min-h-11 flex-wrap items-center justify-between gap-2 border-t border-line bg-panel/90 px-3 py-1.5">
         <div className="flex flex-wrap items-center gap-2">
           <div
-            className="flex items-center gap-1.5 text-[11px] text-mute"
+            className="hidden text-[11px] text-mute sm:flex"
             data-design-breadcrumb="true"
           >
             <span className="text-ink" data-breadcrumb-garment="true">{garment.name}</span>
-            <span aria-hidden="true" className="text-mute">·</span>
+            <span className="mx-1.5">·</span>
             <span data-breadcrumb-view="true">{viewLabel}</span>
             <span className="sr-only" data-breadcrumb-zone="true">{placementZoneLabel(zone)}</span>
           </div>
-          <div className="flex rounded-md border border-line p-0.5">
-            {document.views.map((view) => (
-              <button
-                key={view.id}
-                type="button"
-                data-garment-view={view.id}
-                aria-pressed={document.activeView === view.id}
-                onClick={() => setActiveView(view.id)}
-                className={`h-7 rounded px-2 text-[11px] ${
-                  document.activeView === view.id
-                    ? 'bg-accent/15 text-ink'
-                    : 'text-mute hover:text-ink'
-                }`}
-              >
-                {view.label}
-              </button>
-            ))}
-          </div>
-          <div className="flex flex-wrap gap-1">
-            {garmentZones.map((item) => (
-              <button
-                key={item}
-                type="button"
-                data-zone-option={item}
-                aria-pressed={item === zone}
-                onClick={() => setActiveZone(item)}
-                className={`h-7 rounded-md border px-2 text-[11px] ${
-                  item === zone
-                    ? 'border-accent/50 bg-accent/10 text-ink'
-                    : 'border-line text-mute hover:text-ink'
-                }`}
-              >
-                {placementZoneLabel(item)}
-              </button>
-            ))}
-          </div>
-          <div
-            className="flex items-center gap-1"
-            data-garment-color-control="true"
-            title="Garment color"
+          <ViewToggle />
+          <button
+            type="button"
+            aria-pressed={gridVisible}
+            onClick={() => setGridVisible(!gridVisible)}
+            className={`h-7 rounded-md border px-2 text-[11px] ${
+              gridVisible ? 'border-accent/40 bg-accent/10 text-ink' : 'border-line text-mute hover:text-ink'
+            }`}
           >
+            Grid
+          </button>
+          <button
+            type="button"
+            aria-pressed={snapToGrid}
+            onClick={() => setSnapToGrid(!snapToGrid)}
+            className={`h-7 rounded-md border px-2 text-[11px] ${
+              snapToGrid ? 'border-accent/40 bg-accent/10 text-ink' : 'border-line text-mute hover:text-ink'
+            }`}
+          >
+            Snap
+          </button>
+          <span className="sr-only" data-grid-visible={gridVisible ? 'true' : 'false'} data-snap-enabled={snapToGrid ? 'true' : 'false'} />
+          <ZoneChips hidden />
+          <div className="sr-only" data-garment-color-control="true" title="Garment color">
             {GARMENT_COLOR_PRESETS.slice(0, 6).map((preset) => (
               <button
                 key={preset.value}
                 type="button"
                 data-garment-color={preset.value}
                 aria-label={preset.label}
-                title={preset.label}
                 aria-pressed={bodyColor.toLowerCase() === preset.value}
                 onClick={() => setBodyColor(preset.value)}
-                className={`h-5 w-5 rounded-full border ${
-                  bodyColor.toLowerCase() === preset.value
-                    ? 'border-accent ring-1 ring-accent/50'
-                    : 'border-line'
-                }`}
-                style={{ backgroundColor: preset.value }}
               />
             ))}
             <input
@@ -247,15 +222,10 @@ export function CanvasStage({
               }}
               onChange={(event) => setBodyColor(event.target.value, 'replace')}
               onBlur={() => commitGesture(colorOrigin.current)}
-              className="h-5 w-5 cursor-pointer rounded-full border border-line bg-studio p-0"
             />
           </div>
-          <span className="text-[10px] text-mute" data-grid-visible={gridVisible ? 'true' : 'false'} data-snap-enabled={snapToGrid ? 'true' : 'false'}>
-            {gridVisible ? 'Grid' : 'No grid'}
-            {snapToGrid ? ' · snap' : ''}
-          </span>
         </div>
-        <div className="flex items-center gap-2" data-zoom-controls="true">
+        <div className="flex items-center gap-1.5" data-zoom-controls="true">
           <button
             type="button"
             className="flex h-7 w-7 items-center justify-center rounded-md border border-line text-ink hover:bg-panel-hover"
@@ -265,7 +235,7 @@ export function CanvasStage({
           >
             −
           </button>
-          <span className="w-12 text-center text-[12px] text-mute" data-zoom-value="true">
+          <span className="w-11 text-center text-[12px] text-mute" data-zoom-value="true">
             {Math.round(zoom * 100)}%
           </span>
           <button

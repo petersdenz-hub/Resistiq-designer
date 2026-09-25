@@ -1,44 +1,48 @@
-import { placementZoneLabel, resolveActiveZone, zonesForGarment } from '@/design/designObjects'
 import { useDesign } from '@/design/useDesign'
 import { GarmentSelector } from '@/garments/GarmentSelector'
 import { getGarment } from '@/garments/registry'
-import { STUDIO_SECTIONS, type StudioSectionId } from '@/studio/editorChrome'
-import { DesignIcon, LayersIcon, MaterialIcon, ShirtIcon } from '@/ui'
-import { useRef, useState } from 'react'
+import {
+  DEFAULT_OPEN_SECTIONS,
+  toggleStudioSections,
+  type StudioSectionId,
+} from '@/studio/editorChrome'
+import { DesignIcon } from '@/ui'
+import { useState } from 'react'
 import { CanvasTools } from './CanvasTools'
-import { DesignPanel } from './DesignPanel'
-
-const SECTION_ICONS = {
-  garment: ShirtIcon,
-  design: DesignIcon,
-  layers: LayersIcon,
-  canvas: MaterialIcon,
-} as const
+import { DesignActions, LayerList } from './DesignPanel'
+import { StudioAccordion } from './StudioAccordion'
 
 export function Sidebar({
   collapsed = false,
   overlay = false,
+  focusSection,
   onExpand,
   onCollapse,
 }: {
   collapsed?: boolean
   overlay?: boolean
+  focusSection?: StudioSectionId | null
   onExpand?: () => void
   onCollapse?: () => void
 }) {
-  const [section, setSection] = useState<StudioSectionId>('design')
-  const scrollRef = useRef<HTMLDivElement>(null)
+  const [open, setOpen] = useState<StudioSectionId[]>([...DEFAULT_OPEN_SECTIONS])
 
-  function jump(id: StudioSectionId) {
-    setSection(id)
-    const node = scrollRef.current?.querySelector(`[data-studio-section="${id}"]`)
-    node?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+  function toggle(id: StudioSectionId) {
+    setOpen((current) => toggleStudioSections(current, id))
+  }
+
+  function openSection(id: StudioSectionId) {
+    setOpen((current) => (current.includes(id) ? current : toggleStudioSections(current, id)))
+  }
+
+  function isOpen(id: StudioSectionId) {
+    return focusSection ? focusSection === id : open.includes(id)
   }
 
   if (collapsed) {
     return (
       <aside
-        className="flex w-12 shrink-0 flex-col items-center border-r border-line bg-panel py-3"
+        className="flex w-11 shrink-0 flex-col items-center border-r border-line bg-panel py-3"
         data-sidebar-collapsed="true"
       >
         <button
@@ -46,7 +50,7 @@ export function Sidebar({
           title="Show tools"
           aria-label="Show tools"
           onClick={onExpand}
-          className="flex h-10 w-10 items-center justify-center rounded-lg text-mute hover:bg-panel-hover hover:text-ink"
+          className="flex h-9 w-9 items-center justify-center rounded-md text-mute hover:bg-panel-hover hover:text-ink"
         >
           <DesignIcon />
         </button>
@@ -54,33 +58,64 @@ export function Sidebar({
     )
   }
 
+  const sections = (
+    <>
+      {(!focusSection || focusSection === 'garment') ? (
+        <StudioAccordion
+          id="garment"
+          label="Garment"
+          open={isOpen('garment')}
+          onOpen={() => openSection('garment')}
+          onToggle={() => toggle('garment')}
+        >
+          <GarmentTools />
+        </StudioAccordion>
+      ) : null}
+      {(!focusSection || focusSection === 'design') ? (
+        <StudioAccordion
+          id="design"
+          label="Design"
+          open={isOpen('design')}
+          onOpen={() => openSection('design')}
+          onToggle={() => toggle('design')}
+        >
+          <DesignActions />
+        </StudioAccordion>
+      ) : null}
+      {(!focusSection || focusSection === 'layers') ? (
+        <StudioAccordion
+          id="layers"
+          label="Layers"
+          open={isOpen('layers')}
+          onOpen={() => openSection('layers')}
+          onToggle={() => toggle('layers')}
+        >
+          <LayerList />
+        </StudioAccordion>
+      ) : null}
+      {(!focusSection || focusSection === 'canvas') ? (
+        <StudioAccordion
+          id="canvas"
+          label="Canvas"
+          open={isOpen('canvas')}
+          onOpen={() => openSection('canvas')}
+          onToggle={() => toggle('canvas')}
+        >
+          <CanvasTools />
+        </StudioAccordion>
+      ) : null}
+    </>
+  )
+
   return (
     <aside
-      className={`flex h-full w-[16.75rem] shrink-0 border-r border-line bg-panel ${
+      className={`flex h-full w-[15rem] shrink-0 flex-col border-r border-line bg-panel ${
         overlay ? 'shadow-2xl' : ''
       }`}
       data-sidebar="true"
     >
-      <div className="flex w-12 flex-col items-center gap-1 border-r border-line py-3">
-        {STUDIO_SECTIONS.map((item) => {
-          const Icon = SECTION_ICONS[item.id]
-          const selected = item.id === section
-          return (
-            <button
-              key={item.id}
-              type="button"
-              title={item.label}
-              aria-label={item.label}
-              aria-pressed={selected}
-              onClick={() => jump(item.id)}
-              className={`flex h-10 w-10 items-center justify-center rounded-lg transition-colors ${
-                selected ? 'bg-accent/15 text-accent' : 'text-mute hover:bg-panel-hover hover:text-ink'
-              }`}
-            >
-              <Icon />
-            </button>
-          )
-        })}
+      <div className="flex items-center justify-between border-b border-line px-3 py-2.5">
+        <div className="text-[10px] font-medium uppercase tracking-[0.16em] text-mute">Tools</div>
         {onCollapse ? (
           <button
             type="button"
@@ -88,92 +123,27 @@ export function Sidebar({
             aria-label="Hide tools"
             data-collapse-sidebar="true"
             onClick={onCollapse}
-            className="mt-auto flex h-8 w-8 items-center justify-center rounded-md text-[11px] text-mute hover:bg-panel-hover hover:text-ink"
+            className="flex h-6 w-6 items-center justify-center rounded text-mute hover:bg-panel-hover hover:text-ink"
           >
             ‹
           </button>
         ) : null}
       </div>
-
-      <div className="flex min-w-0 flex-1 flex-col">
-        <div className="border-b border-line px-4 py-3">
-          <div className="text-[10px] font-medium uppercase tracking-[0.16em] text-mute">Tools</div>
-        </div>
-        <div ref={scrollRef} className="flex-1 space-y-6 overflow-y-auto px-4 py-4">
-          <GarmentTools />
-          <DesignPanel />
-          <CanvasTools />
-        </div>
-      </div>
+      <div className="flex-1 space-y-3 overflow-y-auto px-3 py-3">{sections}</div>
     </aside>
   )
 }
 
 function GarmentTools() {
-  const { document, setActiveView, setActiveZone } = useDesign()
+  const { document } = useDesign()
   const garment = getGarment(document.garmentType)
-  const garmentZones = zonesForGarment(document.garmentType)
-  const zone = resolveActiveZone(document)
-  const viewLabel =
-    document.views.find((view) => view.id === document.activeView)?.label ?? document.activeView
 
   return (
-    <div className="space-y-4" data-studio-section="garment" data-garment-nav="true">
+    <div className="space-y-3" data-garment-nav="true">
       <GarmentSelector />
-      <div>
-        <div className="mb-2 text-[10px] font-medium uppercase tracking-[0.14em] text-mute">View</div>
-        <div className="flex rounded-md border border-line p-0.5">
-          {document.views.map((view) => (
-            <button
-              key={view.id}
-              type="button"
-              data-garment-view={view.id}
-              aria-pressed={document.activeView === view.id}
-              onClick={() => setActiveView(view.id)}
-              className={`h-7 flex-1 rounded px-2 text-[11px] ${
-                document.activeView === view.id
-                  ? 'bg-accent/15 text-ink'
-                  : 'text-mute hover:text-ink'
-              }`}
-            >
-              {view.label}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div
-        className="rounded-md border border-line px-3 py-2 text-[11px] text-mute"
-        data-garment-path="true"
-      >
+      <p className="text-[11px] text-mute" data-garment-path="true">
         <span className="text-ink">{garment.name}</span>
-        <span className="mx-1.5 text-mute">·</span>
-        <span>{viewLabel}</span>
-        <span className="mx-1.5 text-mute">·</span>
-        <span className="text-ink">{placementZoneLabel(zone)}</span>
-      </div>
-      <div>
-        <div className="mb-2 text-[10px] font-medium uppercase tracking-[0.14em] text-mute">
-          Design area
-        </div>
-        <div className="flex flex-wrap gap-1">
-          {garmentZones.map((item) => (
-            <button
-              key={item}
-              type="button"
-              data-zone-option={item}
-              aria-pressed={item === zone}
-              onClick={() => setActiveZone(item)}
-              className={`h-7 rounded-md border px-2 text-[11px] ${
-                item === zone
-                  ? 'border-accent/50 bg-accent/10 text-ink'
-                  : 'border-line text-mute hover:text-ink'
-              }`}
-            >
-              {placementZoneLabel(item)}
-            </button>
-          ))}
-        </div>
-      </div>
+      </p>
     </div>
   )
 }
