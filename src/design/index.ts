@@ -16,6 +16,7 @@ export {
   createTextObject,
   DEFAULT_GRID_SIZE,
   defaultPanelIdForZone,
+  defaultZoneForView,
   duplicateDesignObject,
   defaultObjectName,
   getDesignObjectById,
@@ -28,6 +29,9 @@ export {
   objectDisplayName,
   PLACEMENT_ZONE_LABELS,
   PLACEMENT_ZONES,
+  SHAPE_KIND_LABELS,
+  SHAPE_KINDS,
+  isShapeKind,
   removeDesignObject,
   resolveActiveZone,
   resolveObjectAnchor,
@@ -43,6 +47,7 @@ export {
   ALIGNMENTS,
   alignDesignObjects,
   boxesIntersect,
+  collectSnapGuideBoxes,
   collectSnapTargets,
   DISTRIBUTIONS,
   distributeDesignObjects,
@@ -95,6 +100,7 @@ export type {
   ImageDesignObject,
   PlacementZone,
   ShapeDesignObject,
+  ShapeKind,
   TextDesignObject,
 } from './designObjects'
 export {

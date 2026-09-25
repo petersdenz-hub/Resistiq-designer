@@ -1,3 +1,6 @@
+import { getGarmentPanel, localRectToCanvas } from '@/garments/coordinates'
+import { getGarment } from '@/garments/registry'
+import { localFromPercent, panelDesignBounds, panelDesignZones } from '@/garments/model'
 import type { GarmentRect } from '@/garments/types'
 import { createId } from './ids'
 import {
@@ -13,7 +16,7 @@ import {
   type DesignObjectPatch,
   type PlacementZone,
 } from './designObjects'
-import { getArtworkPanelBounds, resolveObjectViewBox, storeObjectViewBox } from './objectPlacement'
+import { resolveObjectViewBox, storeObjectViewBox } from './objectPlacement'
 import type { DesignDocument, LayerDirection } from './types'
 
 export const ALIGNMENTS = ['left', 'center', 'right', 'top', 'middle', 'bottom'] as const
@@ -438,6 +441,39 @@ export interface SnapGuides {
   horizontal: number[]
 }
 
+function pushBoxEdges(xs: number[], ys: number[], box: GarmentRect) {
+  xs.push(box.x, box.x + box.width / 2, box.x + box.width)
+  ys.push(box.y, box.y + box.height / 2, box.y + box.height)
+}
+
+function garmentGuideBoxes(document: DesignDocument, zone: PlacementZone): GarmentRect[] {
+  const garment = getGarment(document.garmentType)
+  const boxes: GarmentRect[] = [
+    { x: 0, y: 0, width: garment.viewBox.width, height: garment.viewBox.height },
+  ]
+  const panelId = defaultPanelIdForZone(document, zone)
+  const panel = panelId ? getGarmentPanel(garment, panelId) : null
+  if (panel) {
+    boxes.push(panel.frame)
+    if (panel.safeArea) {
+      boxes.push(localRectToCanvas(panel, panel.safeArea))
+    }
+    boxes.push(localRectToCanvas(panel, localFromPercent(panelDesignBounds(panel), panel.local)))
+    for (const zoneDef of panelDesignZones(panel)) {
+      boxes.push(localRectToCanvas(panel, localFromPercent(zoneDef.bounds, panel.local)))
+    }
+  }
+  return boxes
+}
+
+/** Visual guide boxes used by the editor overlay. Never stored on designObjects. */
+export function collectSnapGuideBoxes(
+  document: DesignDocument,
+  zone: PlacementZone,
+): GarmentRect[] {
+  return garmentGuideBoxes(document, zone)
+}
+
 export function collectSnapTargets(
   document: DesignDocument,
   zone: PlacementZone,
@@ -445,19 +481,15 @@ export function collectSnapTargets(
 ): { xs: number[]; ys: number[] } {
   const xs: number[] = []
   const ys: number[] = []
-  const bounds = getArtworkPanelBounds(document, defaultPanelIdForZone(document, zone))
-  if (bounds) {
-    xs.push(bounds.x, bounds.x + bounds.width / 2, bounds.x + bounds.width)
-    ys.push(bounds.y, bounds.y + bounds.height / 2, bounds.y + bounds.height)
+  for (const box of garmentGuideBoxes(document, zone)) {
+    pushBoxEdges(xs, ys, box)
   }
   const excluded = new Set(excludeIds)
   for (const object of getDesignObjectsInZone(document, zone)) {
     if (excluded.has(object.id) || !object.visible) {
       continue
     }
-    const box = resolveObjectViewBox(document, object)
-    xs.push(box.x, box.x + box.width / 2, box.x + box.width)
-    ys.push(box.y, box.y + box.height / 2, box.y + box.height)
+    pushBoxEdges(xs, ys, resolveObjectViewBox(document, object))
   }
   return { xs, ys }
 }

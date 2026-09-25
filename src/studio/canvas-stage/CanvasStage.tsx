@@ -1,4 +1,4 @@
-import { getDesignObjectsInZone, getElementsInView, resolveActiveZone } from '@/design/selectors'
+import { getBodyColor, getDesignObjectsInZone, getElementsInView, resolveActiveZone } from '@/design/selectors'
 import { PLACEMENT_ZONE_LABELS, zonesForGarment } from '@/design/designObjects'
 import { useDesign } from '@/design/useDesign'
 import { StageViewport } from '@/canvas/StageViewport'
@@ -7,6 +7,7 @@ import { EditToolbar } from '@/studio/EditToolbar'
 import { fitCanvasZoom } from '@/studio/editorChrome'
 import { useCanvasEditor } from '@/studio/canvasEditorContext'
 import { getGarment } from '@/garments/registry'
+import { GARMENT_COLOR_PRESETS } from '@/ui'
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type WheelEvent } from 'react'
 
 const MIN_ZOOM = 0.4
@@ -24,7 +25,7 @@ export function CanvasStage({
   onToggleLeft: () => void
   onToggleRight: () => void
 }) {
-  const { document, setActiveView, setActiveZone } = useDesign()
+  const { document, setActiveView, setActiveZone, setBodyColor, commitGesture } = useDesign()
   const { pan, setPan, gridSize, gridVisible, snapToGrid } = useCanvasEditor()
   const [zoom, setZoom] = useState(0.95)
   const [showSafeAreas, setShowSafeAreas] = useState(true)
@@ -36,6 +37,9 @@ export function CanvasStage({
   const visibleCount = getDesignObjectsInZone(document, zone).length
   const garment = getGarment(document.garmentType)
   const garmentZones = zonesForGarment(document.garmentType)
+  const viewLabel = document.views.find((view) => view.id === document.activeView)?.label ?? document.activeView
+  const bodyColor = getBodyColor(document)
+  const colorOrigin = useRef(document)
 
   function clampZoom(value: number) {
     return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Number(value.toFixed(2))))
@@ -161,7 +165,16 @@ export function CanvasStage({
 
       <div className="relative flex min-h-12 flex-wrap items-center justify-between gap-2 border-t border-line bg-panel/90 px-3 py-2">
         <div className="flex flex-wrap items-center gap-2">
-          <div className="text-[10px] uppercase tracking-[0.14em] text-mute">Garment</div>
+          <div
+            className="flex items-center gap-1.5 text-[11px] text-mute"
+            data-design-breadcrumb="true"
+          >
+            <span className="text-ink" data-breadcrumb-garment="true">{garment.name}</span>
+            <span aria-hidden="true">→</span>
+            <span data-breadcrumb-view="true">{viewLabel}</span>
+            <span aria-hidden="true">→</span>
+            <span className="text-ink" data-breadcrumb-zone="true">{PLACEMENT_ZONE_LABELS[zone]}</span>
+          </div>
           <div className="flex rounded-md border border-line p-0.5">
             {document.views.map((view) => (
               <button
@@ -180,7 +193,6 @@ export function CanvasStage({
               </button>
             ))}
           </div>
-          <div className="text-[10px] uppercase tracking-[0.14em] text-mute">Panel</div>
           <div className="flex flex-wrap gap-1">
             {garmentZones.map((item) => (
               <button
@@ -198,6 +210,41 @@ export function CanvasStage({
                 {PLACEMENT_ZONE_LABELS[item]}
               </button>
             ))}
+          </div>
+          <div
+            className="flex items-center gap-1"
+            data-garment-color-control="true"
+            title="Garment color"
+          >
+            {GARMENT_COLOR_PRESETS.slice(0, 6).map((preset) => (
+              <button
+                key={preset.value}
+                type="button"
+                data-garment-color={preset.value}
+                aria-label={preset.label}
+                title={preset.label}
+                aria-pressed={bodyColor.toLowerCase() === preset.value}
+                onClick={() => setBodyColor(preset.value)}
+                className={`h-5 w-5 rounded-full border ${
+                  bodyColor.toLowerCase() === preset.value
+                    ? 'border-accent ring-1 ring-accent/50'
+                    : 'border-line'
+                }`}
+                style={{ backgroundColor: preset.value }}
+              />
+            ))}
+            <input
+              type="color"
+              data-garment-color-custom="true"
+              aria-label="Custom garment color"
+              value={bodyColor}
+              onPointerDown={() => {
+                colorOrigin.current = document
+              }}
+              onChange={(event) => setBodyColor(event.target.value, 'replace')}
+              onBlur={() => commitGesture(colorOrigin.current)}
+              className="h-5 w-5 cursor-pointer rounded-full border border-line bg-studio p-0"
+            />
           </div>
           <button
             type="button"

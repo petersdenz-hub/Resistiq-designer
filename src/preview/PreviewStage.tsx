@@ -28,17 +28,26 @@ export function PreviewStage({ document, viewId, zoom = 0.85 }: PreviewStageProp
     paintDesignObject(document, object),
   )
 
+  const bodyColor = getBodyColor(document)
+
   return (
     <svg
       width={garment.viewBox.width * zoom}
       height={garment.viewBox.height * zoom}
       viewBox={`0 0 ${garment.viewBox.width} ${garment.viewBox.height}`}
+      data-preview-stage="true"
+      data-garment-type={document.garmentType}
+      data-garment-color={bodyColor}
+      data-preview-view={viewId}
+      data-preview-seams="true"
+      data-preview-artwork={String(objects.length)}
+      data-preview-handles="false"
     >
       <GarmentRenderer
         garmentType={document.garmentType}
         viewId={viewId}
         panelId={document.activePanelId}
-        bodyColor={getBodyColor(document)}
+        bodyColor={bodyColor}
         panelColors={getPanelColorMap(document)}
         construction={getResolvedConstruction(document)}
       />

@@ -3,6 +3,7 @@ import type {
   DesignObject,
   DesignObjectPatch,
   PlacementZone,
+  ShapeKind,
 } from './designObjects'
 import type { Alignment, Distribution } from './objectEditing'
 import type {
@@ -71,7 +72,7 @@ export interface DesignContextValue {
   addText: () => void
   addImageFromFile: (file: File, role?: 'image' | 'logo') => Promise<string | null>
   addDesignText: () => void
-  addDesignShape: () => void
+  addDesignShape: (kind?: ShapeKind) => void
   addDesignImageFromFile: (file: File) => Promise<string | null>
   removeSelected: () => void
   removeElementById: (elementId: string) => void

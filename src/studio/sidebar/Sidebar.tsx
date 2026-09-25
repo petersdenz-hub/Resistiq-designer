@@ -1,6 +1,7 @@
 import { ACCEPTED_IMAGE_ACCEPT } from '@/design/ingestImage'
 import { DesignPanel } from './DesignPanel'
 import { MaterialsPanel } from './MaterialsPanel'
+import { PLACEMENT_ZONE_LABELS, resolveActiveZone, zonesForGarment } from '@/design/designObjects'
 import { getElementsInView, getPanelById } from '@/design/selectors'
 import { useDesign } from '@/design/useDesign'
 import { GarmentSelector } from '@/garments/GarmentSelector'
@@ -124,16 +125,31 @@ function Placeholder({ text }: { text: string }) {
 }
 
 function GarmentPanel() {
-  const { document, setActivePanel } = useDesign()
+  const { document, setActivePanel, setActiveZone } = useDesign()
   const garment = getGarment(document.garmentType)
   const viewPanels = garment.panels.filter((panel) => panel.viewId === document.activeView)
+  const garmentZones = zonesForGarment(document.garmentType)
+  const zone = resolveActiveZone(document)
+  const activePanel = garment.panels.find((panel) => panel.id === document.activePanelId)
+  const viewLabel =
+    document.views.find((view) => view.id === document.activeView)?.label ?? document.activeView
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-garment-nav="true">
       <GarmentSelector />
+      <div
+        className="rounded-md border border-line px-3 py-2 text-[11px] text-mute"
+        data-garment-path="true"
+      >
+        <span className="text-ink">{garment.name}</span>
+        <span className="mx-1">→</span>
+        <span>{viewLabel}</span>
+        <span className="mx-1">→</span>
+        <span className="text-ink">{PLACEMENT_ZONE_LABELS[zone]}</span>
+      </div>
       <div>
         <div className="mb-2 text-[10px] font-medium uppercase tracking-[0.14em] text-mute">
-          Panels on this view
+          Panel
         </div>
         <ul className="space-y-1.5">
           {viewPanels.map((panel) => {
@@ -160,6 +176,38 @@ function GarmentPanel() {
             )
           })}
         </ul>
+      </div>
+      <div>
+        <div className="mb-2 text-[10px] font-medium uppercase tracking-[0.14em] text-mute">
+          Design area
+        </div>
+        <div className="flex flex-wrap gap-1">
+          {garmentZones.map((item) => (
+            <button
+              key={item}
+              type="button"
+              data-zone-option={item}
+              aria-pressed={item === zone}
+              onClick={() => setActiveZone(item)}
+              className={`h-7 rounded-md border px-2 text-[11px] ${
+                item === zone
+                  ? 'border-accent/50 bg-accent/10 text-ink'
+                  : 'border-line text-mute hover:text-ink'
+              }`}
+            >
+              {PLACEMENT_ZONE_LABELS[item]}
+            </button>
+          ))}
+        </div>
+        {activePanel && isPrintablePanel(activePanel) && activePanel.designZones?.length ? (
+          <ul className="mt-2 space-y-1" data-panel-design-zones="true">
+            {activePanel.designZones.map((item) => (
+              <li key={item.id} className="text-[11px] text-mute">
+                {item.name}
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </div>
       <p className="text-[11px] leading-5 text-mute">
         {GARMENT_CATEGORY_LABELS[garment.category]} · artwork stays on its original panels when you
