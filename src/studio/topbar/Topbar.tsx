@@ -179,7 +179,12 @@ export function Topbar({ onClose, onNew, onPreview }: TopbarProps) {
           Save as
         </Button>
         <Button onClick={onPreview}>Preview</Button>
-        <Button disabled={!EXPORT_AVAILABLE} title="Export coming later">
+        <Button
+          disabled={!EXPORT_AVAILABLE}
+          title="Export coming later"
+          aria-disabled={!EXPORT_AVAILABLE}
+          className={!EXPORT_AVAILABLE ? 'opacity-35' : ''}
+        >
           Export
         </Button>
       </div>

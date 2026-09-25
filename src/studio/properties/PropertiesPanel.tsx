@@ -128,18 +128,6 @@ function SelectedObjectProperties() {
         <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">
           {selectedObject.type === 'image' ? 'Image / Logo' : selectedObject.type === 'text' ? 'Text' : 'Artwork'}
         </div>
-        <div className="space-y-1">
-          <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Design area</div>
-          <ZoneChips />
-        </div>
-        <Field label="Name">
-          <input
-            data-object-name="true"
-            value={selectedObject.name ?? ''}
-            onChange={(event) => updateSelectedObject({ name: event.target.value })}
-            className="h-8 w-full rounded-md border border-line bg-studio px-2 text-[12px] text-ink outline-none focus:border-accent/50"
-          />
-        </Field>
       </section>
 
       {selectedObject.type === 'text' ? (
@@ -275,25 +263,31 @@ function SelectedObjectProperties() {
         </div>
       ) : null}
 
-      {selectedObject.type === 'text' ? (
-        <details className="space-y-2">
-          <summary className="cursor-pointer text-[10px] font-medium uppercase tracking-[0.14em] text-mute">
-            Position & size
-          </summary>
-          <div className="mt-2 space-y-3">
-            <ObjectTransformFields locked={locked} hideOpacity onBox={updateSelectedObject} />
-            <ObjectPlacementFields
-              locked={locked}
-              onZone={setSelectedObjectZone}
-              onPanel={setSelectedObjectPanel}
-              onSpace={setSelectedObjectSpace}
-              onBox={updateSelectedObject}
+      <div className="space-y-1">
+        <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Design area</div>
+        <ZoneChips />
+      </div>
+
+      {selectedObject.type === 'image' || selectedObject.type === 'shape' ? (
+        <ObjectTransformFields locked={locked} onBox={updateSelectedObject} />
+      ) : null}
+
+      <details className="space-y-2">
+        <summary className="cursor-pointer text-[10px] font-medium uppercase tracking-[0.14em] text-mute">
+          {selectedObject.type === 'text' ? 'Position & size' : 'Advanced'}
+        </summary>
+        <div className="mt-2 space-y-3">
+          <Field label="Name">
+            <input
+              data-object-name="true"
+              value={selectedObject.name ?? ''}
+              onChange={(event) => updateSelectedObject({ name: event.target.value })}
+              className="h-8 w-full rounded-md border border-line bg-studio px-2 text-[12px] text-ink outline-none focus:border-accent/50"
             />
-          </div>
-        </details>
-      ) : (
-        <>
-          <ObjectTransformFields locked={locked} onBox={updateSelectedObject} />
+          </Field>
+          {selectedObject.type === 'text' ? (
+            <ObjectTransformFields locked={locked} hideOpacity onBox={updateSelectedObject} />
+          ) : null}
           <ObjectPlacementFields
             locked={locked}
             onZone={setSelectedObjectZone}
@@ -301,8 +295,8 @@ function SelectedObjectProperties() {
             onSpace={setSelectedObjectSpace}
             onBox={updateSelectedObject}
           />
-        </>
-      )}
+        </div>
+      </details>
 
       <section className="space-y-2" data-properties-section="layer">
         <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Layer</div>

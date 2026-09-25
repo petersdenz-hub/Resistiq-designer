@@ -46,10 +46,14 @@ export function PreviewOverlay({ document, onClose }: PreviewOverlayProps) {
         <Button onClick={onClose}>Close</Button>
       </div>
       <div
-        className="flex flex-1 items-center justify-center overflow-auto p-10"
+        className="flex flex-1 items-center justify-center overflow-auto p-6 sm:p-8"
         data-preview-overlay="true"
       >
-        <PreviewStage document={document} viewId={viewId} />
+        <PreviewStage
+          document={document}
+          viewId={viewId}
+          zoom={Math.min(1.55, 640 / garment.viewBox.height, 720 / garment.viewBox.width)}
+        />
       </div>
     </div>
   )

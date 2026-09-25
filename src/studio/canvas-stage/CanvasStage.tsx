@@ -212,24 +212,28 @@ export function CanvasStage({
           >
             Snap
           </button>
-          <GuideChip
-            pressed={showPrintArea}
-            label="Print"
-            dataAttr="print-area"
-            onClick={() => setShowPrintArea(!showPrintArea)}
-          />
-          <GuideChip
-            pressed={showSafeAreas}
-            label="Safe"
-            dataAttr="safe-area"
-            onClick={() => setShowSafeAreas(!showSafeAreas)}
-          />
-          <GuideChip
-            pressed={showGuides}
-            label="Guides"
-            dataAttr="guides"
-            onClick={() => setShowGuides(!showGuides)}
-          />
+          {compactChrome ? null : (
+            <>
+              <GuideChip
+                pressed={showPrintArea}
+                label="Print"
+                dataAttr="print-area"
+                onClick={() => setShowPrintArea(!showPrintArea)}
+              />
+              <GuideChip
+                pressed={showSafeAreas}
+                label="Safe"
+                dataAttr="safe-area"
+                onClick={() => setShowSafeAreas(!showSafeAreas)}
+              />
+              <GuideChip
+                pressed={showGuides}
+                label="Guides"
+                dataAttr="guides"
+                onClick={() => setShowGuides(!showGuides)}
+              />
+            </>
+          )}
           <span className="sr-only" data-grid-visible={gridVisible ? 'true' : 'false'} data-snap-enabled={snapToGrid ? 'true' : 'false'} />
           <div
             className="pointer-events-auto absolute left-0 top-0 z-0 flex h-7 items-center opacity-[0.01]"
