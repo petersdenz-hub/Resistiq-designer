@@ -123,6 +123,7 @@ export function Studio({ onClose, onNew }: StudioProps) {
     redo,
     removeSelected,
     selectAllObjects,
+    selectElement,
     selectObjects,
     selectedElementId,
     selectedObjectId,
