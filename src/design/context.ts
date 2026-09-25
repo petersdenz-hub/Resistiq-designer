@@ -47,6 +47,7 @@ export interface DesignContextValue {
   applyDocument: (document: DesignDocument, history?: HistoryMode) => void
   setActiveView: (viewId: string) => void
   setActivePanel: (panelId: string) => void
+  switchGarment: (garmentType: string) => void
   setActiveZone: (zone: PlacementZone) => void
   setSelectedObjectZone: (zone: PlacementZone) => void
   setSelectedObjectPanel: (panelId: string) => void

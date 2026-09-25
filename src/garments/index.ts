@@ -19,8 +19,12 @@ export {
 } from './constructionOptions'
 export { MATERIAL_CATALOG, getCatalogMaterial } from './materialCatalog'
 export { GarmentPicker } from './GarmentPicker'
+export { GarmentSelector } from './GarmentSelector'
 export {
   AVAILABLE_GARMENTS,
+  GARMENT_CATALOG,
+  garmentCatalogGroups,
+  garmentsInCategory,
   getGarment,
   hasGarment,
   PLANNED_GARMENT_LABELS,
@@ -33,16 +37,37 @@ export { hoodieGarment } from './hoodie'
 export { jacketGarment } from './jacket'
 export { pantsGarment } from './pants'
 export { shortsGarment } from './shorts'
+export { sweatshirtGarment } from './sweatshirt'
 export { tshirtGarment } from './tshirt'
+export {
+  completeGarment,
+  completePanel,
+  garmentPreviewView,
+  inferPanelSide,
+  inferSupportedDesignZones,
+  isGarmentDesignZone,
+  isPrintablePanel,
+  localFromPercent,
+  panelDesignBounds,
+  panelDesignBoundsLocal,
+  panelDesignZones,
+  panelName,
+  percentFromLocal,
+} from './model'
 export type { GarmentCapabilities } from './capabilities'
 export type {
+  DesignZoneDefinition,
   GarmentCategory,
   GarmentDefaults,
   GarmentDefinition,
+  GarmentDesignZoneId,
   GarmentPanelDefinition,
+  GarmentPanelSide,
   GarmentPanelType,
+  GarmentPreview,
   GarmentRect,
   GarmentRenderProps,
   GarmentSafeAreaDefinition,
   GarmentViewDefinition,
+  PercentRect,
 } from './types'

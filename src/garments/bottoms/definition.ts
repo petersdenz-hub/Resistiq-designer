@@ -85,6 +85,8 @@ export function createBottomsMeta(kind: BottomsKind): Omit<GarmentDefinition, 'r
     views: FRONT_BACK_VIEWS,
     viewBox: STANDARD_VIEWBOX,
     panels,
+    preview: { viewId: 'front' },
+    supportedDesignZones: ['front', 'back', 'left-leg', 'right-leg'],
     defaults: { bodyColor: long ? '#2a3140' : '#4a5568' },
     capabilities: garmentCapabilities({
       legs: true,

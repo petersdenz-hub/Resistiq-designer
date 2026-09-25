@@ -195,6 +195,7 @@ export function StageViewport({ zoom, showSafeAreas }: StageViewportProps) {
       <GarmentRenderer
         garmentType={document.garmentType}
         viewId={document.activeView}
+        panelId={document.activePanelId}
         bodyColor={getBodyColor(document)}
         panelColors={getPanelColorMap(document)}
         construction={getResolvedConstruction(document)}

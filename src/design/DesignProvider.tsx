@@ -37,6 +37,7 @@ import { createId } from './ids'
 import { useCallback, useLayoutEffect, useMemo, useReducer, useRef, type ReactNode } from 'react'
 import { DesignContext, type DesignContextValue, type HistoryMode } from './context'
 import { createNewDesign } from './createDesign'
+import { switchGarment as writeSwitchGarment } from './garmentSwitch'
 import { ingestImageError, ingestImageFile } from './ingestImage'
 import {
   addElement,
@@ -328,6 +329,7 @@ export function DesignProvider({
       applyDocument: (document, history = 'record') => apply(document, history),
       setActiveView: (viewId) => dispatch({ type: 'setActiveView', viewId }),
       setActivePanel: (panelId) => dispatch({ type: 'setActivePanel', panelId }),
+      switchGarment: (garmentType) => apply(writeSwitchGarment(current().document, garmentType)),
       setActiveZone: (zone) => {
         const { document, selectedObjectIds } = current()
         apply(writeSetActiveZone(document, zone))

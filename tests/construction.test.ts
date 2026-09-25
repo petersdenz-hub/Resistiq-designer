@@ -45,7 +45,7 @@ function legacyTshirt(): DesignDocument {
 
 describe('Phase 7B.1 construction foundation', () => {
   it('does not add construction to new designs', () => {
-    for (const type of ['tshirt', 'hoodie', 'jacket', 'pants', 'shorts']) {
+    for (const type of ['tshirt', 'hoodie', 'sweatshirt', 'jacket', 'pants', 'shorts']) {
       const document = createNewDesign(type)
       expect(document.construction).toBeUndefined()
       expect(document.materials).toEqual([])
@@ -139,7 +139,7 @@ describe('Phase 7B.1 construction foundation', () => {
   })
 
   it('only references existing panel ids in garment defaults', () => {
-    for (const type of ['tshirt', 'hoodie', 'jacket', 'pants', 'shorts']) {
+    for (const type of ['tshirt', 'hoodie', 'sweatshirt', 'jacket', 'pants', 'shorts']) {
       const garment = getGarment(type)
       const panelIds = new Set(garment.panels.map((panel) => panel.id))
       const defaults = defaultConstructionFor(type)

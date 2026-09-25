@@ -19,6 +19,7 @@ export function GarmentPicker({ onPick, onClose }: GarmentPickerProps) {
           <li key={garment.id}>
             <button
               type="button"
+              data-garment-option={garment.id}
               onClick={() => onPick(garment.id)}
               className="flex w-full flex-col overflow-hidden rounded-lg border border-line bg-canvas text-left transition-colors hover:border-accent/50"
             >

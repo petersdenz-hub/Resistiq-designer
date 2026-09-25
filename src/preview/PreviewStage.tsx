@@ -37,6 +37,7 @@ export function PreviewStage({ document, viewId, zoom = 0.85 }: PreviewStageProp
       <GarmentRenderer
         garmentType={document.garmentType}
         viewId={viewId}
+        panelId={document.activePanelId}
         bodyColor={getBodyColor(document)}
         panelColors={getPanelColorMap(document)}
         construction={getResolvedConstruction(document)}

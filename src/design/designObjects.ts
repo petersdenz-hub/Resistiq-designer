@@ -108,10 +108,9 @@ export const PLACEMENT_ZONE_LABELS: Record<PlacementZone, string> = {
 }
 
 export function zonesForGarment(garmentType: string): PlacementZone[] {
-  if (garmentType === 'pants' || garmentType === 'shorts') {
-    return ['front', 'back', 'left-leg', 'right-leg']
-  }
-  return ['front', 'back', 'left-sleeve', 'right-sleeve']
+  const garment = getGarment(garmentType)
+  const zones = garment.supportedDesignZones ?? []
+  return zones.filter((zone): zone is PlacementZone => isPlacementZone(zone))
 }
 
 export function defaultZoneForView(viewId: string): PlacementZone {

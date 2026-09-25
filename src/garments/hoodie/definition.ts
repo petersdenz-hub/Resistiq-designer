@@ -165,6 +165,8 @@ export const hoodieMeta = {
   views: FRONT_BACK_VIEWS,
   viewBox: STANDARD_VIEWBOX,
   panels: HOODIE_PANELS,
+  preview: { viewId: 'front' },
+  supportedDesignZones: ['front', 'back', 'left-sleeve', 'right-sleeve'],
   defaults: { bodyColor: '#3a4150' },
   capabilities: garmentCapabilities({
     hood: true,

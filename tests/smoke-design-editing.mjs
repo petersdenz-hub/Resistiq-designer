@@ -1,5 +1,17 @@
 import { spawn } from 'node:child_process'
+import { writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { setTimeout as delay } from 'node:timers/promises'
+
+const SMOKE_PNG = join(tmpdir(), 'resistq-7c-mark.png')
+writeFileSync(
+  SMOKE_PNG,
+  Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+    'base64',
+  ),
+)
 
 const PORT = 5173
 const BASE = `http://127.0.0.1:${PORT}`
@@ -148,11 +160,52 @@ async function run() {
     throw new Error('Object names are missing from the editor')
   }
 
+  const imageInput = await page.$('[data-design-panel="true"] input[type="file"]')
+  if (!imageInput) {
+    throw new Error('Logo / image upload is missing')
+  }
+  await imageInput.uploadFile(SMOKE_PNG)
+  await delay(400)
+  const withImage = await page.$$eval('[data-design-object]', (nodes) => nodes.length)
+  if (withImage < 5) {
+    throw new Error(`Logo / image was not added, count=${withImage}`)
+  }
+
+  await page.click('button[aria-label="Garment"]')
+  await page.waitForSelector('[data-garment-selector="true"]')
+  await page.click('[data-garment-option="hoodie"]')
+  await page.waitForSelector('[data-dialog="true"]')
+  await clickText(page, 'Continue')
+  await page.waitForFunction(() => document.querySelector('[data-garment-type="hoodie"]'))
+  await page.click('[data-zone-option="front"]')
+  await delay(100)
+  const afterHoodie = await page.$$eval('[data-design-object]', (nodes) => nodes.length)
+  if (afterHoodie < 5) {
+    throw new Error(`Artwork was lost after switching to hoodie (${afterHoodie})`)
+  }
+
+  await page.click('[data-garment-option="pants"]')
+  await page.waitForSelector('[data-dialog="true"]')
+  await clickText(page, 'Continue')
+  await page.waitForFunction(() => document.querySelector('[data-garment-type="pants"]'))
+  await page.waitForSelector('[data-zone-option="left-leg"]')
+
+  await page.click('[data-garment-option="tshirt"]')
+  await page.waitForSelector('[data-dialog="true"]')
+  await clickText(page, 'Continue')
+  await page.waitForFunction(() => document.querySelector('[data-garment-type="tshirt"]'))
+  await page.click('[data-zone-option="front"]')
+  await delay(100)
+  const restored = await page.$$eval('[data-design-object]', (nodes) => nodes.length)
+  if (restored < 5) {
+    throw new Error(`T-shirt artwork did not return after garment switching (${restored})`)
+  }
+
   await browser.close()
   if (vite) {
     vite.kill('SIGTERM')
   }
-  console.log('Phase 7B.8 browser smoke passed')
+  console.log('Phase 7C browser smoke passed')
   process.exit(0)
 }
 

@@ -1,5 +1,11 @@
 export { constrainElementInDocument, getConstraintBounds, getSafeAreaForPanel } from './constraints'
-export { createNewDesign } from './createDesign'
+export { createNewDesign, documentChromeFromGarment } from './createDesign'
+export {
+  canSafelyTransferArtwork,
+  documentHasArtwork,
+  garmentSwitchRequiresConfirm,
+  switchGarment,
+} from './garmentSwitch'
 export { DesignProvider } from './DesignProvider'
 export { useDesign } from './useDesign'
 export { createId } from './ids'
