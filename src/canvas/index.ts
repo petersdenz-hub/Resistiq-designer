@@ -5,6 +5,7 @@ export {
   clientToSvgPoint,
   getCenter,
   resizeRect,
+  resizeRectKeepAspect,
   rotationFromPointer,
   type ResizeHandle,
 } from './geometry'

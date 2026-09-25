@@ -1,5 +1,10 @@
 import { FONT_WEIGHTS, TEXT_ALIGNS, TEXT_FONT_FAMILIES } from '@/design/typography'
-import { PLACEMENT_ZONE_LABELS } from '@/design/designObjects'
+import {
+  imageKeepsAlpha,
+  PLACEMENT_ZONE_LABELS,
+  PLACEMENT_ZONES,
+} from '@/design/designObjects'
+import { useAsset } from '@/persistence/useAsset'
 import { getPanelById, getPanelColor } from '@/design/selectors'
 import {
   isGraphicElement,
@@ -81,10 +86,18 @@ function SelectedPanelProperties() {
 }
 
 function SelectedObjectProperties() {
-  const { selectedObject, updateSelectedObject, moveSelectedObjectLayer, removeSelected } = useDesign()
+  const {
+    selectedObject,
+    updateSelectedObject,
+    moveSelectedObjectLayer,
+    removeSelected,
+    setSelectedObjectZone,
+  } = useDesign()
   if (!selectedObject) {
     return null
   }
+
+  const locked = selectedObject.locked
 
   return (
     <div className="space-y-4" data-properties-kind="design-object">
@@ -93,7 +106,7 @@ function SelectedObjectProperties() {
         <div className="mt-1 text-[11px] text-mute">{PLACEMENT_ZONE_LABELS[selectedObject.zone]}</div>
       </div>
       <p className="text-[11px] leading-4 text-mute">
-        This is a design object on the canvas, not garment construction.
+        This is a design object on the canvas, not garment construction. Position is in garment space.
       </p>
 
       {selectedObject.type === 'text' ? (
@@ -101,7 +114,7 @@ function SelectedObjectProperties() {
           <Field label="Content">
             <textarea
               value={selectedObject.content}
-              disabled={selectedObject.locked}
+              disabled={locked}
               onChange={(event) => updateSelectedObject({ content: event.target.value })}
               className="min-h-16 w-full rounded-md border border-line bg-studio px-2 py-1.5 text-[12px] text-ink outline-none focus:border-accent/50"
             />
@@ -109,7 +122,7 @@ function SelectedObjectProperties() {
           <Field label="Font">
             <select
               value={selectedObject.fontFamily}
-              disabled={selectedObject.locked}
+              disabled={locked}
               onChange={(event) => updateSelectedObject({ fontFamily: event.target.value })}
               className="h-8 w-full rounded-md border border-line bg-studio px-2 text-[12px] text-ink"
             >
@@ -121,24 +134,34 @@ function SelectedObjectProperties() {
             </select>
           </Field>
           <LiveNumber
-            label="Size"
+            label="Font size"
             value={selectedObject.fontSize}
             min={8}
-            disabled={selectedObject.locked}
+            disabled={locked}
             onCommit={(value) => updateSelectedObject({ fontSize: value })}
           />
-          <SegmentedControl
-            value={String(selectedObject.fontWeight)}
-            options={FONT_WEIGHTS.map((weight) => ({ value: String(weight), label: String(weight) }))}
-            onChange={(value) =>
-              updateSelectedObject({ fontWeight: Number(value) as (typeof FONT_WEIGHTS)[number] })
-            }
-          />
-          <SegmentedControl
-            value={selectedObject.textAlign}
-            options={TEXT_ALIGNS.map((align) => ({ value: align, label: align }))}
-            onChange={(value) => updateSelectedObject({ textAlign: value })}
-          />
+          <Field label="Weight">
+            <SegmentedControl
+              value={String(selectedObject.fontWeight)}
+              options={FONT_WEIGHTS.map((weight) => ({
+                value: String(weight),
+                label: weight === 400 ? 'Reg' : weight === 500 ? 'Med' : 'Bold',
+              }))}
+              onChange={(value) =>
+                updateSelectedObject({ fontWeight: Number(value) as (typeof FONT_WEIGHTS)[number] })
+              }
+            />
+          </Field>
+          <Field label="Align">
+            <SegmentedControl
+              value={selectedObject.textAlign}
+              options={TEXT_ALIGNS.map((align) => ({
+                value: align,
+                label: align === 'left' ? 'Left' : align === 'right' ? 'Right' : 'Center',
+              }))}
+              onChange={(value) => updateSelectedObject({ textAlign: value })}
+            />
+          </Field>
           <ColorPicker
             label="Color"
             value={selectedObject.color}
@@ -146,6 +169,8 @@ function SelectedObjectProperties() {
           />
         </div>
       ) : null}
+
+      {selectedObject.type === 'image' ? <ImageObjectFields /> : null}
 
       {selectedObject.type === 'shape' ? (
         <div className="space-y-2">
@@ -155,15 +180,15 @@ function SelectedObjectProperties() {
             onCommit={(value) => updateSelectedObject({ fill: value })}
           />
           <ColorPicker
-            label="Border"
+            label="Stroke"
             value={selectedObject.stroke}
             onCommit={(value) => updateSelectedObject({ stroke: value })}
           />
           <LiveNumber
-            label="Border width"
+            label="Stroke width"
             value={selectedObject.strokeWidth}
             min={0}
-            disabled={selectedObject.locked}
+            disabled={locked}
             onCommit={(value) => updateSelectedObject({ strokeWidth: value })}
           />
         </div>
@@ -173,27 +198,27 @@ function SelectedObjectProperties() {
         <LiveNumber
           label="X"
           value={selectedObject.x}
-          disabled={selectedObject.locked}
+          disabled={locked}
           onCommit={(value) => updateSelectedObject({ x: value })}
         />
         <LiveNumber
           label="Y"
           value={selectedObject.y}
-          disabled={selectedObject.locked}
+          disabled={locked}
           onCommit={(value) => updateSelectedObject({ y: value })}
         />
         <LiveNumber
-          label="W"
+          label="Width"
           value={selectedObject.width}
           min={8}
-          disabled={selectedObject.locked}
+          disabled={locked}
           onCommit={(value) => updateSelectedObject({ width: value })}
         />
         <LiveNumber
-          label="H"
+          label="Height"
           value={selectedObject.height}
           min={8}
-          disabled={selectedObject.locked}
+          disabled={locked}
           onCommit={(value) => updateSelectedObject({ height: value })}
         />
       </div>
@@ -201,22 +226,161 @@ function SelectedObjectProperties() {
         label="Rotation"
         value={Number(selectedObject.rotation.toFixed(1))}
         digits={1}
-        disabled={selectedObject.locked}
+        disabled={locked}
         onCommit={(value) => updateSelectedObject({ rotation: value })}
       />
-      <LiveNumber
-        label="Opacity"
-        value={selectedObject.opacity}
-        min={0}
-        digits={2}
-        disabled={selectedObject.locked}
-        onCommit={(value) => updateSelectedObject({ opacity: Math.min(1, value) })}
-      />
+      <ObjectOpacityField />
+
+      <Field label="Placement zone">
+        <select
+          data-object-zone="true"
+          value={selectedObject.zone}
+          onChange={(event) => setSelectedObjectZone(event.target.value as (typeof PLACEMENT_ZONES)[number])}
+          className="h-8 w-full rounded-md border border-line bg-studio px-2 text-[12px] text-ink"
+        >
+          {PLACEMENT_ZONES.map((item) => (
+            <option key={item} value={item}>
+              {PLACEMENT_ZONE_LABELS[item]}
+            </option>
+          ))}
+        </select>
+      </Field>
+
+      <div className="grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          data-object-visible="true"
+          aria-pressed={selectedObject.visible}
+          onClick={() => updateSelectedObject({ visible: !selectedObject.visible })}
+          className={`h-8 rounded-md border text-[12px] ${
+            selectedObject.visible
+              ? 'border-accent/50 bg-accent/10 text-ink'
+              : 'border-line text-mute hover:text-ink'
+          }`}
+        >
+          {selectedObject.visible ? 'Visible' : 'Hidden'}
+        </button>
+        <button
+          type="button"
+          data-object-locked="true"
+          aria-pressed={selectedObject.locked}
+          onClick={() => updateSelectedObject({ locked: !selectedObject.locked })}
+          className={`h-8 rounded-md border text-[12px] ${
+            selectedObject.locked
+              ? 'border-accent/50 bg-accent/10 text-ink'
+              : 'border-line text-mute hover:text-ink'
+          }`}
+        >
+          {selectedObject.locked ? 'Locked' : 'Unlocked'}
+        </button>
+      </div>
+
       <LayerButtons onMove={moveSelectedObjectLayer} />
       <Button className="w-full" onClick={removeSelected}>
         Remove object
       </Button>
     </div>
+  )
+}
+
+function ImageObjectFields() {
+  const { selectedObject, updateSelectedObject } = useDesign()
+  if (!selectedObject || selectedObject.type !== 'image') {
+    return null
+  }
+  const asset = useAsset(selectedObject.source)
+  const format = selectedObject.mimeType.includes('svg')
+    ? 'SVG'
+    : selectedObject.mimeType.includes('png')
+      ? 'PNG'
+      : selectedObject.mimeType.includes('webp')
+        ? 'WEBP'
+        : selectedObject.mimeType.includes('jpeg') || selectedObject.mimeType.includes('jpg')
+          ? 'JPG'
+          : 'Image'
+  const alpha = imageKeepsAlpha(selectedObject.mimeType)
+
+  return (
+    <div className="space-y-2" data-image-object-fields="true">
+      <div
+        data-image-asset-preview="true"
+        className="overflow-hidden rounded-md border border-line"
+        style={{
+          backgroundImage:
+            'linear-gradient(45deg, #3a3f4c 25%, transparent 25%), linear-gradient(-45deg, #3a3f4c 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #3a3f4c 75%), linear-gradient(-45deg, transparent 75%, #3a3f4c 75%)',
+          backgroundSize: '12px 12px',
+          backgroundPosition: '0 0, 0 6px, 6px -6px, -6px 0',
+          backgroundColor: '#2a3040',
+        }}
+      >
+        {asset ? (
+          <img
+            src={asset.dataUrl}
+            alt={selectedObject.fileName}
+            className="mx-auto max-h-24 object-contain"
+          />
+        ) : (
+          <div className="px-3 py-6 text-center text-[11px] text-mute">Asset not loaded</div>
+        )}
+      </div>
+      <div>
+        <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">File</div>
+        <div className="mt-1 truncate text-[12px] text-ink" title={selectedObject.fileName} data-image-filename="true">
+          {selectedObject.fileName}
+        </div>
+        <div className="mt-0.5 text-[11px] text-mute">
+          {format}
+          {alpha ? ' · transparency kept' : ' · no alpha'}
+        </div>
+      </div>
+      <button
+        type="button"
+        data-aspect-lock="true"
+        aria-pressed={selectedObject.aspectLocked}
+        disabled={selectedObject.locked}
+        onClick={() => updateSelectedObject({ aspectLocked: !selectedObject.aspectLocked })}
+        className={`h-8 w-full rounded-md border text-[12px] ${
+          selectedObject.aspectLocked
+            ? 'border-accent/50 bg-accent/10 text-ink'
+            : 'border-line text-mute hover:text-ink'
+        }`}
+      >
+        {selectedObject.aspectLocked ? 'Aspect ratio locked' : 'Aspect ratio unlocked'}
+      </button>
+    </div>
+  )
+}
+
+function ObjectOpacityField() {
+  const { selectedObject, document, updateSelectedObject, commitGesture } = useDesign()
+  const originRef = useRef(document)
+
+  if (!selectedObject) {
+    return null
+  }
+
+  return (
+    <Field label="Opacity">
+      <input
+        type="range"
+        min={0}
+        max={1}
+        step={0.05}
+        data-object-opacity="true"
+        value={selectedObject.opacity}
+        disabled={selectedObject.locked}
+        onPointerDown={() => {
+          originRef.current = document
+        }}
+        onChange={(event) =>
+          updateSelectedObject({ opacity: Number(event.target.value) }, 'replace')
+        }
+        onPointerUp={() => {
+          commitGesture(originRef.current)
+        }}
+        className="w-full accent-accent"
+      />
+    </Field>
   )
 }
 
