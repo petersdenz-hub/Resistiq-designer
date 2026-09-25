@@ -87,7 +87,7 @@ export function CapGarment({ viewId, bodyColor, panelColors, construction }: Gar
         <ClothWash id={`${id}-face`} color={face} x1={280} y1={210} x2={280} y2={372} />
         <ClothWash id={`${id}-right`} color={right} x1={220} y1={210} x2={148} y2={372} />
         <ClothWash id={`${id}-left`} color={left} x1={340} y1={210} x2={412} y2={372} />
-        <ClothWash id={`${id}-brim`} color={brim} x1={280} y1={368} x2={280} y2={484} />
+        <ClothWash id={`${id}-brim`} color={brim} x1={280} y1={368} x2={280} y2={482} />
         <ClothWash id={`${id}-band`} color={band} x1={280} y1={364} x2={280} y2={402} />
         <ClothWash id={`${id}-closure`} color={closure} x1={280} y1={348} x2={280} y2={408} />
         <FlatShadow id={id} />
@@ -159,7 +159,7 @@ export function CapGarment({ viewId, bodyColor, panelColors, construction }: Gar
         <Stitch d={CROWN_FRONT_SEAM_RIGHT} color={face.highlight} />
         {!isBack ? <Stitch d={CROWN_CENTER_SEAM} color={face.highlight} /> : null}
         <Fold d="M248 236 C268 222 292 222 312 236" color={crown.highlight} opacity={0.14} />
-        {!isBack ? <Fold d="M210 400 C248 418 312 418 350 400" color={brim.highlight} opacity={0.12} /> : null}
+        {!isBack ? <Fold d="M214 404 C248 420 312 420 346 404" color={brim.highlight} opacity={0.12} /> : null}
 
         {bandStyle ? (
           <g

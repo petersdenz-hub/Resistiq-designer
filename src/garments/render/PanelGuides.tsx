@@ -162,7 +162,7 @@ export function PanelGuides({
                 style={{ cursor: 'pointer' }}
               />
             )}
-            {showGuides || panelSelected ? (
+            {showGuides ? (
               <text
                 x={panel.frame.x + 6}
                 y={panel.frame.y + 13}

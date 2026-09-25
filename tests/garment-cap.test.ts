@@ -321,7 +321,7 @@ describe('Phase 11 cap garment', () => {
     expect(front!.width).toBeGreaterThan(120)
     expect(crown!.height).toBeLessThan(front!.height)
     const html = renderCap('front')
-    expect(html).toContain('M280 210 L280 372')
+    expect(html).toContain('M280 214 L280 372')
     expect(html).toContain('data-flat-seam="true"')
   })
 
