@@ -396,6 +396,56 @@ async function run() {
       throw new Error('Shorts showed pants cargo pockets')
     }
   })
+  await switchGarment('cap', async () => {
+    await page.waitForSelector('[data-zone-option="front"]')
+    await clearSelection()
+    await page.waitForSelector('[data-garment-customization="true"]')
+    const regions = await page.$$eval('[data-color-region]', (nodes) =>
+      nodes.map((node) => node.getAttribute('data-color-region')),
+    )
+    if (!regions.includes('front-panel') || !regions.includes('crown') || !regions.includes('brim') || !regions.includes('band') || !regions.includes('left-side') || !regions.includes('right-side')) {
+      throw new Error(`Cap regions are wrong: ${regions.join(',')}`)
+    }
+    const capSilhouette = await page.$('#design-stage [data-garment-silhouette="true"]')
+    if (!capSilhouette) {
+      throw new Error('Cap silhouette is missing')
+    }
+    const brimSeam = await page.$('#design-stage [data-construction-kind="hem"]')
+    if (!brimSeam) {
+      throw new Error('Cap brim construction is missing')
+    }
+    const eyelets = await page.$$('#design-stage [data-construction-detail="eyelet"]')
+    if (eyelets.length < 2) {
+      throw new Error('Cap eyelets are missing')
+    }
+    const brimColor = await page.$('[data-color-region="brim"] [data-color-preset="#1e2a4a"]')
+    if (brimColor) {
+      await brimColor.click()
+      await delay(80)
+    }
+    const frontColor = await page.$('[data-color-region="front-panel"] [data-color-preset="#8b3a3a"]')
+    if (frontColor) {
+      await frontColor.click()
+      await delay(80)
+    }
+    await page.click('[data-material-option="nylon"]')
+    await delay(80)
+    const nylon = await page.$('[data-material-option="nylon"][aria-pressed="true"]')
+    if (!nylon) {
+      throw new Error('Cap nylon material was not selected')
+    }
+    const fabric = await page.$('#design-stage [data-fabric="nylon"]')
+    if (!fabric) {
+      throw new Error('Cap did not apply the selected material')
+    }
+    await page.waitForSelector('[data-construction-control="hem"]')
+    await page.waitForSelector('[data-construction-control="waistband"]')
+    await page.waitForSelector('[data-construction-control="button"]')
+    const clip = await page.$('#design-stage [data-artwork-clip-kind="silhouette"]')
+    if (!clip) {
+      throw new Error('Cap artwork is not clipped to the silhouette')
+    }
+  })
   await switchGarment('tshirt', async () => {
     await page.waitForSelector('[data-zone-option="left-sleeve"]')
     await clearSelection()
@@ -412,7 +462,7 @@ async function run() {
   if (vite) {
     vite.kill('SIGTERM')
   }
-  console.log('Phase 10 browser smoke passed')
+  console.log('Phase 11 browser smoke passed')
   process.exit(0)
 }
 

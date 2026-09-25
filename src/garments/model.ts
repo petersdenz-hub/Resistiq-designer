@@ -57,6 +57,9 @@ export function inferPlacementZone(
   if (panel.type === 'foot') {
     return inferPanelSide(panel) === 'left' ? 'left-foot' : 'right-foot'
   }
+  if (panel.type === 'side_panel') {
+    return inferPanelSide(panel) === 'left' ? 'left-side' : 'right-side'
+  }
   if (panel.type === 'crown' || panel.type === 'brim' || panel.type === 'band' || panel.type === 'strap') {
     return panel.type
   }

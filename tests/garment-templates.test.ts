@@ -23,7 +23,7 @@ import {
 } from '@/garments'
 import { describe, expect, it } from 'vitest'
 
-const CATALOG_IDS = ['tshirt', 'hoodie', 'sweatshirt', 'jacket', 'pants', 'shorts'] as const
+const CATALOG_IDS = ['tshirt', 'hoodie', 'sweatshirt', 'jacket', 'pants', 'shorts', 'cap'] as const
 
 describe('Phase 7D real garment templates', () => {
   it('loads every catalog garment with valid panels', () => {

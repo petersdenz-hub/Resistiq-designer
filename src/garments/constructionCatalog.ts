@@ -113,6 +113,12 @@ export const CARGO_POCKET_OPTIONS = [
   { value: 'none', label: 'Off' },
 ]
 
+export const BUTTON_OPTIONS = [
+  { value: 'snap', label: 'Snap' },
+  { value: 'button', label: 'Button' },
+  { value: 'none', label: 'None' },
+]
+
 export const TSHIRT_CONSTRUCTION: DesignConstruction = {
   collar: { id: 'collar', kind: 'collar', style: 'crew', present: true, panelId: 'collar' },
   hem: { id: 'hem', kind: 'hem', style: 'coverstitch', present: true, panelId: 'front_body' },
@@ -297,6 +303,18 @@ export const PANTS_CONTROLS: GarmentConstructionControl[] = [
   { id: 'hem', kind: 'hem', label: 'Hem', options: HEM_OPTIONS },
 ]
 
+export const CAP_CONSTRUCTION: DesignConstruction = {
+  hem: { id: 'hem', kind: 'hem', style: 'coverstitch', present: true, panelId: 'brim' },
+  waistband: { id: 'waistband', kind: 'waistband', style: 'faced', present: true, panelId: 'band' },
+  buttons: [{ id: 'closure', kind: 'button', style: 'snap', present: true, panelId: 'closure' }],
+}
+
+export const CAP_CONTROLS: GarmentConstructionControl[] = [
+  { id: 'hem', kind: 'hem', label: 'Brim finish', options: HEM_OPTIONS },
+  { id: 'waistband', kind: 'waistband', label: 'Sweatband', options: WAISTBAND_OPTIONS },
+  { id: 'button', kind: 'button', label: 'Closure', options: BUTTON_OPTIONS },
+]
+
 export const SHORTS_CONTROLS: GarmentConstructionControl[] = [
   { id: 'waistband', kind: 'waistband', label: 'Waistband', options: WAISTBAND_OPTIONS },
   { id: 'belt_loop', kind: 'belt_loop', label: 'Belt loops', options: BELT_LOOP_OPTIONS },
@@ -369,13 +387,24 @@ export function deriveConstructionDefaults(garment: ConstructionGarment): Design
   if (caps.zipper && panelsOf(garment, 'zipper').length > 0) {
     next.zipper = part('zipper', 'zipper', 'center_front', { variant: 'metal' })
   }
-  if (caps.waistband && panelsOf(garment, 'waistband').length > 0) {
-    next.waistband = part('waistband', 'waistband', 'faced', { panelId: panelIdOf(garment, 'waistband') })
+  if (caps.waistband && (panelsOf(garment, 'waistband').length > 0 || panelsOf(garment, 'band').length > 0)) {
+    next.waistband = part('waistband', 'waistband', 'faced', {
+      panelId: panelIdOf(garment, 'waistband') ?? panelIdOf(garment, 'band'),
+    })
   }
   if (caps.hem) {
     next.hem = part('hem', 'hem', 'coverstitch', {
-      panelId: caps.legs ? undefined : bodyPanelId(garment, 'front') ?? panelIdOf(garment, 'hem'),
+      panelId: caps.legs
+        ? undefined
+        : bodyPanelId(garment, 'front') ?? panelIdOf(garment, 'hem') ?? panelIdOf(garment, 'brim'),
     })
+  }
+  if (caps.buttons) {
+    next.buttons = [
+      part('button', panelIdOf(garment, 'structure') ?? 'button', 'snap', {
+        panelId: panelIdOf(garment, 'structure'),
+      }),
+    ]
   }
   if (caps.cuffs) {
     const cuffs = panelsOf(garment, 'cuff')
@@ -469,8 +498,18 @@ export function deriveConstructionControls(garment: ConstructionGarment): Garmen
     })
   }
   if (caps.waistband) {
-    controls.push({ id: 'waistband', kind: 'waistband', label: 'Waistband', options: WAISTBAND_OPTIONS })
-    controls.push({ id: 'belt_loop', kind: 'belt_loop', label: 'Belt loops', options: BELT_LOOP_OPTIONS })
+    controls.push({
+      id: 'waistband',
+      kind: 'waistband',
+      label: panelsOf(garment, 'band').length > 0 && panelsOf(garment, 'waistband').length === 0 ? 'Band' : 'Waistband',
+      options: WAISTBAND_OPTIONS,
+    })
+    if (panelsOf(garment, 'waistband').length > 0) {
+      controls.push({ id: 'belt_loop', kind: 'belt_loop', label: 'Belt loops', options: BELT_LOOP_OPTIONS })
+    }
+  }
+  if (caps.buttons) {
+    controls.push({ id: 'button', kind: 'button', label: 'Closure', options: BUTTON_OPTIONS })
   }
   if (caps.hem) {
     controls.push({ id: 'hem', kind: 'hem', label: 'Hem', options: HEM_OPTIONS })
@@ -495,6 +534,7 @@ const CAPABILITY_KIND: Partial<Record<string, keyof GarmentCapabilities>> = {
   hem: 'hem',
   drawstring: 'hood',
   belt_loop: 'waistband',
+  button: 'buttons',
 }
 
 export function filterControlsByCapabilities(
@@ -530,11 +570,21 @@ export function partsForStyle(
         part('hem', 'hem', style, {
           panelId: garment.capabilities.legs
             ? undefined
-            : bodyPanelId(garment, 'front') ?? panelIdOf(garment, 'hem'),
+            : bodyPanelId(garment, 'front') ?? panelIdOf(garment, 'hem') ?? panelIdOf(garment, 'brim'),
         }),
       ]
     case 'waistband':
-      return [part('waistband', 'waistband', style, { panelId: panelIdOf(garment, 'waistband') })]
+      return [
+        part('waistband', 'waistband', style, {
+          panelId: panelIdOf(garment, 'waistband') ?? panelIdOf(garment, 'band'),
+        }),
+      ]
+    case 'button':
+      return [
+        part('button', panelIdOf(garment, 'structure') ?? 'button', style, {
+          panelId: panelIdOf(garment, 'structure'),
+        }),
+      ]
     case 'drawstring':
       return [part('drawstring', 'drawstring', style)]
     case 'belt_loop':

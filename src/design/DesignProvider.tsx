@@ -250,6 +250,12 @@ export function DesignProvider({
   const apply = useCallback(
     (document: DesignDocument, history: HistoryMode = 'record') => {
       dispatch({ type: 'apply', document, history })
+      // Keep the ref current in this turn so sequential apply() calls
+      // (color then material, material then region material) compose.
+      stateRef.current =
+        history === 'replace'
+          ? { ...stateRef.current, document }
+          : withHistory(stateRef.current, document)
     },
     [],
   )
