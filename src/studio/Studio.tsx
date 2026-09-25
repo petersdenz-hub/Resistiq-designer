@@ -29,6 +29,19 @@ export function Studio({ onClose, onNew }: StudioProps) {
     nudgeSelectedObjects,
   } = useDesign()
   const [previewing, setPreviewing] = useState(false)
+  const [leftOpen, setLeftOpen] = useState(true)
+  const [rightOpen, setRightOpen] = useState(true)
+
+  useEffect(() => {
+    function syncLayout() {
+      const width = window.innerWidth
+      setLeftOpen(width >= 960)
+      setRightOpen(width >= 1180)
+    }
+    syncLayout()
+    window.addEventListener('resize', syncLayout)
+    return () => window.removeEventListener('resize', syncLayout)
+  }, [])
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -121,9 +134,33 @@ export function Studio({ onClose, onNew }: StudioProps) {
     <div className="relative flex h-full min-h-0 flex-col bg-studio text-ink">
       <Topbar onClose={onClose} onNew={onNew} onPreview={() => setPreviewing(true)} />
       <div className="flex min-h-0 flex-1">
-        <Sidebar />
-        <CanvasStage />
-        <PropertiesPanel />
+        <Sidebar
+          collapsed={!leftOpen}
+          onExpand={() => setLeftOpen(true)}
+          onCollapse={() => setLeftOpen(false)}
+        />
+        <CanvasStage
+          leftOpen={leftOpen}
+          rightOpen={rightOpen}
+          onToggleLeft={() => setLeftOpen((value) => !value)}
+          onToggleRight={() => setRightOpen((value) => !value)}
+        />
+        {rightOpen ? (
+          <PropertiesPanel onCollapse={() => setRightOpen(false)} />
+        ) : (
+          <aside className="flex w-10 shrink-0 flex-col items-center border-l border-line bg-panel py-3">
+            <button
+              type="button"
+              title="Show properties"
+              aria-label="Show properties"
+              data-show-properties="true"
+              onClick={() => setRightOpen(true)}
+              className="flex h-8 w-8 items-center justify-center rounded-md text-[10px] uppercase tracking-[0.12em] text-mute hover:bg-panel-hover hover:text-ink"
+            >
+              P
+            </button>
+          </aside>
+        )}
       </div>
       {previewing ? (
         <PreviewOverlay document={document} onClose={() => setPreviewing(false)} />

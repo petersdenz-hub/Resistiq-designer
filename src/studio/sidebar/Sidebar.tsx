@@ -32,13 +32,37 @@ const TOOLS: { id: ToolId; label: string; icon: typeof ShirtIcon }[] = [
   { id: 'elements', label: 'Elements', icon: LayersIcon },
 ]
 
-export function Sidebar() {
-  const [tool, setTool] = useState<ToolId>('elements')
+export function Sidebar({
+  collapsed = false,
+  onExpand,
+  onCollapse,
+}: {
+  collapsed?: boolean
+  onExpand?: () => void
+  onCollapse?: () => void
+}) {
+  const [tool, setTool] = useState<ToolId>('design')
   const active = TOOLS.find((item) => item.id === tool) ?? TOOLS[0]
 
+  if (collapsed) {
+    return (
+      <aside className="flex w-12 shrink-0 flex-col items-center border-r border-line bg-panel py-3" data-sidebar-collapsed="true">
+        <button
+          type="button"
+          title="Show tools"
+          aria-label="Show tools"
+          onClick={onExpand}
+          className="flex h-10 w-10 items-center justify-center rounded-lg text-mute hover:bg-panel-hover hover:text-ink"
+        >
+          <DesignIcon />
+        </button>
+      </aside>
+    )
+  }
+
   return (
-    <aside className="flex w-[17.5rem] shrink-0 border-r border-line bg-panel">
-      <div className="flex w-14 flex-col items-center gap-1 border-r border-line py-3">
+    <aside className="flex w-[15.5rem] shrink-0 border-r border-line bg-panel" data-sidebar="true">
+      <div className="flex w-12 flex-col items-center gap-1 border-r border-line py-3">
         {TOOLS.map((item) => {
           const Icon = item.icon
           const selected = item.id === tool
@@ -58,6 +82,18 @@ export function Sidebar() {
             </button>
           )
         })}
+        {onCollapse ? (
+          <button
+            type="button"
+            title="Hide tools"
+            aria-label="Hide tools"
+            data-collapse-sidebar="true"
+            onClick={onCollapse}
+            className="mt-auto flex h-8 w-8 items-center justify-center rounded-md text-[11px] text-mute hover:bg-panel-hover hover:text-ink"
+          >
+            ‹
+          </button>
+        ) : null}
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col">

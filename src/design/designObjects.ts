@@ -279,12 +279,12 @@ export function defaultObjectName(
   detail?: string,
 ): string {
   if (type === 'text') {
-    const preview = detail?.trim() || 'Text'
+    const preview = detail?.trim() || 'New Text'
     return `Text — ${preview.length > 24 ? `${preview.slice(0, 24)}…` : preview}`
   }
   if (type === 'image') {
-    const preview = (detail ?? 'Logo').replace(/\.[^.]+$/, '') || 'Logo'
-    return `Logo — ${preview}`
+    const preview = (detail ?? 'Image').replace(/\.[^.]+$/, '') || 'Image'
+    return /logo/i.test(detail ?? '') ? `Logo — ${preview}` : `Image — ${preview}`
   }
   return 'Shape — Rectangle'
 }
@@ -310,7 +310,7 @@ export function resolveActiveZone(document: DesignDocument): PlacementZone {
 }
 
 export function createTextObject(document: DesignDocument, zone?: PlacementZone): TextDesignObject {
-  const content = 'Text'
+  const content = 'New Text'
   return {
     ...sharedDefaults(document, 'text', zone ?? resolveActiveZone(document)),
     type: 'text',
