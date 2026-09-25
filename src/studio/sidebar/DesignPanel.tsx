@@ -5,6 +5,8 @@ import {
   objectDisplayName,
   PLACEMENT_ZONE_LABELS,
   resolveActiveZone,
+  SHAPE_KIND_LABELS,
+  SHAPE_KINDS,
   zonesForGarment,
 } from '@/design'
 import { useDesign } from '@/design/useDesign'
@@ -70,9 +72,22 @@ export function DesignPanel() {
           >
             {busy ? 'Uploading…' : 'Add logo / image'}
           </Button>
-          <Button className="w-full" data-add-design-shape="true" onClick={addDesignShape}>
+          <Button className="w-full" data-add-design-shape="true" onClick={() => addDesignShape()}>
             Add shape
           </Button>
+          <div className="grid grid-cols-2 gap-1" data-shape-kinds="true">
+            {SHAPE_KINDS.map((kind) => (
+              <button
+                key={kind}
+                type="button"
+                data-shape-kind={kind}
+                onClick={() => addDesignShape(kind)}
+                className="h-7 rounded-md border border-line px-2 text-[10px] text-mute hover:text-ink"
+              >
+                {SHAPE_KIND_LABELS[kind]}
+              </button>
+            ))}
+          </div>
         </div>
         {error ? <p className="text-[12px] text-accent">{error}</p> : null}
         <label className="flex items-center justify-between text-[12px] text-ink">

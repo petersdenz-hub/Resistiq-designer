@@ -2,6 +2,7 @@ import {
   imageKeepsAlpha,
   type DesignObject,
   type ImageDesignObject,
+  type ShapeDesignObject,
   type TextDesignObject,
 } from '@/design/designObjects'
 import { useAsset } from '@/persistence/useAsset'
@@ -36,6 +37,7 @@ export function DesignObjectLayer({
             key={object.id}
             data-design-object={object.id}
             data-design-object-type={object.type}
+            data-shape-kind={object.type === 'shape' ? object.shape : undefined}
             data-placement-zone={object.zone}
             data-anchor-space={object.anchor.space}
             data-panel-id={object.anchor.panelId ?? ''}
@@ -63,23 +65,67 @@ export function DesignObjectLayer({
               window.dispatchEvent(new CustomEvent('resistq-edit-text', { detail: object.id }))
             }}
           >
-            {object.type === 'shape' ? (
-              <rect
-                x={object.x}
-                y={object.y}
-                width={object.width}
-                height={object.height}
-                fill={object.fill}
-                stroke={object.strokeWidth > 0 ? object.stroke : undefined}
-                strokeWidth={object.strokeWidth}
-              />
-            ) : null}
+            {object.type === 'shape' ? <ObjectShape object={object} /> : null}
             {object.type === 'text' ? <ObjectText object={object} selected={isSelected} /> : null}
             {object.type === 'image' ? <ObjectImage object={object} selected={isSelected} /> : null}
           </g>
         )
       })}
     </g>
+  )
+}
+
+function ObjectShape({ object }: { object: ShapeDesignObject }) {
+  const stroke = object.strokeWidth > 0 ? object.stroke : undefined
+  if (object.shape === 'circle') {
+    return (
+      <ellipse
+        cx={object.x + object.width / 2}
+        cy={object.y + object.height / 2}
+        rx={object.width / 2}
+        ry={object.height / 2}
+        fill={object.fill === 'none' ? 'transparent' : object.fill}
+        stroke={stroke}
+        strokeWidth={object.strokeWidth}
+      />
+    )
+  }
+  if (object.shape === 'line') {
+    const midY = object.y + object.height / 2
+    return (
+      <>
+        <rect
+          x={object.x}
+          y={object.y}
+          width={object.width}
+          height={object.height}
+          fill="transparent"
+        />
+        <line
+          x1={object.x}
+          y1={midY}
+          x2={object.x + object.width}
+          y2={midY}
+          stroke={object.stroke}
+          strokeWidth={Math.max(object.strokeWidth, 2)}
+          strokeLinecap="round"
+        />
+      </>
+    )
+  }
+  const radius = object.shape === 'rounded-rectangle' ? Math.min(object.width, object.height) * 0.18 : 0
+  return (
+    <rect
+      x={object.x}
+      y={object.y}
+      width={object.width}
+      height={object.height}
+      rx={radius}
+      ry={radius}
+      fill={object.fill === 'none' ? 'transparent' : object.fill}
+      stroke={stroke}
+      strokeWidth={object.strokeWidth}
+    />
   )
 }
 
@@ -115,6 +161,8 @@ function ObjectText({ object, selected }: { object: TextDesignObject; selected: 
         fontFamily={object.fontFamily}
         fontSize={fontSize}
         fontWeight={object.fontWeight}
+        fontStyle={object.italic ? 'italic' : 'normal'}
+        letterSpacing={object.letterSpacing || undefined}
         style={{ userSelect: 'none' }}
       >
         {lines.map((line, index) => (

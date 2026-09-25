@@ -405,9 +405,9 @@ export function DesignProvider({
         apply(addDesignObject(document, object))
         dispatch({ type: 'selectObject', objectId: object.id })
       },
-      addDesignShape: () => {
+      addDesignShape: (kind = 'rectangle') => {
         const document = current().document
-        const object = attachObjectToZonePanel(document, createShapeObject(document))
+        const object = attachObjectToZonePanel(document, createShapeObject(document, undefined, kind))
         apply(addDesignObject(document, object))
         dispatch({ type: 'selectObject', objectId: object.id })
       },

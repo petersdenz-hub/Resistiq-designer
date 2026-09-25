@@ -1,6 +1,7 @@
 import type { DesignSafeArea } from '@/design/types'
 import type { PointerEvent as ReactPointerEvent } from 'react'
 import { localRectToCanvas } from '../coordinates'
+import { isPrintablePanel, localFromPercent, panelDesignBounds, panelDesignZones } from '../model'
 import type { GarmentPanelDefinition } from '../types'
 
 interface PanelGuidesProps {
@@ -32,12 +33,24 @@ export function PanelGuides({
           ? (safeAreas.find((area) => area.panelId === panel.id) ?? null)
           : null
         const safeCanvas = safe ? localRectToCanvas(panel, safe) : null
+        const printable =
+          showSafeAreas && isPrintablePanel(panel)
+            ? localRectToCanvas(panel, localFromPercent(panelDesignBounds(panel), panel.local))
+            : null
+        const zones =
+          panelSelected && showSafeAreas
+            ? panelDesignZones(panel).map((zone) => ({
+                ...zone,
+                canvas: localRectToCanvas(panel, localFromPercent(zone.bounds, panel.local)),
+              }))
+            : []
 
         return (
           <g
             key={panel.id}
             data-panel-guide={panel.id}
             data-panel-selected={panelSelected ? 'true' : 'false'}
+            data-panel-printable={isPrintablePanel(panel) ? 'true' : 'false'}
           >
             <rect
               x={panel.frame.x}
@@ -46,14 +59,14 @@ export function PanelGuides({
               height={panel.frame.height}
               fill={
                 panelSelected
-                  ? 'rgba(201,163,106,0.12)'
+                  ? 'rgba(201,163,106,0.10)'
                   : active
-                    ? 'rgba(201,163,106,0.06)'
-                    : 'rgba(238,240,244,0.03)'
+                    ? 'rgba(201,163,106,0.05)'
+                    : 'rgba(238,240,244,0.02)'
               }
-              stroke={panelSelected ? 'rgba(201,163,106,1)' : active ? 'rgba(201,163,106,0.7)' : 'rgba(238,240,244,0.55)'}
+              stroke={panelSelected ? 'rgba(201,163,106,1)' : active ? 'rgba(201,163,106,0.7)' : 'rgba(238,240,244,0.45)'}
               strokeDasharray={panelSelected ? '0' : '4 3'}
-              strokeWidth={panelSelected ? 2 : active ? 1.4 : 1.15}
+              strokeWidth={panelSelected ? 2 : active ? 1.4 : 1.1}
               rx="3"
               onPointerDown={(event) => {
                 event.stopPropagation()
@@ -75,14 +88,40 @@ export function PanelGuides({
             >
               {panelSelected ? `Panel · ${panel.label}` : panel.label}
             </text>
+            {printable && (active || panelSelected) ? (
+              <g pointerEvents="none" data-printable-area={panel.id}>
+                <rect
+                  x={printable.x}
+                  y={printable.y}
+                  width={printable.width}
+                  height={printable.height}
+                  fill="rgba(201,163,106,0.04)"
+                  stroke="rgba(201,163,106,0.55)"
+                  strokeDasharray="5 4"
+                  strokeWidth="1.05"
+                  rx="2"
+                />
+                {panelSelected ? (
+                  <text
+                    x={printable.x + 5}
+                    y={printable.y + Math.min(12, printable.height - 4)}
+                    fill="rgba(201,163,106,0.9)"
+                    fontSize="8.5"
+                    fontFamily="IBM Plex Sans, sans-serif"
+                  >
+                    Printable
+                  </text>
+                ) : null}
+              </g>
+            ) : null}
             {safe && safeCanvas ? (
-              <g pointerEvents="none">
+              <g pointerEvents="none" data-safe-area={panel.id}>
                 <rect
                   x={safeCanvas.x}
                   y={safeCanvas.y}
                   width={safeCanvas.width}
                   height={safeCanvas.height}
-                  fill={active ? 'rgba(125, 184, 168, 0.12)' : 'rgba(125, 184, 168, 0.06)'}
+                  fill={active ? 'rgba(125, 184, 168, 0.10)' : 'rgba(125, 184, 168, 0.05)'}
                   stroke="rgba(125, 184, 168, 0.88)"
                   strokeDasharray="3 3"
                   strokeWidth="1.15"
@@ -99,6 +138,30 @@ export function PanelGuides({
                 </text>
               </g>
             ) : null}
+            {zones.map((zone) => (
+              <g key={zone.id} pointerEvents="none" data-design-zone={zone.id}>
+                <rect
+                  x={zone.canvas.x}
+                  y={zone.canvas.y}
+                  width={zone.canvas.width}
+                  height={zone.canvas.height}
+                  fill="none"
+                  stroke="rgba(158, 176, 214, 0.7)"
+                  strokeDasharray="2 3"
+                  strokeWidth="0.95"
+                  rx="2"
+                />
+                <text
+                  x={zone.canvas.x + 4}
+                  y={zone.canvas.y + Math.min(11, zone.canvas.height - 3)}
+                  fill="rgba(186, 198, 224, 0.92)"
+                  fontSize="8"
+                  fontFamily="IBM Plex Sans, sans-serif"
+                >
+                  {zone.name}
+                </text>
+              </g>
+            ))}
           </g>
         )
       })}

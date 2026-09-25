@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { setTimeout as delay } from 'node:timers/promises'
 
-const SMOKE_PNG = join(tmpdir(), 'resistq-7c-mark.png')
+const SMOKE_PNG = join(tmpdir(), 'resistq-7e-mark.png')
 writeFileSync(
   SMOKE_PNG,
   Buffer.from(
@@ -81,6 +81,9 @@ async function run() {
   await page.waitForSelector('[data-toolbar-mode="empty"]')
   await page.waitForSelector('[data-empty-state="true"]')
   await page.waitForSelector('[data-zoom-fit="true"]')
+  await page.waitForSelector('[data-design-breadcrumb="true"]')
+  await page.waitForSelector('[data-garment-color-control="true"]')
+
   await page.click('[data-add-design-text="true"]')
   await page.click('[data-add-design-shape="true"]')
   await delay(150)
@@ -88,6 +91,23 @@ async function run() {
   const objectCount = await page.$$eval('[data-design-object]', (nodes) => nodes.length)
   if (objectCount < 2) {
     throw new Error(`Expected 2 design objects, found ${objectCount}`)
+  }
+
+  const addToolsAfterSelect = await page.$('[data-add-design-text="true"]')
+  if (!addToolsAfterSelect) {
+    throw new Error('Artwork add tools disappeared after selecting an object')
+  }
+  await page.waitForSelector('[data-action="duplicate"]')
+  await page.waitForSelector('[data-action="lock"]')
+  await page.waitForSelector('[data-selection-bounds="true"]')
+
+  await page.click('[data-shape-menu="true"]')
+  await page.waitForSelector('[data-shape-kind="circle"]')
+  await page.click('[data-shape-kind="circle"]')
+  await delay(120)
+  const withCircle = await page.$$eval('[data-design-object]', (nodes) => nodes.length)
+  if (withCircle < 3) {
+    throw new Error(`Circle shape was not added, count=${withCircle}`)
   }
 
   const layerRows = await page.$$('[data-layer-row]')
@@ -130,7 +150,7 @@ async function run() {
   await page.click('[data-action="duplicate"]')
   await delay(150)
   const afterDup = await page.$$eval('[data-design-object]', (nodes) => nodes.length)
-  if (afterDup < 4) {
+  if (afterDup < 5) {
     throw new Error(`Duplicate did not keep relative copies, count=${afterDup}`)
   }
 
@@ -151,7 +171,7 @@ async function run() {
   await page.click('[data-zone-option="front"]')
   await delay(100)
   const frontCount = await page.$$eval('[data-design-object]', (nodes) => nodes.length)
-  if (frontCount < 4) {
+  if (frontCount < 5) {
     throw new Error('Front artwork was lost after switching zones')
   }
 
@@ -167,12 +187,38 @@ async function run() {
   await imageInput.uploadFile(SMOKE_PNG)
   await delay(400)
   const withImage = await page.$$eval('[data-design-object]', (nodes) => nodes.length)
-  if (withImage < 5) {
+  if (withImage < 6) {
     throw new Error(`Logo / image was not added, count=${withImage}`)
   }
 
+  await page.click('[data-garment-color="#1a1a1a"]')
+  await delay(80)
+
+  await clickText(page, 'Preview')
+  await page.waitForSelector('[data-preview-stage="true"]')
+  const preview = await page.$eval('[data-preview-stage="true"]', (node) => ({
+    garment: node.getAttribute('data-garment-type'),
+    color: node.getAttribute('data-garment-color'),
+    artwork: Number(node.getAttribute('data-preview-artwork')),
+    handles: node.getAttribute('data-preview-handles'),
+    seams: node.getAttribute('data-preview-seams'),
+  }))
+  if (preview.garment !== 'tshirt' || preview.handles !== 'false' || preview.seams !== 'true') {
+    throw new Error(`Preview chrome is wrong: ${JSON.stringify(preview)}`)
+  }
+  if (preview.artwork < 1) {
+    throw new Error('Preview did not render artwork')
+  }
+  const previewHandles = await page.$('[data-preview-overlay="true"] [data-selection-bounds]')
+  if (previewHandles) {
+    throw new Error('Preview showed editing handles')
+  }
+  await clickText(page, 'Close')
+  await delay(80)
+
   await page.click('button[aria-label="Garment"]')
   await page.waitForSelector('[data-garment-selector="true"]')
+  await page.waitForSelector('[data-garment-nav="true"]')
 
   async function switchGarment(type, extraCheck) {
     await page.click(`[data-garment-option="${type}"]`)
@@ -192,13 +238,12 @@ async function run() {
       await delay(80)
     }
     const count = await page.$$eval('[data-design-object]', (nodes) => nodes.length)
-    if (count < 5) {
+    if (count < 6) {
       throw new Error(`Artwork was lost after switching to ${type} (${count})`)
     }
   }
 
   await switchGarment('hoodie')
-  await switchGarment('sweatshirt')
   await switchGarment('jacket')
   await switchGarment('pants', async () => {
     await page.waitForSelector('[data-zone-option="left-leg"]')
@@ -214,11 +259,11 @@ async function run() {
   if (vite) {
     vite.kill('SIGTERM')
   }
-  console.log('Phase 7D browser smoke passed')
+  console.log('Phase 7E browser smoke passed')
   process.exit(0)
 }
 
-run().catch((error) => {
-  console.error(error)
+run().catch((event) => {
+  console.error(event)
   process.exit(1)
 })

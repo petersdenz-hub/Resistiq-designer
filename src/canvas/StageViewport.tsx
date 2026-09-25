@@ -10,7 +10,7 @@ import {
   resolveActiveZone,
 } from '@/design/selectors'
 import { getArtworkPanelBounds, paintDesignObject } from '@/design/objectPlacement'
-import { objectIdsInMarquee, unionBoxes } from '@/design/objectEditing'
+import { collectSnapGuideBoxes, objectIdsInMarquee, unionBoxes } from '@/design/objectEditing'
 import { useDesign } from '@/design/useDesign'
 import { getGarment } from '@/garments/registry'
 import { getPanelsForView } from '@/garments/coordinates'
@@ -99,6 +99,7 @@ export function StageViewport({ zoom, showSafeAreas }: StageViewportProps) {
   })))
   const unlockedSelected = selectedPainted.filter((object) => !object.locked)
   const panelBounds = getArtworkPanelBounds(document, defaultPanelIdForZone(document, zone))
+  const snapBoxes = collectSnapGuideBoxes(document, zone)
 
   const width = garment.viewBox.width * zoom
   const height = garment.viewBox.height * zoom
@@ -274,7 +275,7 @@ export function StageViewport({ zoom, showSafeAreas }: StageViewportProps) {
             : null
         }
         others={paintedObjects.filter((object) => !selectedObjectIds.includes(object.id))}
-        panels={panelBounds ? [panelBounds] : []}
+        panels={snapBoxes.length > 0 ? snapBoxes : panelBounds ? [panelBounds] : []}
         canvas={garment.viewBox}
         zoom={zoom}
         guides={objectGesture.guides}

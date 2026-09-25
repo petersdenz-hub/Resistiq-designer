@@ -2,7 +2,10 @@ import { FONT_WEIGHTS, TEXT_ALIGNS, TEXT_FONT_FAMILIES } from '@/design/typograp
 import {
   imageKeepsAlpha,
   PLACEMENT_ZONE_LABELS,
-  PLACEMENT_ZONES,
+  SHAPE_KIND_LABELS,
+  SHAPE_KINDS,
+  zonesForGarment,
+  type ShapeKind,
 } from '@/design/designObjects'
 import {
   alignDesignObjects,
@@ -210,6 +213,22 @@ function SelectedObjectProperties() {
               }
             />
           </Field>
+          <Field label="Style">
+            <button
+              type="button"
+              data-text-italic="true"
+              aria-pressed={selectedObject.italic}
+              disabled={locked}
+              onClick={() => updateSelectedObject({ italic: !selectedObject.italic })}
+              className={`h-8 w-full rounded-md border text-[12px] italic ${
+                selectedObject.italic
+                  ? 'border-accent/50 bg-accent/10 text-ink'
+                  : 'border-line text-mute hover:text-ink'
+              }`}
+            >
+              Italic
+            </button>
+          </Field>
           <Field label="Align">
             <SegmentedControl
               value={selectedObject.textAlign}
@@ -220,6 +239,15 @@ function SelectedObjectProperties() {
               onChange={(value) => updateSelectedObject({ textAlign: value })}
             />
           </Field>
+          <div data-letter-spacing="true">
+            <LiveNumber
+              label="Letter spacing"
+              value={selectedObject.letterSpacing}
+              digits={1}
+              disabled={locked}
+              onCommit={(value) => updateSelectedObject({ letterSpacing: value })}
+            />
+          </div>
           <ColorPicker
             label="Color"
             value={selectedObject.color}
@@ -238,18 +266,35 @@ function SelectedObjectProperties() {
       {selectedObject.type === 'shape' ? (
         <div className="space-y-2" data-properties-section="shape">
           <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Shape</div>
+          <Field label="Kind">
+            <select
+              data-shape-kind="true"
+              value={selectedObject.shape}
+              disabled={locked}
+              onChange={(event) =>
+                updateSelectedObject({ shape: event.target.value as ShapeKind })
+              }
+              className="h-8 w-full rounded-md border border-line bg-studio px-2 text-[12px] text-ink"
+            >
+              {SHAPE_KINDS.map((kind) => (
+                <option key={kind} value={kind}>
+                  {SHAPE_KIND_LABELS[kind]}
+                </option>
+              ))}
+            </select>
+          </Field>
           <ColorPicker
             label="Fill"
-            value={selectedObject.fill}
+            value={selectedObject.fill === 'none' ? '#c9a36a' : selectedObject.fill}
             onCommit={(value) => updateSelectedObject({ fill: value })}
           />
           <ColorPicker
-            label="Stroke"
+            label="Outline"
             value={selectedObject.stroke}
             onCommit={(value) => updateSelectedObject({ stroke: value })}
           />
           <LiveNumber
-            label="Stroke width"
+            label="Outline width"
             value={selectedObject.strokeWidth}
             min={0}
             disabled={locked}
@@ -462,7 +507,7 @@ function ObjectPlacementFields({
   onBox,
 }: {
   locked: boolean
-  onZone: (zone: (typeof PLACEMENT_ZONES)[number]) => void
+  onZone: (zone: ReturnType<typeof zonesForGarment>[number]) => void
   onPanel: (panelId: string) => void
   onSpace: (space: 'zone' | 'panel') => void
   onBox: (patch: { x?: number; y?: number; width?: number; height?: number; rotation?: number }) => void
@@ -477,6 +522,7 @@ function ObjectPlacementFields({
   const relative = objectRelativeBox(document, selectedObject)
   const panelAnchored = isPanelAnchored(selectedObject)
   const zonePanels = panelsForZone(document, selectedObject.zone)
+  const garmentZones = zonesForGarment(document.garmentType)
 
   return (
     <div className="space-y-3" data-object-placement="true" data-properties-section="placement" data-anchor-space={selectedObject.anchor.space}>
@@ -484,10 +530,10 @@ function ObjectPlacementFields({
         <select
           data-object-zone="true"
           value={selectedObject.zone}
-          onChange={(event) => onZone(event.target.value as (typeof PLACEMENT_ZONES)[number])}
+          onChange={(event) => onZone(event.target.value as ReturnType<typeof zonesForGarment>[number])}
           className="h-8 w-full rounded-md border border-line bg-studio px-2 text-[12px] text-ink"
         >
-          {PLACEMENT_ZONES.map((item) => (
+          {garmentZones.map((item) => (
             <option key={item} value={item}>
               {PLACEMENT_ZONE_LABELS[item]}
             </option>

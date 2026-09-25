@@ -17,8 +17,19 @@ export type PlacementZone = (typeof PLACEMENT_ZONES)[number]
 export const DESIGN_OBJECT_TYPES = ['text', 'image', 'shape'] as const
 export type DesignObjectType = (typeof DESIGN_OBJECT_TYPES)[number]
 
-export const SHAPE_KINDS = ['rectangle'] as const
+export const SHAPE_KINDS = ['rectangle', 'circle', 'line', 'rounded-rectangle'] as const
 export type ShapeKind = (typeof SHAPE_KINDS)[number]
+
+export const SHAPE_KIND_LABELS: Record<ShapeKind, string> = {
+  rectangle: 'Rectangle',
+  circle: 'Circle',
+  line: 'Line',
+  'rounded-rectangle': 'Rounded rectangle',
+}
+
+export function isShapeKind(value: unknown): value is ShapeKind {
+  return typeof value === 'string' && (SHAPE_KINDS as readonly string[]).includes(value)
+}
 
 export const ANCHOR_SPACES = ['zone', 'panel'] as const
 export type AnchorSpace = (typeof ANCHOR_SPACES)[number]
@@ -67,6 +78,8 @@ export interface TextDesignObject extends DesignObjectBase {
   fontWeight: FontWeight
   textAlign: TextAlign
   color: string
+  italic: boolean
+  letterSpacing: number
 }
 
 export interface ImageDesignObject extends DesignObjectBase {
@@ -215,11 +228,17 @@ function touch(document: DesignDocument): DesignDocument {
   return { ...document, updatedAt: new Date().toISOString() }
 }
 
-function defaultSize(kind: DesignObjectType) {
+function defaultSize(kind: DesignObjectType, shape?: ShapeKind) {
   if (kind === 'text') {
     return { width: 200, height: 48 }
   }
   if (kind === 'shape') {
+    if (shape === 'circle') {
+      return { width: 120, height: 120 }
+    }
+    if (shape === 'line') {
+      return { width: 176, height: 12 }
+    }
     return { width: 144, height: 96 }
   }
   return { width: 176, height: 176 }
@@ -229,8 +248,9 @@ function defaultBox(
   document: DesignDocument,
   kind: DesignObjectType,
   zone: PlacementZone,
+  shape?: ShapeKind,
 ) {
-  const size = defaultSize(kind)
+  const size = defaultSize(kind, shape)
   const cascade = getDesignObjectsInZone(document, zone, true).length * 40
   const panelId = defaultPanelIdForZone(document, zone)
   if (panelId) {
@@ -253,8 +273,9 @@ function sharedDefaults(
   document: DesignDocument,
   type: DesignObjectType,
   zone: PlacementZone,
+  detail?: string,
 ): DesignObjectBase {
-  const box = defaultBox(document, type, zone)
+  const box = defaultBox(document, type, zone, isShapeKind(detail) ? detail : undefined)
   return {
     id: createId(),
     type,
@@ -269,7 +290,7 @@ function sharedDefaults(
     zIndex: nextObjectZIndex(document),
     zone,
     anchor: resolveObjectAnchor(document, zone),
-    name: defaultObjectName(type),
+    name: defaultObjectName(type, detail),
   }
 }
 
@@ -285,7 +306,8 @@ export function defaultObjectName(
     const preview = (detail ?? 'Image').replace(/\.[^.]+$/, '') || 'Image'
     return /logo/i.test(detail ?? '') ? `Logo — ${preview}` : `Image — ${preview}`
   }
-  return 'Shape — Rectangle'
+  const kind = isShapeKind(detail) ? detail : 'rectangle'
+  return `Shape — ${SHAPE_KIND_LABELS[kind]}`
 }
 
 export function objectDisplayName(object: DesignObject): string {
@@ -298,7 +320,7 @@ export function objectDisplayName(object: DesignObject): string {
   if (object.type === 'image') {
     return defaultObjectName('image', object.fileName)
   }
-  return defaultObjectName('shape')
+  return defaultObjectName('shape', object.shape)
 }
 
 export function resolveActiveZone(document: DesignDocument): PlacementZone {
@@ -319,18 +341,25 @@ export function createTextObject(document: DesignDocument, zone?: PlacementZone)
     fontWeight: 500,
     textAlign: 'center',
     color: '#1a1a1a',
+    italic: false,
+    letterSpacing: 0,
     name: defaultObjectName('text', content),
   }
 }
 
-export function createShapeObject(document: DesignDocument, zone?: PlacementZone): ShapeDesignObject {
+export function createShapeObject(
+  document: DesignDocument,
+  zone?: PlacementZone,
+  kind: ShapeKind = 'rectangle',
+): ShapeDesignObject {
+  const shape = isShapeKind(kind) ? kind : 'rectangle'
   return {
-    ...sharedDefaults(document, 'shape', zone ?? resolveActiveZone(document)),
+    ...sharedDefaults(document, 'shape', zone ?? resolveActiveZone(document), shape),
     type: 'shape',
-    shape: 'rectangle',
-    fill: '#c9a36a',
+    shape,
+    fill: shape === 'line' ? 'none' : '#c9a36a',
     stroke: '#1a1a1a',
-    strokeWidth: 0,
+    strokeWidth: shape === 'line' ? 4 : 0,
   }
 }
 
@@ -640,6 +669,8 @@ function sanitizeOne(value: unknown): DesignObject | null {
         ? (raw.textAlign as TextAlign)
         : 'center',
       color: typeof raw.color === 'string' ? raw.color : '#1a1a1a',
+      italic: raw.italic === true,
+      letterSpacing: isFiniteNumber(raw.letterSpacing) ? raw.letterSpacing : 0,
     }
   }
   if (base.type === 'image') {
@@ -660,7 +691,7 @@ function sanitizeOne(value: unknown): DesignObject | null {
   return {
     ...base,
     type: 'shape',
-    shape: 'rectangle',
+    shape: isShapeKind(raw.shape) ? raw.shape : 'rectangle',
     fill: typeof raw.fill === 'string' ? raw.fill : '#c9a36a',
     stroke: typeof raw.stroke === 'string' ? raw.stroke : '#1a1a1a',
     strokeWidth: isFiniteNumber(raw.strokeWidth) ? Math.max(0, raw.strokeWidth) : 0,
