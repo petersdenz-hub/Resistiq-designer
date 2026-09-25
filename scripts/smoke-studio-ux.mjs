@@ -153,6 +153,11 @@ async function run() {
   await delay(80)
   await page.click('[data-garment-view="front"]')
   await delay(80)
+  const textLayer = await page.$('[data-layer-row]')
+  if (textLayer) {
+    await textLayer.click()
+    await delay(80)
+  }
   await shot(page, 'studio_tshirt_artwork.png')
 
   await clickText(page, 'Preview')
@@ -179,12 +184,10 @@ async function run() {
   }
 
   await page.reload({ waitUntil: 'networkidle0' })
-  await clickText(page, 'Phase 14 Tee').catch(async () => {
-    const card = await page.$('button, article, li')
-    if (!card) {
-      throw new Error('Saved design did not reload')
-    }
-  })
+  await page.waitForFunction(() =>
+    [...document.querySelectorAll('button')].some((node) => node.textContent?.includes('Open')),
+  )
+  await clickText(page, 'Open')
   await page.waitForSelector('#design-stage')
   const reloaded = await page.$$eval('[data-design-object]', (nodes) => nodes.length)
   if (reloaded < 2) {

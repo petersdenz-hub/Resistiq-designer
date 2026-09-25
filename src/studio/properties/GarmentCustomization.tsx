@@ -85,6 +85,7 @@ export function GarmentCustomization() {
             >
               <ColorPicker
                 label={region.label}
+                compact={!selected}
                 value={regionColor(document, region)}
                 onCommit={(value) => {
                   if (region.panelIds[0]) {

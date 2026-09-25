@@ -31,7 +31,7 @@ export function GarmentCard({
     >
       <div
         className={`flex items-center justify-center bg-canvas ${
-          size === 'lg' ? 'h-28 px-3 pt-3' : 'h-16 px-2 pt-2'
+          size === 'lg' ? 'h-28 px-3 pt-3' : 'h-14 px-2 pt-1.5'
         }`}
       >
         <svg

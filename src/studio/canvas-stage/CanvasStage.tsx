@@ -144,6 +144,17 @@ export function CanvasStage({
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
       >
+        {elementCount === 0 && objectCount === 0 ? (
+          <div
+            className="pointer-events-none absolute left-1/2 top-3 z-10 w-[18rem] -translate-x-1/2 rounded-md border border-line/80 bg-panel/80 px-3 py-2 text-center backdrop-blur-sm"
+            data-empty-state="true"
+          >
+            <p className="text-[13px] font-medium text-ink">Start designing</p>
+            <p className="mt-1 text-[12px] leading-5 text-mute">
+              Choose a garment color, then add text or a logo.
+            </p>
+          </div>
+        ) : null}
         <div className="relative" style={{ transform: `translate(${pan.x}px, ${pan.y}px)` }}>
           <div className="relative" style={{ paddingLeft: RULER_SIZE, paddingTop: RULER_SIZE }}>
             <CanvasRulers
@@ -154,17 +165,6 @@ export function CanvasStage({
             />
             <StageViewport zoom={zoom} />
           </div>
-          {elementCount === 0 && objectCount === 0 ? (
-            <div
-              className="pointer-events-none absolute left-1/2 top-full mt-3 w-[16rem] -translate-x-1/2 text-center"
-              data-empty-state="true"
-            >
-              <p className="text-[13px] font-medium text-ink">Start designing</p>
-              <p className="mt-1 text-[12px] leading-5 text-mute">
-                Choose a garment color, then add text or a logo.
-              </p>
-            </div>
-          ) : null}
         </div>
       </div>
 
