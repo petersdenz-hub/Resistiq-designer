@@ -454,6 +454,61 @@ async function run() {
       throw new Error('Cap still shows a rectangular safe-area box')
     }
   })
+  await switchGarment('beanie', async () => {
+    await page.waitForSelector('[data-zone-option="front"]')
+    await clearSelection()
+    await page.waitForSelector('[data-garment-customization="true"]')
+    const regions = await page.$$eval('[data-color-region]', (nodes) =>
+      nodes.map((node) => node.getAttribute('data-color-region')),
+    )
+    if (!regions.includes('crown') || !regions.includes('cuff') || !regions.includes('back') || regions.includes('brim')) {
+      throw new Error(`Beanie regions are wrong: ${regions.join(',')}`)
+    }
+    const beanieSilhouette = await page.$('#design-stage [data-garment-silhouette="true"]')
+    if (!beanieSilhouette) {
+      throw new Error('Beanie silhouette is missing')
+    }
+    const cuff = await page.$('#design-stage [data-region-id="cuff"]')
+    if (!cuff) {
+      throw new Error('Beanie cuff is missing')
+    }
+    const brim = await page.$('#design-stage [data-region-id="brim"]')
+    if (brim) {
+      throw new Error('Beanie showed a cap brim')
+    }
+    const crownColor = await page.$('[data-color-region="crown"] [data-color-preset="#8b3a3a"]')
+    if (crownColor) {
+      await crownColor.evaluate((node) => node.scrollIntoView({ block: 'center' }))
+      await crownColor.click()
+      await delay(80)
+    }
+    const cuffColor = await page.$('[data-color-region="cuff"] [data-color-preset="#1e2a4a"]')
+    if (cuffColor) {
+      await cuffColor.evaluate((node) => node.scrollIntoView({ block: 'center' }))
+      await cuffColor.click()
+      await delay(80)
+    }
+    await page.click('[data-material-option="cotton"]')
+    await delay(80)
+    const cotton = await page.$('[data-material-option="cotton"][aria-pressed="true"]')
+    if (!cotton) {
+      throw new Error('Beanie cotton material was not selected')
+    }
+    const fabric = await page.$('#design-stage [data-fabric="cotton"]')
+    if (!fabric) {
+      throw new Error('Beanie did not apply the selected material')
+    }
+    await page.waitForSelector('[data-construction-control="waistband"]')
+    await page.waitForSelector('[data-construction-control="hem"]')
+    const clip = await page.$('#design-stage [data-artwork-clip-kind="silhouette"]')
+    if (!clip) {
+      throw new Error('Beanie artwork is not clipped to the silhouette')
+    }
+    const printKind = await page.$('#design-stage [data-printable-area-kind="silhouette"]')
+    if (!printKind) {
+      throw new Error('Beanie print area is still a rectangle')
+    }
+  })
   await switchGarment('tshirt', async () => {
     await page.waitForSelector('[data-zone-option="left-sleeve"]')
     await clearSelection()

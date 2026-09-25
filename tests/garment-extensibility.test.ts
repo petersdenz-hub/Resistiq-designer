@@ -90,7 +90,7 @@ describe('future garment definitions stay registry-driven', () => {
   })
 
   it('lists planned categories without shipping those garments', () => {
-    expect(PLANNED_GARMENT_LABELS).toEqual(['Beanie', 'Gloves', 'Socks', 'Bag', 'Backpack'])
+    expect(PLANNED_GARMENT_LABELS).toEqual(['Gloves', 'Socks', 'Bag', 'Backpack'])
     expect(AVAILABLE_GARMENTS.map((garment) => garment.id)).toEqual([
       'tshirt',
       'hoodie',
@@ -99,6 +99,7 @@ describe('future garment definitions stay registry-driven', () => {
       'pants',
       'shorts',
       'cap',
+      'beanie',
     ])
     expect(garmentCatalogGroups().map((group) => group.category)).toEqual([
       'tops',

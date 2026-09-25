@@ -315,6 +315,16 @@ export const CAP_CONTROLS: GarmentConstructionControl[] = [
   { id: 'button', kind: 'button', label: 'Closure', options: BUTTON_OPTIONS },
 ]
 
+export const BEANIE_CONSTRUCTION: DesignConstruction = {
+  waistband: { id: 'waistband', kind: 'waistband', style: 'rib', present: true, panelId: 'cuff' },
+  hem: { id: 'hem', kind: 'hem', style: 'coverstitch', present: true, panelId: 'cuff' },
+}
+
+export const BEANIE_CONTROLS: GarmentConstructionControl[] = [
+  { id: 'waistband', kind: 'waistband', label: 'Cuff', options: WAISTBAND_OPTIONS },
+  { id: 'hem', kind: 'hem', label: 'Cuff finish', options: HEM_OPTIONS },
+]
+
 export const SHORTS_CONTROLS: GarmentConstructionControl[] = [
   { id: 'waistband', kind: 'waistband', label: 'Waistband', options: WAISTBAND_OPTIONS },
   { id: 'belt_loop', kind: 'belt_loop', label: 'Belt loops', options: BELT_LOOP_OPTIONS },
