@@ -44,6 +44,7 @@ describe('Phase 7C garment system foundation', () => {
       'pants',
       'shorts',
       'cap',
+      'beanie',
     ])
     expect(getGarment('tshirt').id).toBe('tshirt')
     expect(getGarment('sweatshirt').id).toBe('sweatshirt')

@@ -1,3 +1,4 @@
+import { beanieGarment } from './beanie'
 import { capGarment } from './cap'
 import { hoodieGarment } from './hoodie'
 import { jacketGarment } from './jacket'
@@ -18,6 +19,7 @@ const builtinIds = [
   pantsGarment.id,
   shortsGarment.id,
   capGarment.id,
+  beanieGarment.id,
 ] as const
 
 /**
@@ -32,7 +34,6 @@ export const GARMENT_CATALOG = AVAILABLE_GARMENTS
  * Do not implement these garments here — add a definition later.
  */
 export const PLANNED_GARMENT_LABELS = [
-  'Beanie',
   'Gloves',
   'Socks',
   'Bag',
@@ -67,6 +68,7 @@ putGarment(jacketGarment)
 putGarment(pantsGarment)
 putGarment(shortsGarment)
 putGarment(capGarment)
+putGarment(beanieGarment)
 refreshCatalog()
 
 export function hasGarment(garmentType: string | undefined | null): boolean {

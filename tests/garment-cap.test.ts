@@ -103,7 +103,7 @@ describe('Phase 11 cap garment', () => {
     expect(getGarment('cap').category).toBe('headwear')
     expect(AVAILABLE_GARMENTS.some((garment) => garment.id === 'cap')).toBe(true)
     const headwear = garmentCatalogGroups().find((group) => group.category === 'headwear')
-    expect(headwear?.garments.map((garment) => garment.id)).toEqual(['cap'])
+    expect(headwear?.garments.map((garment) => garment.id)).toEqual(['cap', 'beanie'])
   })
 
   it('can be selected and opens on the front artwork panel', () => {
