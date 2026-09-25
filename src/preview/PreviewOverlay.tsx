@@ -38,7 +38,7 @@ export function PreviewOverlay({ document, onClose }: PreviewOverlayProps) {
           </div>
         </div>
         <SegmentedControl
-          className="w-auto shrink-0"
+          className="w-auto shrink-0 border-white/20 bg-[#141820]"
           value={viewId}
           options={document.views.map((view) => ({ value: view.id, label: view.label }))}
           onChange={setViewId}
