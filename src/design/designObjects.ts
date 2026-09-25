@@ -232,6 +232,7 @@ function defaultBox(
   zone: PlacementZone,
 ) {
   const size = defaultSize(kind)
+  const cascade = getDesignObjectsInZone(document, zone, true).length * 40
   const panelId = defaultPanelIdForZone(document, zone)
   if (panelId) {
     const geometry = getGarmentPanel(getGarment(document.garmentType), panelId)
@@ -239,14 +240,14 @@ function defaultBox(
       const width = Math.min(size.width, Math.max(48, geometry.frame.width * 0.72))
       const height = Math.min(size.height, Math.max(24, geometry.frame.height * 0.72))
       return {
-        x: geometry.frame.x + (geometry.frame.width - width) / 2,
-        y: geometry.frame.y + (geometry.frame.height - height) / 2,
+        x: geometry.frame.x + (geometry.frame.width - width) / 2 + cascade,
+        y: geometry.frame.y + (geometry.frame.height - height) / 2 + cascade,
         width,
         height,
       }
     }
   }
-  return { x: 180, y: 220, ...size }
+  return { x: 180 + cascade, y: 220 + cascade, ...size }
 }
 
 function sharedDefaults(

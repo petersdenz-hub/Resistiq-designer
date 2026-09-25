@@ -36,7 +36,7 @@ export function EditToolbar() {
       data-edit-toolbar="true"
       data-selected-count={selectedObjects.length}
     >
-      <span className="mr-1 text-[10px] uppercase tracking-[0.12em] text-mute">
+      <span className="mr-1 text-[11px] text-mute">
         {selectedObjects.length} selected
       </span>
       <ToolButton data-action="group" disabled={!canGroup} onClick={groupSelectedObjects}>
