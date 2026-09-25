@@ -6,7 +6,7 @@ import {
   createTextObject,
   objectDisplayName,
 } from '@/design'
-import { fitCanvasZoom, objectPropertySections, toolbarMode } from '@/studio/editorChrome'
+import { fitCanvasZoom, objectPropertySections, studioViewport, toolbarMode } from '@/studio/editorChrome'
 import { describe, expect, it } from 'vitest'
 
 describe('Phase 7B.8 designer UX polish', () => {
@@ -46,6 +46,12 @@ describe('Phase 7B.8 designer UX polish', () => {
     expect(zoom).toBeLessThanOrEqual(2.4)
     expect(document.designObjects?.[0]?.x).toBe(object.x)
     expect(document.designObjects?.[0]?.y).toBe(object.y)
+  })
+
+  it('uses desktop, tablet, and mobile studio breakpoints', () => {
+    expect(studioViewport(1600)).toBe('desktop')
+    expect(studioViewport(1100)).toBe('tablet')
+    expect(studioViewport(800)).toBe('mobile')
   })
 
   it('keeps locked objects out of empty-state and mutation-friendly defaults', () => {

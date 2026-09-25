@@ -33,6 +33,7 @@ export {
   viewPanelSilhouettes,
 } from './topology'
 export type { GarmentExportManifest } from './exportManifest'
+export { GarmentCard } from './GarmentCard'
 export { GarmentPicker } from './GarmentPicker'
 export { GarmentSelector } from './GarmentSelector'
 export {
@@ -41,10 +42,13 @@ export {
   garmentCatalogGroups,
   garmentsInCategory,
   getGarment,
+  studioGarmentGroupId,
+  studioGarmentGroups,
   hasGarment,
   listGarments,
   PLANNED_GARMENT_LABELS,
   registerGarment,
+  STUDIO_GARMENT_GROUPS,
   resolveGarmentType,
   unregisterGarment,
 } from './registry'
@@ -82,6 +86,7 @@ export {
   GARMENT_CATEGORY_LABELS,
   GARMENT_CATEGORY_ORDER,
 } from './types'
+export type { StudioGarmentGroupId } from './registry'
 export type {
   DesignZoneDefinition,
   GarmentCategory,

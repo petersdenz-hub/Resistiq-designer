@@ -5,6 +5,7 @@ import { Field } from './Field'
 interface ColorPickerProps {
   label: string
   value: string
+  compact?: boolean
   presets?: readonly { value: string; label: string }[]
   onCommit: (value: string) => void
   onLiveChange?: (value: string) => void
@@ -15,6 +16,7 @@ interface ColorPickerProps {
 export function ColorPicker({
   label,
   value,
+  compact = false,
   presets = GARMENT_COLOR_PRESETS,
   onCommit,
   onLiveChange,
@@ -32,6 +34,7 @@ export function ColorPicker({
   return (
     <Field label={label}>
       <div className="space-y-2.5">
+        {compact ? null : (
         <div className="flex items-center gap-2">
           <input
             type="color"
@@ -81,6 +84,7 @@ export function ColorPicker({
             aria-label={`${label} hex`}
           />
         </div>
+        )}
         {presets.length > 0 ? (
           <div className="flex flex-wrap gap-1.5">
             {presets.map((preset) => {
@@ -101,6 +105,16 @@ export function ColorPicker({
                 />
               )
             })}
+            {compact ? (
+              <input
+                type="color"
+                data-color-custom="true"
+                value={committed}
+                aria-label={`${label} custom`}
+                onChange={(event) => onCommit(event.target.value)}
+                className="h-6 w-6 cursor-pointer rounded-full border border-line bg-studio p-0"
+              />
+            ) : null}
           </div>
         ) : null}
       </div>

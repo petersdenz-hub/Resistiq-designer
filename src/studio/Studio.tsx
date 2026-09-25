@@ -1,5 +1,6 @@
 import { useDesign } from '@/design/useDesign'
 import { PreviewOverlay } from '@/preview/PreviewOverlay'
+import { studioLeftOverlay, studioRightOverlay, studioViewport, type StudioViewport } from '@/studio/editorChrome'
 import { useEffect, useState } from 'react'
 import { CanvasEditorProvider } from './canvas-editor'
 import { CanvasStage } from './canvas-stage/CanvasStage'
@@ -30,14 +31,18 @@ export function Studio({ onClose, onNew }: StudioProps) {
     nudgeSelectedObjects,
   } = useDesign()
   const [previewing, setPreviewing] = useState(false)
+  const [viewport, setViewport] = useState<StudioViewport>('desktop')
   const [leftOpen, setLeftOpen] = useState(true)
   const [rightOpen, setRightOpen] = useState(true)
+  const leftOverlay = studioLeftOverlay(viewport)
+  const rightOverlay = studioRightOverlay(viewport)
 
   useEffect(() => {
     function syncLayout() {
-      const width = window.innerWidth
-      setLeftOpen(width >= 960)
-      setRightOpen(width >= 1180)
+      const next = studioViewport(window.innerWidth)
+      setViewport(next)
+      setLeftOpen(next === 'desktop' || next === 'tablet')
+      setRightOpen(next === 'desktop')
     }
     syncLayout()
     window.addEventListener('resize', syncLayout)
@@ -94,6 +99,12 @@ export function Studio({ onClose, onNew }: StudioProps) {
       }
 
       if (!typing && event.key === 'Escape') {
+        if (leftOverlay) {
+          setLeftOpen(false)
+        }
+        if (rightOverlay) {
+          setRightOpen(false)
+        }
         selectObjects([])
         selectElement(null)
         return
@@ -119,9 +130,13 @@ export function Studio({ onClose, onNew }: StudioProps) {
   }, [
     duplicateSelectedObject,
     groupSelectedObjects,
+    leftOpen,
+    leftOverlay,
     nudgeSelectedObjects,
     redo,
     removeSelected,
+    rightOpen,
+    rightOverlay,
     selectAllObjects,
     selectElement,
     selectObjects,
@@ -134,23 +149,62 @@ export function Studio({ onClose, onNew }: StudioProps) {
 
   return (
     <CanvasEditorProvider>
-    <div className="relative flex h-full min-h-0 flex-col bg-studio text-ink">
+    <div className="relative flex h-full min-h-0 flex-col bg-studio text-ink" data-studio-viewport={viewport}>
       <Topbar onClose={onClose} onNew={onNew} onPreview={() => setPreviewing(true)} />
-      <div className="flex min-h-0 flex-1">
-        <Sidebar
-          collapsed={!leftOpen}
-          onExpand={() => setLeftOpen(true)}
-          onCollapse={() => setLeftOpen(false)}
-        />
+      <div className="relative flex min-h-0 flex-1 overflow-hidden">
+        {leftOverlay && leftOpen ? (
+          <button
+            type="button"
+            aria-label="Close tools"
+            className="absolute inset-0 z-20 bg-black/45"
+            onClick={() => setLeftOpen(false)}
+          />
+        ) : null}
+        {leftOpen ? (
+          <div
+            className={
+              leftOverlay
+                ? 'absolute inset-y-0 left-0 z-30 flex h-full'
+                : 'flex h-full'
+            }
+            data-tools-drawer={leftOverlay ? 'true' : 'false'}
+          >
+            <Sidebar
+              overlay={leftOverlay}
+              onCollapse={() => setLeftOpen(false)}
+            />
+          </div>
+        ) : leftOverlay ? null : (
+          <Sidebar collapsed onExpand={() => setLeftOpen(true)} />
+        )}
         <CanvasStage
           leftOpen={leftOpen}
           rightOpen={rightOpen}
           onToggleLeft={() => setLeftOpen((value) => !value)}
           onToggleRight={() => setRightOpen((value) => !value)}
         />
+        {rightOverlay && rightOpen ? (
+          <button
+            type="button"
+            aria-label="Close properties"
+            className="absolute inset-0 z-20 bg-black/45"
+            onClick={() => setRightOpen(false)}
+          />
+        ) : null}
         {rightOpen ? (
-          <PropertiesPanel onCollapse={() => setRightOpen(false)} />
-        ) : (
+          <div
+            className={
+              viewport === 'mobile'
+                ? 'absolute inset-x-0 bottom-0 z-30 flex max-h-[72%] min-h-[16rem] flex-col overflow-hidden rounded-t-lg border-t border-line shadow-2xl'
+                : rightOverlay
+                  ? 'absolute inset-y-0 right-0 z-30 flex h-full w-60'
+                  : 'flex h-full w-60'
+            }
+            data-properties-drawer={rightOverlay ? 'true' : 'false'}
+          >
+            <PropertiesPanel onCollapse={() => setRightOpen(false)} />
+          </div>
+        ) : rightOverlay ? null : (
           <aside className="flex w-10 shrink-0 flex-col items-center border-l border-line bg-panel py-3">
             <button
               type="button"

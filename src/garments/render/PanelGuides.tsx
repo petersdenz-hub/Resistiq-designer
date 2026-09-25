@@ -8,7 +8,6 @@ import {
   panelBleedBounds,
   panelDesignBounds,
   panelDesignZones,
-  panelDisplayLabel,
 } from '../model'
 import { panelSilhouettePaths } from '../topology'
 import type { GarmentPanelDefinition } from '../types'
@@ -171,7 +170,7 @@ export function PanelGuides({
                 fontFamily="IBM Plex Sans, sans-serif"
                 pointerEvents="none"
               >
-                {panelDisplayLabel(panel)}
+                {region?.label ?? panel.label}
               </text>
             ) : null}
             {bleed && silhouettes.length === 0 && (active || panelSelected) ? (

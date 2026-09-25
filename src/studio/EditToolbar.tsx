@@ -74,7 +74,7 @@ export function EditToolbar() {
         disabled={busy}
         onClick={() => inputRef.current?.click()}
       >
-        {busy ? 'Uploading…' : 'Add image'}
+        {busy ? 'Uploading…' : 'Add logo / image'}
       </ToolButton>
       <div className="relative">
         <ToolButton

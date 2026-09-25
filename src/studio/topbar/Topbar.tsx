@@ -92,7 +92,7 @@ export function Topbar({ onClose, onNew, onPreview }: TopbarProps) {
   }
 
   return (
-    <header className="relative grid h-14 shrink-0 grid-cols-[1fr_minmax(10rem,20rem)_1fr] items-center border-b border-line bg-panel px-3">
+    <header className="relative flex min-h-14 shrink-0 flex-wrap items-center gap-2 border-b border-line bg-panel px-3 py-2 lg:grid lg:h-14 lg:grid-cols-[1fr_minmax(10rem,22rem)_1fr] lg:flex-nowrap lg:py-0">
       <div className="flex items-center gap-2">
         <div className="flex h-7 w-7 items-center justify-center rounded-md bg-accent/15 text-[13px] font-semibold text-accent">
           R
@@ -105,52 +105,62 @@ export function Topbar({ onClose, onNew, onPreview }: TopbarProps) {
         </Button>
       </div>
 
-      <input
-        value={nameDraft.text}
-        onChange={(event) =>
-          setNameDraft((current) => ({ ...current, text: event.target.value }))
-        }
-        onBlur={() => {
-          const next = nameDraft.text.trim()
-          if (next && next !== document.name) {
-            hydrateDocument({ ...document, name: next, updatedAt: new Date().toISOString() })
-          } else {
-            setNameDraft({ committed: document.name, text: document.name })
+      <div className="flex min-w-0 flex-1 items-center justify-center gap-2">
+        <input
+          value={nameDraft.text}
+          onChange={(event) =>
+            setNameDraft((current) => ({ ...current, text: event.target.value }))
           }
-        }}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter') {
-            event.currentTarget.blur()
-          }
-        }}
-        aria-label="Design name"
-        className="h-8 w-full rounded-md border border-transparent bg-transparent px-3 text-center text-[13px] font-medium text-ink outline-none hover:border-line focus:border-accent/40 focus:bg-studio"
-      />
+          onBlur={() => {
+            const next = nameDraft.text.trim()
+            if (next && next !== document.name) {
+              hydrateDocument({ ...document, name: next, updatedAt: new Date().toISOString() })
+            } else {
+              setNameDraft({ committed: document.name, text: document.name })
+            }
+          }}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              event.currentTarget.blur()
+            }
+          }}
+          aria-label="Design name"
+          className="h-8 w-full max-w-xs rounded-md border border-transparent bg-transparent px-3 text-center text-[13px] font-medium text-ink outline-none hover:border-line focus:border-accent/40 focus:bg-studio"
+        />
+        <span
+          data-save-status={dirty ? 'unsaved' : 'saved'}
+          className="hidden shrink-0 text-[10px] uppercase tracking-[0.12em] text-mute sm:inline"
+        >
+          {dirty ? 'Unsaved' : 'Saved'}
+        </span>
+      </div>
 
-      <div className="flex items-center justify-end gap-2">
+      <div className="flex flex-wrap items-center justify-end gap-2">
         <Button onClick={undo} disabled={!canUndo} aria-label="Undo">
           <UndoIcon />
-          Undo
+          <span className="hidden sm:inline">Undo</span>
         </Button>
         <Button onClick={redo} disabled={!canRedo} aria-label="Redo">
           <RedoIcon />
-          Redo
+          <span className="hidden sm:inline">Redo</span>
         </Button>
-        <div className="mx-1 h-5 w-px bg-line" />
-        <Button onClick={() => requestSave('save')} title="Save this design in this browser">
+        <div className="mx-1 hidden h-5 w-px bg-line sm:block" />
+        <Button onClick={() => requestSave('save')} title="Save this design">
           Save
         </Button>
-        <Button onClick={() => requestSave('save-as')} title="Save a new copy with its own id">
+        <Button onClick={() => requestSave('save-as')} title="Save a copy of this design">
           Save as
         </Button>
         <Button onClick={onPreview}>Preview</Button>
-        <Button
-          variant="accent"
-          disabled={!EXPORT_AVAILABLE}
-          title="Export is not available yet. Designs stay as structured data."
-        >
-          Export
-        </Button>
+        <span className="hidden md:inline-flex">
+          <Button
+            variant="accent"
+            disabled={!EXPORT_AVAILABLE}
+            title="Export is not available yet."
+          >
+            Export
+          </Button>
+        </span>
       </div>
 
       {toast ? (
@@ -161,7 +171,7 @@ export function Topbar({ onClose, onNew, onPreview }: TopbarProps) {
 
       {namePrompt ? (
         <Dialog
-          title={namePrompt === 'save-as' ? 'Save as' : 'Name this design'}
+          title={namePrompt === 'save-as' ? 'Save a copy' : 'Name this design'}
           onClose={() => setNamePrompt(null)}
         >
           <Field label="Design name">
