@@ -7,9 +7,9 @@ export function CanvasEditorProvider({ children }: { children: ReactNode }) {
   const [snapToGrid, setSnapToGrid] = useState(true)
   const [gridSize, setGridSize] = useState(DEFAULT_GRID_SIZE)
   const [pan, setPan] = useState({ x: 0, y: 0 })
-  const [showPrintArea, setShowPrintArea] = useState(DEFAULT_CANVAS_GUIDES.showPrintArea)
-  const [showSafeAreas, setShowSafeAreas] = useState(DEFAULT_CANVAS_GUIDES.showSafeAreas)
-  const [showGuides, setShowGuides] = useState(DEFAULT_CANVAS_GUIDES.showGuides)
+  const [showPrintArea, setShowPrintArea] = useState<boolean>(DEFAULT_CANVAS_GUIDES.showPrintArea)
+  const [showSafeAreas, setShowSafeAreas] = useState<boolean>(DEFAULT_CANVAS_GUIDES.showSafeAreas)
+  const [showGuides, setShowGuides] = useState<boolean>(DEFAULT_CANVAS_GUIDES.showGuides)
 
   const value = useMemo(
     () => ({
