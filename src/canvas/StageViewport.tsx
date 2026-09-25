@@ -1,4 +1,5 @@
 import { isLockedElement } from '@/design/types'
+import { defaultPanelIdForZone } from '@/design/designObjects'
 import {
   getBodyColor,
   getDesignObjectsInZone,
@@ -8,14 +9,15 @@ import {
   getSafeAreasInView,
   resolveActiveZone,
 } from '@/design/selectors'
-import { paintDesignObject } from '@/design/objectPlacement'
+import { getArtworkPanelBounds, paintDesignObject } from '@/design/objectPlacement'
+import { objectIdsInMarquee, unionBoxes } from '@/design/objectEditing'
 import { useDesign } from '@/design/useDesign'
 import { getGarment } from '@/garments/registry'
 import { getPanelsForView } from '@/garments/coordinates'
 import { GarmentRenderer } from '@/garments/render/GarmentRenderer'
 import { PanelGuides } from '@/garments/render/PanelGuides'
 import { useCanvasEditor } from '@/studio/canvasEditorContext'
-import { useRef } from 'react'
+import { useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { AlignmentGuides } from './AlignmentGuides'
 import { CanvasGrid } from './CanvasGrid'
 import { DesignElements } from './DesignElements'
@@ -25,25 +27,39 @@ import { TransformControls } from './TransformControls'
 import { applyPreview, useElementGesture } from './useElementGesture'
 import { applyObjectPreview, useDesignObjectGesture } from './useDesignObjectGesture'
 import { ZoneSurfaceOverlay } from './ZoneSurfaceOverlay'
+import { clientToSvgPoint } from './geometry'
 
 interface StageViewportProps {
   zoom: number
   showSafeAreas: boolean
 }
 
+interface MarqueeState {
+  startX: number
+  startY: number
+  x: number
+  y: number
+  width: number
+  height: number
+  panelId?: string
+}
+
 export function StageViewport({ zoom, showSafeAreas }: StageViewportProps) {
   const svgRef = useRef<SVGSVGElement | null>(null)
+  const marqueeRef = useRef<MarqueeState | null>(null)
+  const [marquee, setMarquee] = useState<MarqueeState | null>(null)
   const {
     document,
     selectedElement,
     selectedElementId,
-    selectedObject,
     selectedObjectId,
+    selectedObjectIds,
     selectElement,
     selectObject,
+    selectObjects,
     setActivePanel,
     updateElementById,
-    updateObjectById,
+    applyDocument,
     commitGesture,
   } = useDesign()
   const { gridVisible, gridSize, snapToGrid } = useCanvasEditor()
@@ -67,20 +83,86 @@ export function StageViewport({ zoom, showSafeAreas }: StageViewportProps) {
     document,
     snapToGrid,
     gridSize,
-    updateObjectById,
+    applyDocument,
     commitGesture,
   })
 
   const paintedObjects = objects.map((object) =>
     applyObjectPreview(paintDesignObject(document, object), objectGesture.preview),
   )
-  const selectedPainted =
-    selectedObject && selectedObject.zone === zone
-      ? applyObjectPreview(paintDesignObject(document, selectedObject), objectGesture.preview)
-      : null
+  const selectedPainted = paintedObjects.filter((object) => selectedObjectIds.includes(object.id))
+  const union = unionBoxes(selectedPainted.map((object) => ({
+    x: object.x,
+    y: object.y,
+    width: object.width,
+    height: object.height,
+  })))
+  const unlockedSelected = selectedPainted.filter((object) => !object.locked)
+  const panelBounds = getArtworkPanelBounds(document, defaultPanelIdForZone(document, zone))
 
   const width = garment.viewBox.width * zoom
   const height = garment.viewBox.height * zoom
+
+  function beginEmptyGesture(event: ReactPointerEvent<SVGElement>, panelId?: string) {
+    const svg = svgRef.current
+    if (!svg || event.shiftKey) {
+      return
+    }
+    const pointer = clientToSvgPoint(svg, event.clientX, event.clientY)
+    const next = {
+      startX: pointer.x,
+      startY: pointer.y,
+      x: pointer.x,
+      y: pointer.y,
+      width: 0,
+      height: 0,
+      panelId,
+    }
+    marqueeRef.current = next
+    setMarquee(next)
+
+    const onMove = (moveEvent: PointerEvent) => {
+      const current = marqueeRef.current
+      if (!current) {
+        return
+      }
+      const point = clientToSvgPoint(svg, moveEvent.clientX, moveEvent.clientY)
+      const box = {
+        ...current,
+        x: Math.min(current.startX, point.x),
+        y: Math.min(current.startY, point.y),
+        width: Math.abs(point.x - current.startX),
+        height: Math.abs(point.y - current.startY),
+      }
+      marqueeRef.current = box
+      setMarquee(box)
+    }
+
+    const onUp = () => {
+      const current = marqueeRef.current
+      marqueeRef.current = null
+      setMarquee(null)
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerup', onUp)
+      window.removeEventListener('pointercancel', onUp)
+      if (!current) {
+        return
+      }
+      if (current.width > 4 || current.height > 4) {
+        selectObjects(objectIdsInMarquee(document, zone, current))
+        return
+      }
+      selectElement(null)
+      selectObjects([])
+      if (current.panelId) {
+        setActivePanel(current.panelId)
+      }
+    }
+
+    window.addEventListener('pointermove', onMove)
+    window.addEventListener('pointerup', onUp)
+    window.addEventListener('pointercancel', onUp)
+  }
 
   return (
     <svg
@@ -93,11 +175,11 @@ export function StageViewport({ zoom, showSafeAreas }: StageViewportProps) {
       data-placement-zone={zone}
       data-grid-visible={gridVisible ? 'true' : 'false'}
       data-snap-enabled={snapToGrid ? 'true' : 'false'}
+      data-selected-count={selectedObjectIds.length}
       className="overflow-visible"
       onPointerDown={(event) => {
         if (event.target === event.currentTarget) {
-          selectElement(null)
-          selectObject(null)
+          beginEmptyGesture(event)
         }
       }}
     >
@@ -105,9 +187,8 @@ export function StageViewport({ zoom, showSafeAreas }: StageViewportProps) {
         width={garment.viewBox.width}
         height={garment.viewBox.height}
         fill="transparent"
-        onPointerDown={() => {
-          selectElement(null)
-          selectObject(null)
+        onPointerDown={(event) => {
+          beginEmptyGesture(event)
         }}
       />
 
@@ -134,8 +215,11 @@ export function StageViewport({ zoom, showSafeAreas }: StageViewportProps) {
         showSafeAreas={showSafeAreas}
         selectionKind={selectedElementId || selectedObjectId ? 'element' : 'panel'}
         onSelectPanel={(panelId) => {
-          selectObject(null)
+          selectObjects([])
           setActivePanel(panelId)
+        }}
+        onPanelPointerDown={(panelId, event) => {
+          beginEmptyGesture(event, panelId)
         }}
       />
 
@@ -150,38 +234,92 @@ export function StageViewport({ zoom, showSafeAreas }: StageViewportProps) {
 
       <DesignObjectLayer
         objects={paintedObjects}
-        selectedObjectId={selectedObjectId}
-        onSelect={selectObject}
-        onMoveStart={objectGesture.startMove}
+        selectedObjectIds={selectedObjectIds}
+        onSelect={(objectId, event) => {
+          selectObject(objectId, { toggle: event.shiftKey, expandGroup: true })
+        }}
+        onMoveStart={(objectId, event) => {
+          if (event.shiftKey) {
+            return
+          }
+          const ids = selectedObjectIds.includes(objectId) ? selectedObjectIds : [objectId]
+          objectGesture.startMove(objectId, ids, event)
+        }}
       />
+
+      {selectedPainted.length > 1
+        ? selectedPainted.map((object) => (
+            <rect
+              key={`bound-${object.id}`}
+              data-object-bounds={object.id}
+              x={object.x}
+              y={object.y}
+              width={object.width}
+              height={object.height}
+              fill="none"
+              stroke="#c9a36a"
+              strokeWidth={0.9 / zoom}
+              strokeDasharray={`${3 / zoom} ${2 / zoom}`}
+              opacity="0.7"
+              pointerEvents="none"
+            />
+          ))
+        : null}
 
       <AlignmentGuides
-        moving={objectGesture.preview && selectedPainted ? selectedPainted : null}
-        others={paintedObjects.filter((object) => object.id !== selectedObjectId)}
+        moving={
+          objectGesture.preview && union
+            ? { ...union, x: union.x, y: union.y, width: union.width, height: union.height }
+            : null
+        }
+        others={paintedObjects.filter((object) => !selectedObjectIds.includes(object.id))}
+        panels={panelBounds ? [panelBounds] : []}
         canvas={garment.viewBox}
         zoom={zoom}
+        guides={objectGesture.guides}
       />
 
-      {selectedPainted && !selectedPainted.locked ? (
+      {marquee && (marquee.width > 2 || marquee.height > 2) ? (
+        <rect
+          data-selection-marquee="true"
+          x={marquee.x}
+          y={marquee.y}
+          width={marquee.width}
+          height={marquee.height}
+          fill="rgba(201,163,106,0.12)"
+          stroke="#c9a36a"
+          strokeWidth={1 / zoom}
+          strokeDasharray={`${4 / zoom} ${3 / zoom}`}
+          pointerEvents="none"
+        />
+      ) : null}
+
+      {unlockedSelected.length > 0 && union ? (
         <TransformControls
-          element={selectedPainted}
+          element={{
+            id: unlockedSelected.length === 1 ? unlockedSelected[0].id : 'selection',
+            x: union.x,
+            y: union.y,
+            width: union.width,
+            height: union.height,
+            rotation: unlockedSelected.length === 1 ? unlockedSelected[0].rotation : 0,
+          }}
           zoom={zoom}
           onResizeStart={(handle, event) =>
-            objectGesture.startResize(selectedPainted.id, handle, event)
+            objectGesture.startResize(unlockedSelected.map((object) => object.id), handle, event)
           }
-          onRotateStart={(event) => objectGesture.startRotate(selectedPainted.id, event)}
+          onRotateStart={(event) =>
+            objectGesture.startRotate(unlockedSelected.map((object) => object.id), event)
+          }
         />
-      ) : selectedPainted && selectedPainted.locked ? (
-        <g
-          data-editor-chrome="true"
-          transform={`rotate(${selectedPainted.rotation} ${selectedPainted.x + selectedPainted.width / 2} ${selectedPainted.y + selectedPainted.height / 2})`}
-          pointerEvents="none"
-        >
+      ) : selectedPainted.length > 0 && selectedPainted.every((object) => object.locked) && union ? (
+        <g data-editor-chrome="true" pointerEvents="none">
           <rect
-            x={selectedPainted.x}
-            y={selectedPainted.y}
-            width={selectedPainted.width}
-            height={selectedPainted.height}
+            data-multi-selection="true"
+            x={union.x}
+            y={union.y}
+            width={union.width}
+            height={union.height}
             fill="none"
             stroke="#c9a36a"
             strokeWidth={1.25 / zoom}
@@ -218,6 +356,18 @@ export function StageViewport({ zoom, showSafeAreas }: StageViewportProps) {
             strokeDasharray={`${4 / zoom} ${3 / zoom}`}
           />
         </g>
+      ) : null}
+
+      {unlockedSelected.length > 1 && union ? (
+        <rect
+          data-multi-selection="true"
+          x={union.x}
+          y={union.y}
+          width={union.width}
+          height={union.height}
+          fill="none"
+          pointerEvents="none"
+        />
       ) : null}
     </svg>
   )

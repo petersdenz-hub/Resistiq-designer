@@ -5,14 +5,28 @@ import {
   createImageObject,
   createShapeObject,
   createTextObject,
-  duplicateDesignObject,
   getDesignObjectById,
-  moveDesignObjectLayer,
   removeDesignObject,
   defaultPanelIdForZone,
+  resolveActiveZone,
   setActiveZone as writeSetActiveZone,
   updateDesignObject,
 } from './designObjects'
+import {
+  alignDesignObjects,
+  distributeDesignObjects,
+  duplicateDesignObjects,
+  expandGroupIds,
+  groupDesignObjects,
+  moveDesignObjectsLayer,
+  nudgeDesignObjects,
+  removeDesignObjects,
+  selectableObjectIds,
+  selectionForEdit,
+  toggleSelectedIds,
+  ungroupDesignObjects,
+  updateDesignObjects,
+} from './objectEditing'
 import {
   assignDesignObjectZone,
   attachObjectToZonePanel,
@@ -54,6 +68,7 @@ interface DesignState {
   document: DesignDocument
   selectedElementId: string | null
   selectedObjectId: string | null
+  selectedObjectIds: string[]
   past: DesignDocument[]
   future: DesignDocument[]
 }
@@ -61,6 +76,7 @@ interface DesignState {
 type DesignAction =
   | { type: 'select'; elementId: string | null }
   | { type: 'selectObject'; objectId: string | null }
+  | { type: 'selectObjects'; objectIds: string[] }
   | { type: 'setActiveView'; viewId: string }
   | { type: 'setActivePanel'; panelId: string }
   | { type: 'apply'; document: DesignDocument; history: HistoryMode }
@@ -68,6 +84,20 @@ type DesignAction =
   | { type: 'hydrate'; document: DesignDocument }
   | { type: 'undo' }
   | { type: 'redo' }
+
+function primaryObjectId(ids: string[]): string | null {
+  return ids[ids.length - 1] ?? null
+}
+
+function withObjectSelection(state: DesignState, objectIds: string[]): DesignState {
+  const selectedObjectIds = [...new Set(objectIds)]
+  return {
+    ...state,
+    selectedObjectIds,
+    selectedObjectId: primaryObjectId(selectedObjectIds),
+    selectedElementId: selectedObjectIds.length > 0 ? null : state.selectedElementId,
+  }
+}
 
 function withHistory(state: DesignState, nextDocument: DesignDocument): DesignState {
   return {
@@ -81,25 +111,34 @@ function withHistory(state: DesignState, nextDocument: DesignDocument): DesignSt
 function reducer(state: DesignState, action: DesignAction): DesignState {
   switch (action.type) {
     case 'select':
-      return { ...state, selectedElementId: action.elementId, selectedObjectId: null }
+      return {
+        ...state,
+        selectedElementId: action.elementId,
+        selectedObjectId: null,
+        selectedObjectIds: [],
+      }
     case 'selectObject':
-      return { ...state, selectedObjectId: action.objectId, selectedElementId: null }
+      return withObjectSelection(state, action.objectId ? [action.objectId] : [])
+    case 'selectObjects':
+      return withObjectSelection(state, action.objectIds)
     case 'setActiveView': {
       const next = setActiveView(state.document, action.viewId)
       const selected = getElementById(next, state.selectedElementId)
       const selectedPanel = selected
         ? next.panels.find((panel) => panel.id === selected.panelId)
         : null
-      const selectedObject = getDesignObjectById(next, state.selectedObjectId)
+      const zone = next.activeZone ?? next.activeView
+      const selectedObjectIds = keepObjectIds(next, state.selectedObjectIds).filter((id) => {
+        const object = getDesignObjectById(next, id)
+        return object?.zone === zone
+      })
       return {
         ...state,
         document: next,
         selectedElementId:
           selected && selectedPanel?.viewId === next.activeView ? selected.id : null,
-        selectedObjectId:
-          selectedObject && selectedObject.zone === (next.activeZone ?? next.activeView)
-            ? selectedObject.id
-            : null,
+        selectedObjectIds,
+        selectedObjectId: primaryObjectId(selectedObjectIds),
       }
     }
     case 'setActivePanel':
@@ -107,6 +146,7 @@ function reducer(state: DesignState, action: DesignAction): DesignState {
         ...state,
         selectedElementId: null,
         selectedObjectId: null,
+        selectedObjectIds: [],
         document: setActivePanel(state.document, action.panelId),
       }
     case 'apply':
@@ -134,10 +174,12 @@ function reducer(state: DesignState, action: DesignAction): DesignState {
         return state
       }
       const restored = keepEditorChrome(previous, state.document)
+      const selectedObjectIds = keepObjectIds(restored, state.selectedObjectIds)
       return {
         document: restored,
         selectedElementId: keepSelection(restored, state.selectedElementId),
-        selectedObjectId: keepObjectSelection(restored, state.selectedObjectId),
+        selectedObjectIds,
+        selectedObjectId: primaryObjectId(selectedObjectIds),
         past: state.past.slice(0, -1),
         future: [state.document, ...state.future],
       }
@@ -148,10 +190,12 @@ function reducer(state: DesignState, action: DesignAction): DesignState {
         return state
       }
       const restored = keepEditorChrome(next, state.document)
+      const selectedObjectIds = keepObjectIds(restored, state.selectedObjectIds)
       return {
         document: restored,
         selectedElementId: keepSelection(restored, state.selectedElementId),
-        selectedObjectId: keepObjectSelection(restored, state.selectedObjectId),
+        selectedObjectIds,
+        selectedObjectId: primaryObjectId(selectedObjectIds),
         past: [...state.past, state.document],
         future: rest,
       }
@@ -163,8 +207,8 @@ function keepSelection(document: DesignDocument, selectedElementId: string | nul
   return getElementById(document, selectedElementId)?.id ?? null
 }
 
-function keepObjectSelection(document: DesignDocument, selectedObjectId: string | null) {
-  return getDesignObjectById(document, selectedObjectId)?.id ?? null
+function keepObjectIds(document: DesignDocument, selectedObjectIds: string[]) {
+  return selectedObjectIds.filter((id) => getDesignObjectById(document, id))
 }
 
 function keepEditorChrome(
@@ -190,6 +234,7 @@ export function DesignProvider({
     document: normalizeDocument(initialDocument ?? createNewDesign('tshirt')),
     selectedElementId: null,
     selectedObjectId: null,
+    selectedObjectIds: [],
     past: [],
     future: [],
   }))
@@ -209,6 +254,9 @@ export function DesignProvider({
   const value = useMemo<DesignContextValue>(() => {
     const selectedElement = getElementById(state.document, state.selectedElementId)
     const selectedObject = getDesignObjectById(state.document, state.selectedObjectId)
+    const selectedObjects = state.selectedObjectIds
+      .map((id) => getDesignObjectById(state.document, id))
+      .filter((object): object is NonNullable<typeof object> => Boolean(object))
     const current = () => stateRef.current
 
     return {
@@ -216,19 +264,76 @@ export function DesignProvider({
       selectedElementId: state.selectedElementId,
       selectedElement,
       selectedObjectId: state.selectedObjectId,
+      selectedObjectIds: state.selectedObjectIds,
       selectedObject,
+      selectedObjects,
       canUndo: state.past.length > 0,
       canRedo: state.future.length > 0,
       selectElement: (elementId) => dispatch({ type: 'select', elementId }),
-      selectObject: (objectId) => dispatch({ type: 'selectObject', objectId }),
+      selectObject: (objectId, options) => {
+        if (!objectId) {
+          dispatch({ type: 'selectObjects', objectIds: [] })
+          return
+        }
+        const { document, selectedObjectIds } = current()
+        const next = options?.expandGroup ? expandGroupIds(document, objectId) : [objectId]
+        if (options?.toggle) {
+          dispatch({ type: 'selectObjects', objectIds: toggleSelectedIds(selectedObjectIds, next) })
+          return
+        }
+        if (options?.additive) {
+          dispatch({ type: 'selectObjects', objectIds: [...selectedObjectIds, ...next] })
+          return
+        }
+        dispatch({ type: 'selectObjects', objectIds: next })
+      },
+      selectObjects: (objectIds) => dispatch({ type: 'selectObjects', objectIds }),
+      selectAllObjects: () => {
+        const { document } = current()
+        dispatch({
+          type: 'selectObjects',
+          objectIds: selectableObjectIds(document, resolveActiveZone(document)),
+        })
+      },
+      groupSelectedObjects: () => {
+        const { document, selectedObjectIds } = current()
+        apply(groupDesignObjects(document, selectedObjectIds))
+      },
+      ungroupSelectedObjects: () => {
+        const { document, selectedObjectIds } = current()
+        apply(ungroupDesignObjects(document, selectedObjectIds))
+      },
+      alignSelectedObjects: (alignment) => {
+        const { document, selectedObjectIds } = current()
+        apply(alignDesignObjects(document, selectedObjectIds, alignment))
+      },
+      distributeSelectedObjects: (axis) => {
+        const { document, selectedObjectIds } = current()
+        apply(distributeDesignObjects(document, selectedObjectIds, axis))
+      },
+      nudgeSelectedObjects: (dx, dy) => {
+        const { document, selectedObjectIds } = current()
+        apply(nudgeDesignObjects(document, selectedObjectIds, dx, dy))
+      },
+      updateSelectedObjects: (patch, history = 'record') => {
+        const { document, selectedObjectIds } = current()
+        apply(
+          updateDesignObjects(
+            document,
+            selectedObjectIds.map((id) => ({ id, patch })),
+          ),
+          history,
+        )
+      },
+      applyDocument: (document, history = 'record') => apply(document, history),
       setActiveView: (viewId) => dispatch({ type: 'setActiveView', viewId }),
       setActivePanel: (panelId) => dispatch({ type: 'setActivePanel', panelId }),
       setActiveZone: (zone) => {
-        const { document, selectedObjectId } = current()
-        const selected = getDesignObjectById(document, selectedObjectId)
+        const { document, selectedObjectIds } = current()
         apply(writeSetActiveZone(document, zone))
-        if (selected && selected.zone !== zone) {
-          dispatch({ type: 'selectObject', objectId: null })
+        const remaining = selectedObjectIds.filter((id) => getDesignObjectById(document, id)?.zone === zone)
+        if (remaining.length !== selectedObjectIds.length) {
+          dispatch({ type: 'selectObjects', objectIds: remaining })
         }
       },
       setSelectedObjectZone: (zone) => {
@@ -369,10 +474,10 @@ export function DesignProvider({
         }
       },
       removeSelected: () => {
-        const { document, selectedElementId, selectedObjectId } = current()
-        if (selectedObjectId) {
-          apply(removeDesignObject(document, selectedObjectId))
-          dispatch({ type: 'selectObject', objectId: null })
+        const { document, selectedElementId, selectedObjectIds } = current()
+        if (selectedObjectIds.length > 0) {
+          apply(removeDesignObjects(document, selectionForEdit(document, selectedObjectIds)))
+          dispatch({ type: 'selectObjects', objectIds: [] })
           return
         }
         if (!selectedElementId) {
@@ -388,22 +493,27 @@ export function DesignProvider({
         }
       },
       removeObjectById: (objectId) => {
-        apply(removeDesignObject(current().document, objectId))
-        if (current().selectedObjectId === objectId) {
-          dispatch({ type: 'selectObject', objectId: null })
+        const { document, selectedObjectIds } = current()
+        apply(removeDesignObject(document, objectId))
+        if (selectedObjectIds.includes(objectId)) {
+          dispatch({
+            type: 'selectObjects',
+            objectIds: selectedObjectIds.filter((id) => id !== objectId),
+          })
         }
       },
       duplicateSelectedObject: () => {
-        const { document, selectedObjectId } = current()
-        if (!selectedObjectId) {
+        const { document, selectedObjectIds } = current()
+        const ids = selectionForEdit(document, selectedObjectIds)
+        if (ids.length === 0) {
           return
         }
-        const result = duplicateDesignObject(document, selectedObjectId)
-        if (!result) {
+        const result = duplicateDesignObjects(document, ids)
+        if (result.objects.length === 0) {
           return
         }
         apply(result.document)
-        dispatch({ type: 'selectObject', objectId: result.object.id })
+        dispatch({ type: 'selectObjects', objectIds: result.objects.map((object) => object.id) })
       },
       updateSelected: (patch, history = 'record') => {
         const { document, selectedElementId } = current()
@@ -433,11 +543,11 @@ export function DesignProvider({
         apply(moveElementLayer(document, selectedElementId, direction))
       },
       moveSelectedObjectLayer: (direction) => {
-        const { document, selectedObjectId } = current()
-        if (!selectedObjectId) {
+        const { document, selectedObjectIds } = current()
+        if (selectedObjectIds.length === 0) {
           return
         }
-        apply(moveDesignObjectLayer(document, selectedObjectId, direction))
+        apply(moveDesignObjectsLayer(document, selectedObjectIds, direction))
       },
       commitGesture: (previous) => dispatch({ type: 'commitGesture', previous }),
       hydrateDocument: (document) => dispatch({ type: 'hydrate', document }),

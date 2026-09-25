@@ -3,6 +3,7 @@ import { PLACEMENT_ZONE_LABELS } from '@/design/designObjects'
 import { useDesign } from '@/design/useDesign'
 import { StageViewport } from '@/canvas/StageViewport'
 import { CanvasRulers, RULER_SIZE } from '@/canvas/CanvasRulers'
+import { EditToolbar } from '@/studio/EditToolbar'
 import { useCanvasEditor } from '@/studio/canvasEditorContext'
 import { getGarment } from '@/garments/registry'
 import { SegmentedControl } from '@/ui'
@@ -60,6 +61,10 @@ export function CanvasStage() {
   return (
     <section className="relative flex min-w-0 flex-1 flex-col bg-canvas">
       <div className="pointer-events-none absolute inset-0 opacity-40 [background-image:linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] [background-size:32px_32px]" />
+
+      <div className="relative z-10 px-4 pt-3">
+        <EditToolbar />
+      </div>
 
       <div
         className="relative flex flex-1 items-center justify-center overflow-hidden p-8"

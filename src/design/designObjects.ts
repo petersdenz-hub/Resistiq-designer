@@ -53,6 +53,10 @@ export interface DesignObjectBase {
   zIndex: number
   zone: PlacementZone
   anchor: DesignObjectAnchor
+  /** Optional editor name. Missing on older documents. */
+  name?: string
+  /** Lightweight group membership. Missing means ungrouped. */
+  groupId?: string
 }
 
 export interface TextDesignObject extends DesignObjectBase {
@@ -265,7 +269,36 @@ function sharedDefaults(
     zIndex: nextObjectZIndex(document),
     zone,
     anchor: resolveObjectAnchor(document, zone),
+    name: defaultObjectName(type),
   }
+}
+
+export function defaultObjectName(
+  type: DesignObjectType,
+  detail?: string,
+): string {
+  if (type === 'text') {
+    const preview = detail?.trim() || 'Text'
+    return `Text — ${preview.length > 24 ? `${preview.slice(0, 24)}…` : preview}`
+  }
+  if (type === 'image') {
+    const preview = (detail ?? 'Logo').replace(/\.[^.]+$/, '') || 'Logo'
+    return `Logo — ${preview}`
+  }
+  return 'Shape — Rectangle'
+}
+
+export function objectDisplayName(object: DesignObject): string {
+  if (object.name?.trim()) {
+    return object.name.trim()
+  }
+  if (object.type === 'text') {
+    return defaultObjectName('text', object.content)
+  }
+  if (object.type === 'image') {
+    return defaultObjectName('image', object.fileName)
+  }
+  return defaultObjectName('shape')
 }
 
 export function resolveActiveZone(document: DesignDocument): PlacementZone {
@@ -276,15 +309,17 @@ export function resolveActiveZone(document: DesignDocument): PlacementZone {
 }
 
 export function createTextObject(document: DesignDocument, zone?: PlacementZone): TextDesignObject {
+  const content = 'Text'
   return {
     ...sharedDefaults(document, 'text', zone ?? resolveActiveZone(document)),
     type: 'text',
-    content: 'Text',
+    content,
     fontFamily: DEFAULT_TEXT_FONT,
     fontSize: 22,
     fontWeight: 500,
     textAlign: 'center',
     color: '#1a1a1a',
+    name: defaultObjectName('text', content),
   }
 }
 
@@ -321,6 +356,7 @@ export function createImageObject(
     aspectLocked: input.aspectLocked !== false,
     naturalWidth: input.naturalWidth,
     naturalHeight: input.naturalHeight,
+    name: defaultObjectName('image', input.fileName),
   }
   if (input.naturalWidth && input.naturalHeight) {
     const aspect = input.naturalWidth / Math.max(input.naturalHeight, 1)
@@ -345,24 +381,44 @@ export function removeDesignObject(
   document: DesignDocument,
   objectId: string,
 ): DesignDocument {
+  const current = getDesignObjectById(document, objectId)
+  if (!current || current.locked) {
+    return document
+  }
   return touch({
     ...document,
     designObjects: getDesignObjects(document).filter((object) => object.id !== objectId),
   })
 }
 
+const LOCKED_SAFE_KEYS = new Set(['locked', 'visible', 'name'])
+
+function sanitizePatch(object: DesignObject, patch: DesignObjectPatch): DesignObjectPatch {
+  if (!object.locked) {
+    return patch
+  }
+  const next: DesignObjectPatch = {}
+  for (const key of Object.keys(patch) as (keyof DesignObjectPatch)[]) {
+    if (LOCKED_SAFE_KEYS.has(key)) {
+      ;(next as Record<string, unknown>)[key] = patch[key]
+    }
+  }
+  return next
+}
+
 function applyObjectPatch(document: DesignDocument, object: DesignObject, patch: DesignObjectPatch): DesignObject {
-  const next = { ...object, ...patch } as DesignObject
-  if (patch.zone && isPlacementZone(patch.zone) && patch.zone !== object.zone) {
+  const allowed = sanitizePatch(object, patch)
+  const next = { ...object, ...allowed } as DesignObject
+  if (allowed.zone && isPlacementZone(allowed.zone) && allowed.zone !== object.zone) {
     next.anchor = {
       space: patch.anchor?.space ?? (object.anchor.space === 'panel' ? 'panel' : 'zone'),
-      panelId: patch.anchor?.panelId ?? defaultPanelIdForZone(document, patch.zone),
+      panelId: patch.anchor?.panelId ?? defaultPanelIdForZone(document, allowed.zone),
     }
-    next.zone = patch.zone
+    next.zone = allowed.zone
   }
   if (next.type === 'image' && next.aspectLocked !== false) {
-    const widthChanged = patch.width !== undefined && patch.height === undefined
-    const heightChanged = patch.height !== undefined && patch.width === undefined
+    const widthChanged = allowed.width !== undefined && allowed.height === undefined
+    const heightChanged = allowed.height !== undefined && allowed.width === undefined
     if (widthChanged || heightChanged) {
       const aspect = objectAspect({
         width: object.width,
@@ -556,6 +612,8 @@ function sanitizeBase(raw: Record<string, unknown>): DesignObjectBase | null {
     zIndex: isFiniteNumber(raw.zIndex) ? raw.zIndex : 1,
     zone,
     anchor: sanitizeAnchor(raw.anchor),
+    name: typeof raw.name === 'string' && raw.name.length > 0 ? raw.name : undefined,
+    groupId: typeof raw.groupId === 'string' && raw.groupId.length > 0 ? raw.groupId : undefined,
   }
 }
 

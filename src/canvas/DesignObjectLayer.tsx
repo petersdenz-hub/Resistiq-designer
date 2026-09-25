@@ -9,24 +9,28 @@ import type { PointerEvent as ReactPointerEvent } from 'react'
 
 interface DesignObjectLayerProps {
   objects: DesignObject[]
-  selectedObjectId: string | null
-  onSelect: (objectId: string) => void
+  selectedObjectId?: string | null
+  selectedObjectIds?: string[]
+  onSelect: (objectId: string, event: ReactPointerEvent<SVGElement>) => void
   onMoveStart: (objectId: string, event: ReactPointerEvent<SVGElement>) => void
 }
 
 export function DesignObjectLayer({
   objects,
-  selectedObjectId,
+  selectedObjectId = null,
+  selectedObjectIds,
   onSelect,
   onMoveStart,
 }: DesignObjectLayerProps) {
+  const selected = new Set(selectedObjectIds ?? (selectedObjectId ? [selectedObjectId] : []))
+
   return (
     <g data-design-object-layer="true">
       {objects.map((object) => {
         if (!object.visible) {
           return null
         }
-        const selected = object.id === selectedObjectId
+        const isSelected = selected.has(object.id)
         return (
           <g
             key={object.id}
@@ -36,16 +40,19 @@ export function DesignObjectLayer({
             data-anchor-space={object.anchor.space}
             data-panel-id={object.anchor.panelId ?? ''}
             data-object-locked={object.locked ? 'true' : 'false'}
+            data-object-selected={isSelected ? 'true' : 'false'}
+            data-object-name={object.name ?? ''}
             transform={`rotate(${object.rotation} ${object.x + object.width / 2} ${object.y + object.height / 2})`}
             opacity={object.opacity}
             style={{ cursor: object.locked ? 'default' : 'move' }}
             onPointerDown={(event) => {
               event.stopPropagation()
               event.preventDefault()
-              onSelect(object.id)
-              if (!object.locked) {
-                onMoveStart(object.id, event)
+              if (object.locked) {
+                return
               }
+              onSelect(object.id, event)
+              onMoveStart(object.id, event)
             }}
           >
             {object.type === 'shape' ? (
@@ -59,8 +66,8 @@ export function DesignObjectLayer({
                 strokeWidth={object.strokeWidth}
               />
             ) : null}
-            {object.type === 'text' ? <ObjectText object={object} selected={selected} /> : null}
-            {object.type === 'image' ? <ObjectImage object={object} selected={selected} /> : null}
+            {object.type === 'text' ? <ObjectText object={object} selected={isSelected} /> : null}
+            {object.type === 'image' ? <ObjectImage object={object} selected={isSelected} /> : null}
           </g>
         )
       })}

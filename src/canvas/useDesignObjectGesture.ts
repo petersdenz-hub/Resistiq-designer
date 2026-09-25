@@ -2,12 +2,20 @@ import {
   getDesignObjectById,
   isImageAspectLocked,
   objectAspect,
-  snapBox,
-  snapValue,
-  type DesignObjectPatch,
 } from '@/design/designObjects'
-import { resolveObjectViewBox, storeObjectViewBox } from '@/design/objectPlacement'
+import {
+  collectSnapTargets,
+  nudgeDesignObjects,
+  rotateObjectsAround,
+  scaleObjectsInViewBox,
+  selectionForEdit,
+  selectionViewBox,
+  snapMovingBox,
+  updateDesignObjects,
+  type SnapGuides,
+} from '@/design/objectEditing'
 import type { DesignDocument } from '@/design/types'
+import { resolveActiveZone } from '@/design/designObjects'
 import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject } from 'react'
 import {
   clientToSvgPoint,
@@ -20,7 +28,7 @@ import {
 } from './geometry'
 
 export interface ObjectDragPreview {
-  objectId: string
+  objectIds: string[]
   x: number
   y: number
 }
@@ -29,14 +37,14 @@ interface ObjectGestureApi {
   document: DesignDocument
   snapToGrid: boolean
   gridSize: number
-  updateObjectById: (objectId: string, patch: DesignObjectPatch, history?: 'record' | 'replace') => void
+  applyDocument: (document: DesignDocument, history?: 'record' | 'replace') => void
   commitGesture: (previous: DesignDocument) => void
 }
 
 type Gesture =
   | {
       kind: 'move'
-      objectId: string
+      objectIds: string[]
       origin: DesignDocument
       startX: number
       startY: number
@@ -45,7 +53,7 @@ type Gesture =
     }
   | {
       kind: 'resize'
-      objectId: string
+      objectIds: string[]
       origin: DesignDocument
       handle: ResizeHandle
       startX: number
@@ -56,8 +64,11 @@ type Gesture =
     }
   | {
       kind: 'rotate'
-      objectId: string
+      objectIds: string[]
       origin: DesignDocument
+      centerX: number
+      centerY: number
+      startAngle: number
     }
 
 export function useDesignObjectGesture(
@@ -67,6 +78,7 @@ export function useDesignObjectGesture(
   const gestureRef = useRef<Gesture | null>(null)
   const apiRef = useRef(api)
   const [preview, setPreview] = useState<ObjectDragPreview | null>(null)
+  const [guides, setGuides] = useState<SnapGuides | null>(null)
 
   useLayoutEffect(() => {
     apiRef.current = api
@@ -80,15 +92,28 @@ export function useDesignObjectGesture(
         return
       }
       const pointer = clientToSvgPoint(svg, event.clientX, event.clientY)
-      const object = getDesignObjectById(apiRef.current.document, gesture.objectId)
-      if (!object || object.locked) {
-        return
-      }
 
       if (gesture.kind === 'move') {
-        gesture.lastDx = pointer.x - gesture.startX
-        gesture.lastDy = pointer.y - gesture.startY
-        setPreview({ objectId: gesture.objectId, x: gesture.lastDx, y: gesture.lastDy })
+        const originUnion = selectionViewBox(gesture.origin, gesture.objectIds)
+        if (!originUnion) {
+          return
+        }
+        const raw = {
+          ...originUnion,
+          x: originUnion.x + (pointer.x - gesture.startX),
+          y: originUnion.y + (pointer.y - gesture.startY),
+        }
+        const snapped = snapMovingBox(
+          raw,
+          collectSnapTargets(gesture.origin, resolveActiveZone(gesture.origin), gesture.objectIds),
+          6,
+          apiRef.current.gridSize,
+          apiRef.current.snapToGrid,
+        )
+        gesture.lastDx = snapped.box.x - originUnion.x
+        gesture.lastDy = snapped.box.y - originUnion.y
+        setPreview({ objectIds: gesture.objectIds, x: gesture.lastDx, y: gesture.lastDy })
+        setGuides(snapped.guides.vertical.length || snapped.guides.horizontal.length ? snapped.guides : null)
         return
       }
 
@@ -99,25 +124,30 @@ export function useDesignObjectGesture(
           width: gesture.startWidth,
           height: gesture.startHeight,
         }
-        const next = isImageAspectLocked(object)
-          ? resizeRectKeepAspect(start, gesture.startRotation, gesture.handle, pointer, objectAspect(object))
-          : resizeRect(start, gesture.startRotation, gesture.handle, pointer)
-        const snapped = snapBox(next, apiRef.current.gridSize, apiRef.current.snapToGrid)
-        const stored = storeObjectViewBox(apiRef.current.document, object, {
-          x: snapped.x,
-          y: snapped.y,
-          width: Math.max(8, snapped.width),
-          height: Math.max(8, snapped.height),
+        const primary = getDesignObjectById(gesture.origin, gesture.objectIds[0])
+        const next =
+          gesture.objectIds.length === 1 && primary && isImageAspectLocked(primary)
+            ? resizeRectKeepAspect(start, gesture.startRotation, gesture.handle, pointer, objectAspect(primary))
+            : resizeRect(start, gesture.startRotation, gesture.handle, pointer)
+        const updates = scaleObjectsInViewBox(gesture.origin, gesture.objectIds, start, {
+          x: next.x,
+          y: next.y,
+          width: Math.max(8, next.width),
+          height: Math.max(8, next.height),
         })
-        apiRef.current.updateObjectById(gesture.objectId, stored, 'replace')
+        apiRef.current.applyDocument(updateDesignObjects(gesture.origin, updates), 'replace')
         return
       }
 
-      const painted = resolveObjectViewBox(apiRef.current.document, object)
-      const rotation = rotationFromPointer(getCenter(painted), pointer)
-      apiRef.current.updateObjectById(
-        gesture.objectId,
-        { rotation: event.shiftKey ? snapAngle(rotation) : rotation },
+      const angle = rotationFromPointer({ x: gesture.centerX, y: gesture.centerY }, pointer)
+      const delta = event.shiftKey ? snapAngle(angle - gesture.startAngle) : angle - gesture.startAngle
+      apiRef.current.applyDocument(
+        rotateObjectsAround(
+          gesture.origin,
+          gesture.objectIds,
+          { x: gesture.centerX, y: gesture.centerY },
+          delta,
+        ),
         'replace',
       )
     }
@@ -128,21 +158,14 @@ export function useDesignObjectGesture(
         return
       }
       if (gesture.kind === 'move') {
-        const object = getDesignObjectById(apiRef.current.document, gesture.objectId)
-        if (object && (gesture.lastDx !== 0 || gesture.lastDy !== 0)) {
-          const painted = resolveObjectViewBox(apiRef.current.document, object)
-          const viewBox = {
-            ...painted,
-            x: snapValue(painted.x + gesture.lastDx, apiRef.current.gridSize, apiRef.current.snapToGrid),
-            y: snapValue(painted.y + gesture.lastDy, apiRef.current.gridSize, apiRef.current.snapToGrid),
-          }
-          apiRef.current.updateObjectById(
-            gesture.objectId,
-            storeObjectViewBox(apiRef.current.document, object, viewBox),
+        if (gesture.lastDx !== 0 || gesture.lastDy !== 0) {
+          apiRef.current.applyDocument(
+            nudgeDesignObjects(gesture.origin, gesture.objectIds, gesture.lastDx, gesture.lastDy),
             'record',
           )
         }
         setPreview(null)
+        setGuides(null)
       } else {
         apiRef.current.commitGesture(gesture.origin)
       }
@@ -161,7 +184,8 @@ export function useDesignObjectGesture(
 
   return {
     preview,
-    startMove(objectId: string, event: ReactPointerEvent<SVGElement>) {
+    guides,
+    startMove(objectId: string, selectedIds: string[], event: ReactPointerEvent<SVGElement>) {
       const svg = svgRef.current
       const document = apiRef.current.document
       const object = getDesignObjectById(document, objectId)
@@ -170,9 +194,12 @@ export function useDesignObjectGesture(
       }
       event.preventDefault()
       const pointer = clientToSvgPoint(svg, event.clientX, event.clientY)
+      const ids = selectionForEdit(document, selectedIds.includes(objectId) ? selectedIds : [objectId]).filter(
+        (id) => !getDesignObjectById(document, id)?.locked,
+      )
       gestureRef.current = {
         kind: 'move',
-        objectId,
+        objectIds: ids.length > 0 ? ids : [objectId],
         origin: document,
         startX: pointer.x,
         startY: pointer.y,
@@ -180,31 +207,45 @@ export function useDesignObjectGesture(
         lastDy: 0,
       }
     },
-    startResize(objectId: string, handle: ResizeHandle, event: ReactPointerEvent<SVGElement>) {
-      const object = getDesignObjectById(apiRef.current.document, objectId)
-      if (!object || object.locked) {
+    startResize(objectIds: string[], handle: ResizeHandle, event: ReactPointerEvent<SVGElement>) {
+      const document = apiRef.current.document
+      const ids = objectIds.filter((id) => !getDesignObjectById(document, id)?.locked)
+      const union = selectionViewBox(document, ids)
+      if (!union || ids.length === 0) {
         return
       }
       event.preventDefault()
-      const painted = resolveObjectViewBox(apiRef.current.document, object)
+      const primary = getDesignObjectById(document, ids[0])
       gestureRef.current = {
         kind: 'resize',
-        objectId,
-        origin: apiRef.current.document,
+        objectIds: ids,
+        origin: document,
         handle,
-        startX: painted.x,
-        startY: painted.y,
-        startWidth: painted.width,
-        startHeight: painted.height,
-        startRotation: object.rotation,
+        startX: union.x,
+        startY: union.y,
+        startWidth: union.width,
+        startHeight: union.height,
+        startRotation: ids.length === 1 ? (primary?.rotation ?? 0) : 0,
       }
     },
-    startRotate(objectId: string, event: ReactPointerEvent<SVGElement>) {
+    startRotate(objectIds: string[], event: ReactPointerEvent<SVGElement>) {
+      const document = apiRef.current.document
+      const ids = objectIds.filter((id) => !getDesignObjectById(document, id)?.locked)
+      const union = selectionViewBox(document, ids)
+      const svg = svgRef.current
+      if (!union || !svg || ids.length === 0) {
+        return
+      }
       event.preventDefault()
+      const pointer = clientToSvgPoint(svg, event.clientX, event.clientY)
+      const center = getCenter(union)
       gestureRef.current = {
         kind: 'rotate',
-        objectId,
-        origin: apiRef.current.document,
+        objectIds: ids,
+        origin: document,
+        centerX: center.x,
+        centerY: center.y,
+        startAngle: rotationFromPointer(center, pointer),
       }
     },
   }
@@ -214,7 +255,7 @@ export function applyObjectPreview<T extends { id: string; x: number; y: number 
   object: T,
   preview: ObjectDragPreview | null,
 ): T {
-  if (!preview || preview.objectId !== object.id) {
+  if (!preview || !preview.objectIds.includes(object.id)) {
     return object
   }
   return { ...object, x: object.x + preview.x, y: object.y + preview.y }
