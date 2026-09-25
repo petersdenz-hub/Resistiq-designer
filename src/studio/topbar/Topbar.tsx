@@ -152,14 +152,15 @@ export function Topbar({ onClose, onNew, onPreview }: TopbarProps) {
           Save as
         </Button>
         <Button onClick={onPreview}>Preview</Button>
-        <Button
-          variant="accent"
-          className="hidden md:inline-flex"
-          disabled={!EXPORT_AVAILABLE}
-          title="Export is not available yet."
-        >
-          Export
-        </Button>
+        <span className="hidden md:inline-flex">
+          <Button
+            variant="accent"
+            disabled={!EXPORT_AVAILABLE}
+            title="Export is not available yet."
+          >
+            Export
+          </Button>
+        </span>
       </div>
 
       {toast ? (
