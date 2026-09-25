@@ -63,7 +63,9 @@ export function switchGarment(document: DesignDocument, nextType: string): Desig
     ? document.activeZone
     : undefined
   const activeZone =
-    currentZone && zones.includes(currentZone) ? currentZone : defaultZoneForView(activeView)
+    currentZone && zones.includes(currentZone)
+      ? currentZone
+      : (zones[0] ?? defaultZoneForView(activeView))
   const panelStillValid = chrome.panels.some(
     (panel) => panel.id === document.activePanelId && panel.viewId === activeView,
   )

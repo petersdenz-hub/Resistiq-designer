@@ -1,4 +1,5 @@
 import { defaultConstructionFor } from '@/garments/constructionDefaults'
+import { getGarment } from '@/garments/registry'
 import {
   CONSTRUCTION_KINDS,
   type ConstructionKind,
@@ -99,10 +100,7 @@ export function pocketSlot(part: DesignConstructionPart, garmentType: string): s
   if (part.slot) {
     return part.slot
   }
-  if (garmentType === 'pants' || garmentType === 'shorts') {
-    return 'back'
-  }
-  return 'body'
+  return getGarment(garmentType).capabilities.legs ? 'back' : 'body'
 }
 
 /** Stored pocket slots override defaults; missing slots keep garment defaults. */

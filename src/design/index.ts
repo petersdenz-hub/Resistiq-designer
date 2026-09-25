@@ -28,6 +28,7 @@ export {
   objectAspect,
   objectDisplayName,
   PLACEMENT_ZONE_LABELS,
+  placementZoneLabel,
   PLACEMENT_ZONES,
   SHAPE_KIND_LABELS,
   SHAPE_KINDS,

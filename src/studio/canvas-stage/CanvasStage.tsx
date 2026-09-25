@@ -1,5 +1,5 @@
 import { getBodyColor, getDesignObjectsInZone, getElementsInView, resolveActiveZone } from '@/design/selectors'
-import { PLACEMENT_ZONE_LABELS, zonesForGarment } from '@/design/designObjects'
+import { placementZoneLabel, zonesForGarment } from '@/design/designObjects'
 import { useDesign } from '@/design/useDesign'
 import { StageViewport } from '@/canvas/StageViewport'
 import { CanvasRulers, RULER_SIZE } from '@/canvas/CanvasRulers'
@@ -184,7 +184,7 @@ export function CanvasStage({
             <span aria-hidden="true">→</span>
             <span data-breadcrumb-view="true">{viewLabel}</span>
             <span aria-hidden="true">→</span>
-            <span className="text-ink" data-breadcrumb-zone="true">{PLACEMENT_ZONE_LABELS[zone]}</span>
+            <span className="text-ink" data-breadcrumb-zone="true">{placementZoneLabel(zone)}</span>
           </div>
           <div className="flex rounded-md border border-line p-0.5">
             {document.views.map((view) => (
@@ -218,7 +218,7 @@ export function CanvasStage({
                     : 'border-line text-mute hover:text-ink'
                 }`}
               >
-                {PLACEMENT_ZONE_LABELS[item]}
+                {placementZoneLabel(item)}
               </button>
             ))}
           </div>

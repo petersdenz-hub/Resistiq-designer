@@ -1,8 +1,25 @@
 import type { ResolvedConstruction } from '@/design/construction'
+import type { DesignConstruction } from '@/design/types'
 import type { ReactNode } from 'react'
 import type { GarmentCapabilities } from './capabilities'
 
-export type GarmentCategory = 'tops' | 'outerwear' | 'bottoms'
+export interface GarmentConstructionControl {
+  id: string
+  kind: string
+  label: string
+  options: Array<{ value: string; label: string }>
+  slot?: string
+  field?: 'style' | 'variant'
+  requiresKind?: string
+}
+
+export type GarmentCategory =
+  | 'tops'
+  | 'outerwear'
+  | 'bottoms'
+  | 'headwear'
+  | 'accessories'
+  | 'bags'
 
 export type GarmentPanelType =
   | 'body'
@@ -20,10 +37,22 @@ export type GarmentPanelType =
   | 'side_panel'
   | 'zipper'
   | 'seam'
+  | 'crown'
+  | 'brim'
+  | 'band'
+  | 'hand'
+  | 'foot'
+  | 'shell'
+  | 'strap'
+  | 'flap'
 
 export type GarmentPanelSide = 'front' | 'back' | 'left' | 'right' | 'center'
 
-/** Placement / print zone ids used by the editor. Not physical seams. */
+/**
+ * Well-known placement / print zone ids. A garment may also declare its own
+ * zone strings (crown, brim, strap, …). The editor consumes whatever the
+ * definition lists in `supportedDesignZones`.
+ */
 export const GARMENT_DESIGN_ZONES = [
   'front',
   'back',
@@ -32,7 +61,14 @@ export const GARMENT_DESIGN_ZONES = [
   'left-leg',
   'right-leg',
 ] as const
-export type GarmentDesignZoneId = (typeof GARMENT_DESIGN_ZONES)[number]
+export type GarmentDesignZoneId = (typeof GARMENT_DESIGN_ZONES)[number] | (string & {})
+
+/** Colorable / selectable region backed by one or more real panels. */
+export interface GarmentRegionDefinition {
+  id: string
+  label: string
+  panelIds: string[]
+}
 
 /** Percentage box inside a panel (0–100). Independent of zoom and screen pixels. */
 export interface PercentRect {
@@ -105,6 +141,12 @@ export interface GarmentPanelDefinition {
    * Used for selection outlines and artwork clipping — never a print rectangle.
    */
   silhouette?: string | string[]
+  /** Editor placement zone this panel belongs to. Inferred from type/side when omitted. */
+  placementZone?: string
+  /** Stable region id when this panel should not follow the default type/side grouping. */
+  regionId?: string
+  /** Display label for `regionId`. */
+  regionLabel?: string
 }
 
 export interface GarmentDefaults {
@@ -137,15 +179,24 @@ export interface GarmentDefinition {
   views: GarmentViewDefinition[]
   viewBox: { width: number; height: number }
   panels: GarmentPanelDefinition[]
+  /**
+   * Explicit editable regions. When omitted, regions are derived from panels.
+   * A new garment should declare these rather than teaching the editor new IDs.
+   */
+  regions?: GarmentRegionDefinition[]
   /** Front-view snapshot used by the catalog and garment selector. */
   preview?: GarmentPreview
   /** Placement zones the editor should offer for this garment. */
   supportedDesignZones?: readonly GarmentDesignZoneId[]
   /**
-   * Panel types this garment may grow later (hood, pocket, collar, …).
+   * Panel types this garment may grow later (hood, pocket, brim, strap, …).
    * Listed so the model can represent them without implementing them now.
    */
   reservedPanelTypes?: readonly GarmentPanelType[]
+  /** Read-time construction used when the document has none. */
+  constructionDefaults?: DesignConstruction
+  /** Construction editor controls. Derived from capabilities when omitted. */
+  constructionControls?: readonly GarmentConstructionControl[]
   defaults: GarmentDefaults
   capabilities: GarmentCapabilities
   defaultPanelId: (viewId: string) => string
@@ -156,6 +207,22 @@ export const GARMENT_CATEGORY_LABELS: Record<GarmentCategory, string> = {
   tops: 'Tops',
   outerwear: 'Outerwear',
   bottoms: 'Bottoms',
+  headwear: 'Headwear',
+  accessories: 'Accessories',
+  bags: 'Bags',
+}
+
+export const GARMENT_CATEGORY_ORDER: GarmentCategory[] = [
+  'tops',
+  'outerwear',
+  'bottoms',
+  'headwear',
+  'accessories',
+  'bags',
+]
+
+export function categoryLabel(category: string): string {
+  return GARMENT_CATEGORY_LABELS[category as GarmentCategory] ?? category
 }
 
 export const FRONT_BACK_VIEWS: GarmentViewDefinition[] = [

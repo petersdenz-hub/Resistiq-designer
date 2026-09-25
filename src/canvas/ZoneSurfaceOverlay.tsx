@@ -1,4 +1,4 @@
-import { defaultPanelIdForZone, PLACEMENT_ZONE_LABELS, type PlacementZone } from '@/design/designObjects'
+import { defaultPanelIdForZone, placementZoneLabel, type PlacementZone } from '@/design/designObjects'
 import { getArtworkPanelBounds, type ArtworkPanelBounds } from '@/design/objectPlacement'
 import type { DesignDocument } from '@/design/types'
 
@@ -41,7 +41,7 @@ function SurfaceLabel({ bounds, zone }: { bounds: ArtworkPanelBounds; zone: Plac
       fontSize={11}
       fontFamily="IBM Plex Sans, sans-serif"
     >
-      {PLACEMENT_ZONE_LABELS[zone]} · 2D
+      {placementZoneLabel(zone)} · 2D
     </text>
   )
 }

@@ -42,9 +42,11 @@ export {
   garmentsInCategory,
   getGarment,
   hasGarment,
+  listGarments,
   PLANNED_GARMENT_LABELS,
   registerGarment,
   resolveGarmentType,
+  unregisterGarment,
 } from './registry'
 export { GarmentRenderer } from './render/GarmentRenderer'
 export { PanelGuides } from './render/PanelGuides'
@@ -59,6 +61,7 @@ export {
   completePanel,
   garmentPreviewView,
   inferPanelSide,
+  inferPlacementZone,
   inferSupportedDesignZones,
   isGarmentDesignZone,
   isPrintablePanel,
@@ -72,9 +75,15 @@ export {
   percentFromLocal,
 } from './model'
 export type { GarmentCapabilities } from './capabilities'
+export {
+  categoryLabel,
+  GARMENT_CATEGORY_LABELS,
+  GARMENT_CATEGORY_ORDER,
+} from './types'
 export type {
   DesignZoneDefinition,
   GarmentCategory,
+  GarmentConstructionControl,
   GarmentDefaults,
   GarmentDefinition,
   GarmentDesignZoneId,
@@ -83,6 +92,7 @@ export type {
   GarmentPanelType,
   GarmentPreview,
   GarmentRect,
+  GarmentRegionDefinition,
   GarmentRenderProps,
   GarmentSafeAreaDefinition,
   GarmentViewDefinition,

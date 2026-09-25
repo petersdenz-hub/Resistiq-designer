@@ -1,3 +1,4 @@
+import { SWEATSHIRT_CONSTRUCTION, SWEATSHIRT_CONTROLS } from '../constructionCatalog'
 import { garmentCapabilities } from '../capabilities'
 import { attachSilhouettes } from '../topology'
 import { FRONT_BACK_VIEWS, STANDARD_VIEWBOX } from '../types'
@@ -235,6 +236,8 @@ export const sweatshirtMeta = {
   panels: attachSilhouettes(SWEATSHIRT_PANELS, SWEATSHIRT_PATHS),
   preview: { viewId: 'front' },
   supportedDesignZones: ['front', 'back', 'left-sleeve', 'right-sleeve'],
+  constructionDefaults: SWEATSHIRT_CONSTRUCTION,
+  constructionControls: SWEATSHIRT_CONTROLS,
   defaults: { bodyColor: '#4a3f38' },
   capabilities: garmentCapabilities({
     sleeves: true,

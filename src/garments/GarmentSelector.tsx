@@ -4,7 +4,7 @@ import { ConfirmDialog } from '@/ui'
 import { useState } from 'react'
 import { AVAILABLE_GARMENTS } from './registry'
 import { garmentPreviewView } from './model'
-import { GARMENT_CATEGORY_LABELS } from './types'
+import { categoryLabel } from './types'
 
 export function GarmentSelector() {
   const { document, switchGarment } = useDesign()
@@ -60,7 +60,7 @@ export function GarmentSelector() {
                 <div className="border-t border-line px-2 py-1.5">
                   <div className="text-[11px] font-medium text-ink">{garment.name}</div>
                   <div className="text-[9px] uppercase tracking-[0.12em] text-mute">
-                    {GARMENT_CATEGORY_LABELS[garment.category]}
+                    {categoryLabel(garment.category)}
                   </div>
                 </div>
               </button>

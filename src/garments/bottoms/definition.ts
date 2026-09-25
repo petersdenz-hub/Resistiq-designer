@@ -1,3 +1,4 @@
+import { BOTTOMS_CONSTRUCTION, PANTS_CONTROLS, SHORTS_CONTROLS } from '../constructionCatalog'
 import { garmentCapabilities } from '../capabilities'
 import { attachSilhouettes } from '../topology'
 import { FRONT_BACK_VIEWS, STANDARD_VIEWBOX } from '../types'
@@ -99,6 +100,7 @@ export function createBottomsMeta(kind: BottomsKind): Omit<GarmentDefinition, 'r
       printable: false,
       local: { width: 50, height: 74 },
       frame: { x: 196, y: 128, width: 50, height: 80 },
+      ...(long ? {} : { regionId: 'pockets', regionLabel: 'Pockets' }),
     },
     {
       id: 'pocket_right',
@@ -108,6 +110,7 @@ export function createBottomsMeta(kind: BottomsKind): Omit<GarmentDefinition, 'r
       printable: false,
       local: { width: 50, height: 74 },
       frame: { x: 314, y: 128, width: 50, height: 80 },
+      ...(long ? {} : { regionId: 'pockets', regionLabel: 'Pockets' }),
     },
     {
       id: 'pocket_left_back',
@@ -117,6 +120,7 @@ export function createBottomsMeta(kind: BottomsKind): Omit<GarmentDefinition, 'r
       printable: false,
       local: { width: 72, height: 78 },
       frame: { x: 196, y: 150, width: 72, height: 78 },
+      ...(long ? {} : { regionId: 'pockets', regionLabel: 'Pockets' }),
     },
     {
       id: 'pocket_right_back',
@@ -126,6 +130,7 @@ export function createBottomsMeta(kind: BottomsKind): Omit<GarmentDefinition, 'r
       printable: false,
       local: { width: 72, height: 78 },
       frame: { x: 294, y: 150, width: 72, height: 78 },
+      ...(long ? {} : { regionId: 'pockets', regionLabel: 'Pockets' }),
     },
     {
       id: 'inseam',
@@ -175,6 +180,8 @@ export function createBottomsMeta(kind: BottomsKind): Omit<GarmentDefinition, 'r
     panels: attachSilhouettes(panels, bottomsPaths(kind)),
     preview: { viewId: 'front' },
     supportedDesignZones: ['front', 'back', 'left-leg', 'right-leg'],
+    constructionDefaults: BOTTOMS_CONSTRUCTION,
+    constructionControls: long ? PANTS_CONTROLS : SHORTS_CONTROLS,
     defaults: { bodyColor: long ? '#2a3140' : '#4a5568' },
     capabilities: garmentCapabilities({
       legs: true,

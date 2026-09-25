@@ -2,11 +2,11 @@ import { getPanelColor } from '@/design/selectors'
 import type { DesignDocument } from '@/design/types'
 import { inferPanelSide, panelName } from './model'
 import { getGarment } from './registry'
-import type { GarmentPanelDefinition, GarmentPanelType } from './types'
+import type { GarmentDefinition, GarmentPanelDefinition, GarmentPanelType, GarmentRegionDefinition } from './types'
 
 /**
  * A colorable garment region backed by one or more real panels.
- * Regions are derived from GarmentDefinition panels — never invented.
+ * Regions come from the garment definition, or are derived from its panels.
  */
 export interface ColorRegion {
   id: string
@@ -27,7 +27,7 @@ function ids(panels: GarmentPanelDefinition[]): string[] {
   return [...new Set(panels.map((panel) => panel.id))]
 }
 
-function splitRegionId(type: GarmentPanelType, side: 'left' | 'right'): string {
+function splitRegionId(type: string, side: 'left' | 'right'): string {
   if (type === 'sleeve') {
     return side === 'left' ? 'left-sleeve' : 'right-sleeve'
   }
@@ -40,7 +40,17 @@ function splitRegionId(type: GarmentPanelType, side: 'left' | 'right'): string {
   if (type === 'pocket') {
     return side === 'left' ? 'left-pocket' : 'right-pocket'
   }
+  if (type === 'hand') {
+    return side === 'left' ? 'left-hand' : 'right-hand'
+  }
+  if (type === 'foot') {
+    return side === 'left' ? 'left-foot' : 'right-foot'
+  }
   return `${type}-${side}`
+}
+
+function titleType(type: string): string {
+  return type.replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())
 }
 
 function addTypedRegions(
@@ -51,7 +61,7 @@ function addTypedRegions(
   groupedLabel: string,
   groupedId: string,
 ) {
-  const matching = panels.filter((panel) => panel.type === type)
+  const matching = panels.filter((panel) => panel.type === type && !panel.regionId)
   if (matching.length === 0) {
     return
   }
@@ -72,19 +82,35 @@ function addGroup(
   id: string,
   label: string,
 ) {
-  const matching = panels.filter((panel) => panel.type === type)
+  const matching = panels.filter((panel) => panel.type === type && !panel.regionId)
   if (matching.length === 0) {
     return
   }
   regions.push({ id, label, panelIds: ids(matching) })
 }
 
-export function colorRegionsFor(garmentType: string): ColorRegion[] {
-  const garment = getGarment(garmentType)
-  const panels = garment.panels
+function explicitPanelRegions(panels: GarmentPanelDefinition[]): ColorRegion[] {
+  const grouped = new Map<string, GarmentPanelDefinition[]>()
+  for (const panel of panels) {
+    if (!panel.regionId) {
+      continue
+    }
+    const list = grouped.get(panel.regionId) ?? []
+    list.push(panel)
+    grouped.set(panel.regionId, list)
+  }
+  return [...grouped.entries()].map(([id, members]) => ({
+    id,
+    label: members[0]?.regionLabel ?? titleType(id),
+    panelIds: ids(members),
+  }))
+}
+
+export function deriveRegionsFromPanels(panels: GarmentPanelDefinition[]): ColorRegion[] {
+  const unlabeled = panels.filter((panel) => !panel.regionId)
   const regions: ColorRegion[] = []
 
-  const body = panels.filter((panel) => panel.type === 'body')
+  const body = unlabeled.filter((panel) => panel.type === 'body')
   const leftBodies = body.filter((panel) => inferPanelSide(panel) === 'left')
   const rightBodies = body.filter((panel) => inferPanelSide(panel) === 'right')
   if (leftBodies.length > 0 && rightBodies.length > 0) {
@@ -111,35 +137,25 @@ export function colorRegionsFor(garmentType: string): ColorRegion[] {
     }
   }
 
-  addTypedRegions(regions, panels, 'sleeve', (side) => (side === 'left' ? 'Left sleeve' : 'Right sleeve'), 'Sleeves', 'sleeves')
-  addTypedRegions(regions, panels, 'leg', (side) => (side === 'left' ? 'Left leg' : 'Right leg'), 'Legs', 'legs')
-  addGroup(regions, panels, 'hood', 'hood', 'Hood')
-  addGroup(regions, panels, 'collar', 'collar', 'Collar')
-  addTypedRegions(regions, panels, 'cuff', (side) => (side === 'left' ? 'Left cuff' : 'Right cuff'), 'Cuffs', 'cuffs')
-  addGroup(regions, panels, 'hem', 'hem', 'Hem')
-  addGroup(regions, panels, 'waistband', 'waistband', 'Waistband')
+  addTypedRegions(regions, unlabeled, 'sleeve', (side) => (side === 'left' ? 'Left sleeve' : 'Right sleeve'), 'Sleeves', 'sleeves')
+  addTypedRegions(regions, unlabeled, 'leg', (side) => (side === 'left' ? 'Left leg' : 'Right leg'), 'Legs', 'legs')
+  addGroup(regions, unlabeled, 'hood', 'hood', 'Hood')
+  addGroup(regions, unlabeled, 'collar', 'collar', 'Collar')
+  addTypedRegions(regions, unlabeled, 'cuff', (side) => (side === 'left' ? 'Left cuff' : 'Right cuff'), 'Cuffs', 'cuffs')
+  addGroup(regions, unlabeled, 'hem', 'hem', 'Hem')
+  addGroup(regions, unlabeled, 'waistband', 'waistband', 'Waistband')
+  addTypedRegions(regions, unlabeled, 'pocket', (side) => (side === 'left' ? 'Left pocket' : 'Right pocket'), 'Pockets', 'pockets')
+  addGroup(regions, unlabeled, 'zipper', 'zipper', 'Zipper')
+  addGroup(regions, unlabeled, 'crown', 'crown', 'Crown')
+  addGroup(regions, unlabeled, 'brim', 'brim', 'Brim')
+  addGroup(regions, unlabeled, 'band', 'band', 'Band')
+  addTypedRegions(regions, unlabeled, 'hand', (side) => (side === 'left' ? 'Left hand' : 'Right hand'), 'Hands', 'hands')
+  addTypedRegions(regions, unlabeled, 'foot', (side) => (side === 'left' ? 'Left foot' : 'Right foot'), 'Feet', 'feet')
+  addGroup(regions, unlabeled, 'shell', 'shell', 'Shell')
+  addGroup(regions, unlabeled, 'strap', 'strap', 'Strap')
+  addGroup(regions, unlabeled, 'flap', 'flap', 'Flap')
 
-  const pockets = panels.filter((panel) => panel.type === 'pocket')
-  if (pockets.length > 0) {
-    const left = pockets.filter((panel) => inferPanelSide(panel) === 'left')
-    const right = pockets.filter((panel) => inferPanelSide(panel) === 'right')
-    if (garmentType === 'shorts' && left.length > 0 && right.length > 0) {
-      regions.push({ id: 'pockets', label: 'Pockets', panelIds: ids(pockets) })
-    } else if (left.length > 0 && right.length > 0) {
-      regions.push({ id: 'left-pocket', label: 'Left pocket', panelIds: ids(left) })
-      regions.push({ id: 'right-pocket', label: 'Right pocket', panelIds: ids(right) })
-    } else {
-      regions.push({
-        id: garmentType === 'hoodie' ? 'kangaroo-pocket' : 'pockets',
-        label: garmentType === 'hoodie' ? 'Kangaroo pocket' : 'Pockets',
-        panelIds: ids(pockets),
-      })
-    }
-  }
-
-  addGroup(regions, panels, 'zipper', 'zipper', 'Zipper')
-
-  const seams = panels.filter((panel) => panel.type === 'seam')
+  const seams = unlabeled.filter((panel) => panel.type === 'seam')
   const inseam = seams.filter((panel) => panel.id.includes('inseam'))
   const outseam = seams.filter((panel) => panel.id.includes('outseam'))
   if (inseam.length > 0) {
@@ -149,7 +165,23 @@ export function colorRegionsFor(garmentType: string): ColorRegion[] {
     regions.push({ id: 'outseam', label: 'Outseam', panelIds: ids(outseam) })
   }
 
+  regions.push(...explicitPanelRegions(panels))
   return regions
+}
+
+export function regionsForDefinition(garment: GarmentDefinition): ColorRegion[] {
+  if (garment.regions && garment.regions.length > 0) {
+    return garment.regions.map((region: GarmentRegionDefinition) => ({
+      id: region.id,
+      label: region.label,
+      panelIds: [...region.panelIds],
+    }))
+  }
+  return deriveRegionsFromPanels(garment.panels)
+}
+
+export function colorRegionsFor(garmentType: string): ColorRegion[] {
+  return regionsForDefinition(getGarment(garmentType))
 }
 
 export function colorRegionById(garmentType: string, id: string): ColorRegion | undefined {

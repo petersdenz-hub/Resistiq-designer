@@ -1,3 +1,4 @@
+import { HOODIE_CONSTRUCTION, HOODIE_CONTROLS } from '../constructionCatalog'
 import { garmentCapabilities } from '../capabilities'
 import { attachSilhouettes } from '../topology'
 import { FRONT_BACK_VIEWS, STANDARD_VIEWBOX } from '../types'
@@ -179,6 +180,8 @@ export const HOODIE_PANELS: GarmentPanelDefinition[] = [
     printable: false,
     local: { width: 132, height: 126 },
     frame: { x: 214, y: 328, width: 132, height: 126 },
+    regionId: 'kangaroo-pocket',
+    regionLabel: 'Kangaroo pocket',
   },
 ]
 
@@ -196,6 +199,8 @@ export const hoodieMeta = {
   panels: attachSilhouettes(HOODIE_PANELS, HOODIE_PATHS),
   preview: { viewId: 'front' },
   supportedDesignZones: ['front', 'back', 'left-sleeve', 'right-sleeve'],
+  constructionDefaults: HOODIE_CONSTRUCTION,
+  constructionControls: HOODIE_CONTROLS,
   defaults: { bodyColor: '#3a4150' },
   capabilities: garmentCapabilities({
     hood: true,

@@ -43,14 +43,14 @@ export function panelPrintBox(document: DesignDocument, panelId: string | undefi
  */
 export function objectClipPaths(document: DesignDocument, object: DesignObject): string[] {
   const panelId = object.anchor.panelId ?? defaultPanelIdForZone(document, object.zone)
-  if (panelId) {
-    const panel = getGarmentPanel(getGarment(document.garmentType), panelId)
-    const panelPaths = panelSilhouettePaths(panel ?? undefined)
-    if (panelPaths.length > 0) {
-      return panelPaths
-    }
+  const panel = panelId ? getGarmentPanel(getGarment(document.garmentType), panelId) : null
+  const panelPaths = panelSilhouettePaths(panel ?? undefined)
+  if (panelPaths.length > 0) {
+    return panelPaths
   }
-  const viewId = object.zone === 'back' ? 'back' : 'front'
+  const viewId =
+    panel?.viewId ??
+    (object.zone === 'back' || object.zone === 'front' ? object.zone : document.activeView)
   return garmentSilhouettePaths(document.garmentType, viewId)
 }
 

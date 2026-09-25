@@ -1,3 +1,4 @@
+import { JACKET_CONSTRUCTION, JACKET_CONTROLS } from '../constructionCatalog'
 import { garmentCapabilities } from '../capabilities'
 import { attachSilhouettes } from '../topology'
 import { FRONT_BACK_VIEWS, STANDARD_VIEWBOX } from '../types'
@@ -204,6 +205,8 @@ export const jacketMeta = {
   preview: { viewId: 'front' },
   supportedDesignZones: ['front', 'back', 'left-sleeve', 'right-sleeve'],
   reservedPanelTypes: ['hood', 'pocket', 'chest', 'collar', 'lower_sleeve', 'side_panel'],
+  constructionDefaults: JACKET_CONSTRUCTION,
+  constructionControls: JACKET_CONTROLS,
   defaults: { bodyColor: '#3d4a3c' },
   capabilities: garmentCapabilities({
     sleeves: true,
