@@ -1,3 +1,5 @@
+import { getGarmentPanel } from '@/garments/coordinates'
+import { getGarment } from '@/garments/registry'
 import { createId } from './ids'
 import { DEFAULT_TEXT_FONT, type FontWeight, type TextAlign } from './typography'
 import type { DesignDocument, LayerDirection } from './types'
@@ -18,9 +20,27 @@ export type DesignObjectType = (typeof DESIGN_OBJECT_TYPES)[number]
 export const SHAPE_KINDS = ['rectangle'] as const
 export type ShapeKind = (typeof SHAPE_KINDS)[number]
 
+export const ANCHOR_SPACES = ['zone', 'panel'] as const
+export type AnchorSpace = (typeof ANCHOR_SPACES)[number]
+
+/**
+ * Future garment-aware placement. Coordinates stay in garment viewBox units
+ * for the object's zone today. A later phase can project from `panelId`
+ * without rewriting objects to screen pixels.
+ */
+export interface DesignObjectAnchor {
+  space: AnchorSpace
+  /** Optional garment panel this object can later be projected onto. */
+  panelId?: string
+}
+
 export interface DesignObjectBase {
   id: string
   type: DesignObjectType
+  /**
+   * Position and size in garment viewBox units for `zone`.
+   * These are not browser/screen pixels.
+   */
   x: number
   y: number
   width: number
@@ -31,6 +51,7 @@ export interface DesignObjectBase {
   locked: boolean
   zIndex: number
   zone: PlacementZone
+  anchor: DesignObjectAnchor
 }
 
 export interface TextDesignObject extends DesignObjectBase {
@@ -45,8 +66,13 @@ export interface TextDesignObject extends DesignObjectBase {
 
 export interface ImageDesignObject extends DesignObjectBase {
   type: 'image'
+  /** Asset id in the local (or future persistent) asset store. */
   source: string
   fileName: string
+  mimeType: string
+  aspectLocked: boolean
+  naturalWidth?: number
+  naturalHeight?: number
 }
 
 export interface ShapeDesignObject extends DesignObjectBase {
@@ -91,6 +117,68 @@ export function isPlacementZone(value: unknown): value is PlacementZone {
   return typeof value === 'string' && (PLACEMENT_ZONES as readonly string[]).includes(value)
 }
 
+const ZONE_PANEL_CANDIDATES: Record<PlacementZone, string[]> = {
+  front: ['front_body', 'front_body_left', 'front_body_right'],
+  back: ['back_body'],
+  'left-sleeve': ['left_sleeve'],
+  'right-sleeve': ['right_sleeve'],
+  'left-leg': ['left_leg'],
+  'right-leg': ['right_leg'],
+}
+
+export function defaultPanelIdForZone(
+  document: DesignDocument,
+  zone: PlacementZone,
+): string | undefined {
+  const ids = new Set(document.panels.map((panel) => panel.id))
+  for (const id of ZONE_PANEL_CANDIDATES[zone]) {
+    if (ids.has(id)) {
+      return id
+    }
+  }
+
+  if (zone === 'front' || zone === 'back') {
+    return (
+      document.panels.find((panel) => panel.viewId === zone && panel.type === 'body')?.id ??
+      document.panels.find((panel) => panel.viewId === zone)?.id
+    )
+  }
+
+  const needle = zone.replace('-', '_')
+  return document.panels.find((panel) => panel.id === needle || panel.id.startsWith(needle))?.id
+}
+
+export function resolveObjectAnchor(
+  document: DesignDocument,
+  zone: PlacementZone,
+  current?: DesignObjectAnchor,
+): DesignObjectAnchor {
+  return {
+    space: current?.space === 'panel' ? 'panel' : 'zone',
+    panelId: current?.panelId ?? defaultPanelIdForZone(document, zone),
+  }
+}
+
+export function imageKeepsAlpha(mimeType?: string): boolean {
+  return mimeType !== 'image/jpeg' && mimeType !== 'image/jpg'
+}
+
+export function objectAspect(object: {
+  width: number
+  height: number
+  naturalWidth?: number
+  naturalHeight?: number
+}): number {
+  if (object.naturalWidth && object.naturalHeight) {
+    return object.naturalWidth / Math.max(object.naturalHeight, 1)
+  }
+  return object.width / Math.max(object.height, 1)
+}
+
+export function isImageAspectLocked(object: DesignObject): boolean {
+  return object.type === 'image' && object.aspectLocked !== false
+}
+
 export function getDesignObjects(document: DesignDocument): DesignObject[] {
   return document.designObjects ?? []
 }
@@ -123,14 +211,37 @@ function touch(document: DesignDocument): DesignDocument {
   return { ...document, updatedAt: new Date().toISOString() }
 }
 
-function defaultBox(kind: DesignObjectType) {
+function defaultSize(kind: DesignObjectType) {
   if (kind === 'text') {
-    return { x: 180, y: 220, width: 200, height: 48 }
+    return { width: 200, height: 48 }
   }
   if (kind === 'shape') {
-    return { x: 208, y: 248, width: 144, height: 96 }
+    return { width: 144, height: 96 }
   }
-  return { x: 192, y: 224, width: 176, height: 176 }
+  return { width: 176, height: 176 }
+}
+
+function defaultBox(
+  document: DesignDocument,
+  kind: DesignObjectType,
+  zone: PlacementZone,
+) {
+  const size = defaultSize(kind)
+  const panelId = defaultPanelIdForZone(document, zone)
+  if (panelId) {
+    const geometry = getGarmentPanel(getGarment(document.garmentType), panelId)
+    if (geometry) {
+      const width = Math.min(size.width, Math.max(48, geometry.frame.width * 0.72))
+      const height = Math.min(size.height, Math.max(24, geometry.frame.height * 0.72))
+      return {
+        x: geometry.frame.x + (geometry.frame.width - width) / 2,
+        y: geometry.frame.y + (geometry.frame.height - height) / 2,
+        width,
+        height,
+      }
+    }
+  }
+  return { x: 180, y: 220, ...size }
 }
 
 function sharedDefaults(
@@ -138,7 +249,7 @@ function sharedDefaults(
   type: DesignObjectType,
   zone: PlacementZone,
 ): DesignObjectBase {
-  const box = defaultBox(type)
+  const box = defaultBox(document, type, zone)
   return {
     id: createId(),
     type,
@@ -152,6 +263,7 @@ function sharedDefaults(
     locked: false,
     zIndex: nextObjectZIndex(document),
     zone,
+    anchor: resolveObjectAnchor(document, zone),
   }
 }
 
@@ -188,19 +300,31 @@ export function createShapeObject(document: DesignDocument, zone?: PlacementZone
 
 export function createImageObject(
   document: DesignDocument,
-  input: { source: string; fileName: string; naturalWidth?: number; naturalHeight?: number },
+  input: {
+    source: string
+    fileName: string
+    mimeType?: string
+    naturalWidth?: number
+    naturalHeight?: number
+    aspectLocked?: boolean
+  },
   zone?: PlacementZone,
 ): ImageDesignObject {
-  const object = {
-    ...sharedDefaults(document, 'image', zone ?? resolveActiveZone(document)),
-    type: 'image' as const,
+  const resolvedZone = zone ?? resolveActiveZone(document)
+  const object: ImageDesignObject = {
+    ...sharedDefaults(document, 'image', resolvedZone),
+    type: 'image',
     source: input.source,
     fileName: input.fileName,
+    mimeType: input.mimeType ?? 'image/png',
+    aspectLocked: input.aspectLocked !== false,
+    naturalWidth: input.naturalWidth,
+    naturalHeight: input.naturalHeight,
   }
   if (input.naturalWidth && input.naturalHeight) {
     const aspect = input.naturalWidth / Math.max(input.naturalHeight, 1)
-    const width = 176
-    const height = width / aspect
+    const width = object.width
+    const height = Math.max(8, width / aspect)
     return { ...object, width, height }
   }
   return object
@@ -226,6 +350,35 @@ export function removeDesignObject(
   })
 }
 
+function applyObjectPatch(document: DesignDocument, object: DesignObject, patch: DesignObjectPatch): DesignObject {
+  const next = { ...object, ...patch } as DesignObject
+  if (patch.zone && isPlacementZone(patch.zone) && patch.zone !== object.zone) {
+    next.anchor = {
+      space: patch.anchor?.space ?? (object.anchor.space === 'panel' ? 'panel' : 'zone'),
+      panelId: patch.anchor?.panelId ?? defaultPanelIdForZone(document, patch.zone),
+    }
+    next.zone = patch.zone
+  }
+  if (next.type === 'image' && next.aspectLocked !== false) {
+    const widthChanged = patch.width !== undefined && patch.height === undefined
+    const heightChanged = patch.height !== undefined && patch.width === undefined
+    if (widthChanged || heightChanged) {
+      const aspect = objectAspect({
+        width: object.width,
+        height: object.height,
+        naturalWidth: next.naturalWidth,
+        naturalHeight: next.naturalHeight,
+      })
+      if (widthChanged) {
+        next.height = Math.max(8, next.width / aspect)
+      } else {
+        next.width = Math.max(8, next.height * aspect)
+      }
+    }
+  }
+  return next
+}
+
 export function updateDesignObject(
   document: DesignDocument,
   objectId: string,
@@ -234,9 +387,21 @@ export function updateDesignObject(
   return touch({
     ...document,
     designObjects: getDesignObjects(document).map((object) =>
-      object.id === objectId ? ({ ...object, ...patch } as DesignObject) : object,
+      object.id === objectId ? applyObjectPatch(document, object, patch) : object,
     ),
   })
+}
+
+export function setDesignObjectZone(
+  document: DesignDocument,
+  objectId: string,
+  zone: PlacementZone,
+): DesignDocument {
+  const current = getDesignObjectById(document, objectId)
+  if (!current || !isPlacementZone(zone)) {
+    return document
+  }
+  return setActiveZone(updateDesignObject(document, objectId, { zone }), zone)
 }
 
 export function duplicateDesignObject(
@@ -349,6 +514,17 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value))
 }
 
+function sanitizeAnchor(value: unknown): DesignObjectAnchor {
+  if (!value || typeof value !== 'object') {
+    return { space: 'zone' }
+  }
+  const raw = value as Record<string, unknown>
+  return {
+    space: raw.space === 'panel' ? 'panel' : 'zone',
+    panelId: typeof raw.panelId === 'string' && raw.panelId.length > 0 ? raw.panelId : undefined,
+  }
+}
+
 function sanitizeBase(raw: Record<string, unknown>): DesignObjectBase | null {
   if (typeof raw.id !== 'string' || raw.id.length === 0) {
     return null
@@ -364,6 +540,7 @@ function sanitizeBase(raw: Record<string, unknown>): DesignObjectBase | null {
   ) {
     return null
   }
+  const zone = isPlacementZone(raw.zone) ? raw.zone : 'front'
   return {
     id: raw.id,
     type: raw.type as DesignObjectType,
@@ -376,7 +553,8 @@ function sanitizeBase(raw: Record<string, unknown>): DesignObjectBase | null {
     visible: raw.visible === false ? false : true,
     locked: raw.locked === true,
     zIndex: isFiniteNumber(raw.zIndex) ? raw.zIndex : 1,
-    zone: isPlacementZone(raw.zone) ? raw.zone : 'front',
+    zone,
+    anchor: sanitizeAnchor(raw.anchor),
   }
 }
 
@@ -414,6 +592,10 @@ function sanitizeOne(value: unknown): DesignObject | null {
       type: 'image',
       source: raw.source,
       fileName: typeof raw.fileName === 'string' ? raw.fileName : 'image',
+      mimeType: typeof raw.mimeType === 'string' && raw.mimeType.length > 0 ? raw.mimeType : 'image/png',
+      aspectLocked: raw.aspectLocked === false ? false : true,
+      naturalWidth: isFiniteNumber(raw.naturalWidth) ? raw.naturalWidth : undefined,
+      naturalHeight: isFiniteNumber(raw.naturalHeight) ? raw.naturalHeight : undefined,
     }
   }
   return {

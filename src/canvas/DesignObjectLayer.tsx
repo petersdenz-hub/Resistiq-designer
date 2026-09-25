@@ -1,4 +1,9 @@
-import type { DesignObject, ImageDesignObject, TextDesignObject } from '@/design/designObjects'
+import {
+  imageKeepsAlpha,
+  type DesignObject,
+  type ImageDesignObject,
+  type TextDesignObject,
+} from '@/design/designObjects'
 import { useAsset } from '@/persistence/useAsset'
 import type { PointerEvent as ReactPointerEvent } from 'react'
 
@@ -116,7 +121,8 @@ function ObjectImage({ object, selected }: { object: ImageDesignObject; selected
           y={object.y}
           width={object.width}
           height={object.height}
-          preserveAspectRatio="none"
+          preserveAspectRatio={object.aspectLocked !== false ? 'xMidYMid meet' : 'none'}
+          data-image-alpha={imageKeepsAlpha(object.mimeType) ? 'true' : 'false'}
           style={{ pointerEvents: 'none' }}
         />
       ) : (

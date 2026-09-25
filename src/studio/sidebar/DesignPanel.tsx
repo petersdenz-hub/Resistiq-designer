@@ -2,6 +2,7 @@ import { ACCEPTED_IMAGE_ACCEPT } from '@/design/ingestImage'
 import {
   getDesignObjectsInZone,
   PLACEMENT_ZONE_LABELS,
+  PLACEMENT_ZONES,
   resolveActiveZone,
   zonesForGarment,
 } from '@/design'
@@ -29,7 +30,7 @@ export function DesignPanel() {
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const zone = resolveActiveZone(document)
-  const zones = zonesForGarment(document.garmentType)
+  const garmentZones = new Set(zonesForGarment(document.garmentType))
   const objects = getDesignObjectsInZone(document, zone, true)
 
   return (
@@ -38,39 +39,11 @@ export function DesignPanel() {
         Artwork lives on the Design Document as design objects. Construction stays on the garment.
       </p>
 
-      <section className="space-y-2">
-        <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Placement</div>
-        <div className="flex flex-wrap gap-1">
-          {zones.map((item) => {
-            const selected = item === zone
-            return (
-              <button
-                key={item}
-                type="button"
-                data-zone-option={item}
-                aria-pressed={selected}
-                onClick={() => setActiveZone(item)}
-                className={`h-7 rounded-md border px-2 text-[11px] ${
-                  selected
-                    ? 'border-accent/50 bg-accent/10 text-ink'
-                    : 'border-line text-mute hover:text-ink'
-                }`}
-              >
-                {PLACEMENT_ZONE_LABELS[item]}
-              </button>
-            )
-          })}
-        </div>
-      </section>
-
-      <section className="space-y-2">
-        <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Add</div>
+      <section className="space-y-2" data-design-section="true">
+        <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Design</div>
         <div className="grid grid-cols-1 gap-1.5">
           <Button variant="accent" className="w-full" data-add-design-text="true" onClick={addDesignText}>
             Add text
-          </Button>
-          <Button className="w-full" data-add-design-shape="true" onClick={addDesignShape}>
-            Add shape
           </Button>
           <input
             ref={inputRef}
@@ -97,14 +70,13 @@ export function DesignPanel() {
             disabled={busy}
             onClick={() => inputRef.current?.click()}
           >
-            {busy ? 'Uploading…' : 'Add image'}
+            {busy ? 'Uploading…' : 'Add logo / image'}
+          </Button>
+          <Button className="w-full" data-add-design-shape="true" onClick={addDesignShape}>
+            Add shape
           </Button>
         </div>
         {error ? <p className="text-[12px] text-accent">{error}</p> : null}
-      </section>
-
-      <section className="space-y-2">
-        <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Canvas</div>
         <label className="flex items-center justify-between text-[12px] text-ink">
           <span>Grid</span>
           <input
@@ -125,10 +97,12 @@ export function DesignPanel() {
         </label>
       </section>
 
-      <section className="space-y-2">
+      <section className="space-y-2" data-layers-section="true">
         <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Layers</div>
         {objects.length === 0 ? (
-          <p className="text-[12px] leading-5 text-mute">No design objects on {PLACEMENT_ZONE_LABELS[zone]} yet.</p>
+          <p className="text-[12px] leading-5 text-mute">
+            No design objects on {PLACEMENT_ZONE_LABELS[zone]} yet.
+          </p>
         ) : (
           <ul className="space-y-1.5">
             {[...objects].reverse().map((object) => {
@@ -139,29 +113,46 @@ export function DesignPanel() {
                     className={`rounded-md border px-2 py-1.5 ${
                       selected ? 'border-accent/50 bg-accent/10' : 'border-line'
                     }`}
+                    data-layer-row={object.id}
                   >
-                    <button
-                      type="button"
-                      onClick={() => selectObject(object.id)}
-                      className="block w-full text-left text-[12px] capitalize text-ink"
-                    >
-                      {object.type === 'text' ? object.content || 'Text' : object.type}
-                      <span className="mt-0.5 block text-[10px] text-mute">
-                        {object.visible ? 'Visible' : 'Hidden'}
-                        {object.locked ? ' · locked' : ''}
-                      </span>
-                    </button>
+                    <div className="flex items-start gap-1">
+                      <button
+                        type="button"
+                        data-layer-visibility={object.id}
+                        aria-pressed={object.visible}
+                        title={object.visible ? 'Hide' : 'Show'}
+                        onClick={() => updateObjectById(object.id, { visible: !object.visible })}
+                        className="mt-0.5 h-6 w-6 shrink-0 rounded border border-line text-[10px] text-mute hover:text-ink"
+                      >
+                        {object.visible ? 'V' : 'H'}
+                      </button>
+                      <button
+                        type="button"
+                        data-layer-lock={object.id}
+                        aria-pressed={object.locked}
+                        title={object.locked ? 'Unlock' : 'Lock'}
+                        onClick={() => updateObjectById(object.id, { locked: !object.locked })}
+                        className="mt-0.5 h-6 w-6 shrink-0 rounded border border-line text-[10px] text-mute hover:text-ink"
+                      >
+                        {object.locked ? 'L' : 'U'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => selectObject(object.id)}
+                        className="min-w-0 flex-1 text-left text-[12px] capitalize text-ink"
+                      >
+                        {objectLabel(object)}
+                        <span className="mt-0.5 block text-[10px] text-mute">
+                          {object.visible ? 'Visible' : 'Hidden'}
+                          {object.locked ? ' · locked' : ''}
+                        </span>
+                      </button>
+                    </div>
                     {selected ? (
                       <div className="mt-1.5 flex flex-wrap gap-1">
-                        <MiniButton onClick={() => updateObjectById(object.id, { visible: !object.visible })}>
-                          {object.visible ? 'Hide' : 'Show'}
-                        </MiniButton>
-                        <MiniButton onClick={() => updateObjectById(object.id, { locked: !object.locked })}>
-                          {object.locked ? 'Unlock' : 'Lock'}
-                        </MiniButton>
-                        <MiniButton onClick={duplicateSelectedObject}>Duplicate</MiniButton>
                         <MiniButton onClick={() => moveSelectedObjectLayer('forward')}>Up</MiniButton>
                         <MiniButton onClick={() => moveSelectedObjectLayer('backward')}>Down</MiniButton>
+                        <MiniButton onClick={duplicateSelectedObject}>Duplicate</MiniButton>
                         <MiniButton onClick={() => removeObjectById(object.id)}>Delete</MiniButton>
                       </div>
                     ) : null}
@@ -172,8 +163,51 @@ export function DesignPanel() {
           </ul>
         )}
       </section>
+
+      <section className="space-y-2" data-placement-section="true">
+        <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Placement</div>
+        <div className="flex flex-wrap gap-1">
+          {PLACEMENT_ZONES.map((item) => {
+            const selected = item === zone
+            const typical = garmentZones.has(item)
+            return (
+              <button
+                key={item}
+                type="button"
+                data-zone-option={item}
+                aria-pressed={selected}
+                onClick={() => setActiveZone(item)}
+                className={`h-7 rounded-md border px-2 text-[11px] ${
+                  selected
+                    ? 'border-accent/50 bg-accent/10 text-ink'
+                    : typical
+                      ? 'border-line text-mute hover:text-ink'
+                      : 'border-line/70 text-mute/70 hover:text-ink'
+                }`}
+              >
+                {PLACEMENT_ZONE_LABELS[item]}
+              </button>
+            )
+          })}
+        </div>
+        <p className="text-[11px] leading-4 text-mute">
+          Switching zones only changes where new artwork is placed. Objects on other zones stay as they are.
+        </p>
+      </section>
     </div>
   )
+}
+
+function objectLabel(object: { type: string; content?: string; fileName?: string }) {
+  if (object.type === 'text') {
+    const preview = object.content?.trim() || 'Text'
+    return preview.length > 22 ? `${preview.slice(0, 22)}…` : preview
+  }
+  if (object.type === 'image') {
+    const preview = object.fileName?.trim() || 'Image'
+    return preview.length > 22 ? `${preview.slice(0, 22)}…` : preview
+  }
+  return object.type
 }
 
 function MiniButton({

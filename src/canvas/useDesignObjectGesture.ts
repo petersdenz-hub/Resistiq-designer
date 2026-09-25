@@ -1,5 +1,7 @@
 import {
   getDesignObjectById,
+  isImageAspectLocked,
+  objectAspect,
   snapBox,
   snapValue,
   type DesignObjectPatch,
@@ -10,6 +12,7 @@ import {
   clientToSvgPoint,
   getCenter,
   resizeRect,
+  resizeRectKeepAspect,
   rotationFromPointer,
   snapAngle,
   type ResizeHandle,
@@ -89,17 +92,15 @@ export function useDesignObjectGesture(
       }
 
       if (gesture.kind === 'resize') {
-        const next = resizeRect(
-          {
-            x: gesture.startX,
-            y: gesture.startY,
-            width: gesture.startWidth,
-            height: gesture.startHeight,
-          },
-          gesture.startRotation,
-          gesture.handle,
-          pointer,
-        )
+        const start = {
+          x: gesture.startX,
+          y: gesture.startY,
+          width: gesture.startWidth,
+          height: gesture.startHeight,
+        }
+        const next = isImageAspectLocked(object)
+          ? resizeRectKeepAspect(start, gesture.startRotation, gesture.handle, pointer, objectAspect(object))
+          : resizeRect(start, gesture.startRotation, gesture.handle, pointer)
         const snapped = snapBox(next, apiRef.current.gridSize, apiRef.current.snapToGrid)
         apiRef.current.updateObjectById(
           gesture.objectId,

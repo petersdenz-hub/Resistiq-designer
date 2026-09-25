@@ -126,6 +126,67 @@ export function resizeRect(
   }
 }
 
+export function resizeRectKeepAspect(
+  rect: Rect,
+  rotation: number,
+  handle: ResizeHandle,
+  worldPointer: Point,
+  aspect: number,
+): Rect {
+  const unconstrained = resizeRect(rect, rotation, handle, worldPointer)
+  const safeAspect = Math.max(aspect, 0.05)
+  const horizontal = handle.includes('e') || handle.includes('w')
+  const vertical = handle.includes('n') || handle.includes('s')
+
+  let width = unconstrained.width
+  let height = unconstrained.height
+
+  if (horizontal && !vertical) {
+    height = width / safeAspect
+  } else if (vertical && !horizontal) {
+    width = height * safeAspect
+  } else {
+    const widthDelta = Math.abs(width - rect.width) / Math.max(rect.width, 1)
+    const heightDelta = Math.abs(height - rect.height) / Math.max(rect.height, 1)
+    if (widthDelta >= heightDelta) {
+      height = width / safeAspect
+    } else {
+      width = height * safeAspect
+    }
+  }
+
+  width = Math.max(MIN_SIZE, width)
+  height = Math.max(MIN_SIZE, width / safeAspect)
+  width = height * safeAspect
+
+  let x = unconstrained.x
+  let y = unconstrained.y
+  if (handle.includes('e')) {
+    x = unconstrained.x
+  } else if (handle.includes('w')) {
+    x = unconstrained.x + unconstrained.width - width
+  } else {
+    x = unconstrained.x + (unconstrained.width - width) / 2
+  }
+  if (handle.includes('s')) {
+    y = unconstrained.y
+  } else if (handle.includes('n')) {
+    y = unconstrained.y + unconstrained.height - height
+  } else {
+    y = unconstrained.y + (unconstrained.height - height) / 2
+  }
+
+  const next = { x, y, width, height }
+  const opposite = OPPOSITE_HANDLE[handle]
+  const before = handleWorldPoint(rect, rotation, opposite)
+  const after = handleWorldPoint(next, rotation, opposite)
+  return {
+    ...next,
+    x: next.x + (before.x - after.x),
+    y: next.y + (before.y - after.y),
+  }
+}
+
 export function rotationFromPointer(center: Point, worldPointer: Point): number {
   const angle = (Math.atan2(worldPointer.y - center.y, worldPointer.x - center.x) * 180) / Math.PI
   return angle + 90

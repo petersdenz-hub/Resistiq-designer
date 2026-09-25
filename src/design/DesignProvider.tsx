@@ -10,6 +10,7 @@ import {
   moveDesignObjectLayer,
   removeDesignObject,
   setActiveZone as writeSetActiveZone,
+  setDesignObjectZone as writeSetDesignObjectZone,
   updateDesignObject,
 } from './designObjects'
 import { createId } from './ids'
@@ -216,7 +217,21 @@ export function DesignProvider({
       selectObject: (objectId) => dispatch({ type: 'selectObject', objectId }),
       setActiveView: (viewId) => dispatch({ type: 'setActiveView', viewId }),
       setActivePanel: (panelId) => dispatch({ type: 'setActivePanel', panelId }),
-      setActiveZone: (zone) => apply(writeSetActiveZone(current().document, zone)),
+      setActiveZone: (zone) => {
+        const { document, selectedObjectId } = current()
+        const selected = getDesignObjectById(document, selectedObjectId)
+        apply(writeSetActiveZone(document, zone))
+        if (selected && selected.zone !== zone) {
+          dispatch({ type: 'selectObject', objectId: null })
+        }
+      },
+      setSelectedObjectZone: (zone) => {
+        const { document, selectedObjectId } = current()
+        if (!selectedObjectId) {
+          return
+        }
+        apply(writeSetDesignObjectZone(document, selectedObjectId, zone))
+      },
       renameDesign: (name) => apply(setDesignName(current().document, name)),
       setBodyColor: (value, history = 'record') =>
         apply(setColorValue(current().document, 'body', value), history),
@@ -278,8 +293,10 @@ export function DesignProvider({
           const object = createImageObject(document, {
             source: asset.id,
             fileName: ingested.name,
+            mimeType: ingested.mimeType,
             naturalWidth: ingested.width,
             naturalHeight: ingested.height,
+            aspectLocked: true,
           })
           apply(addDesignObject(document, object))
           dispatch({ type: 'selectObject', objectId: object.id })
