@@ -52,7 +52,7 @@ export function PreviewOverlay({ document, onClose }: PreviewOverlayProps) {
         <PreviewStage
           document={document}
           viewId={viewId}
-          zoom={Math.min(1.55, 640 / garment.viewBox.height, 720 / garment.viewBox.width)}
+          zoom={Math.min(1.7, 800 / garment.viewBox.height, 960 / garment.viewBox.width)}
         />
       </div>
     </div>
