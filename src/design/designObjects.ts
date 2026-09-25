@@ -364,12 +364,13 @@ export function resolveActiveZone(document: DesignDocument): PlacementZone {
 
 export function createTextObject(document: DesignDocument, zone?: PlacementZone): TextDesignObject {
   const content = 'New Text'
+  const defaults = sharedDefaults(document, 'text', zone ?? resolveActiveZone(document))
   return {
-    ...sharedDefaults(document, 'text', zone ?? resolveActiveZone(document)),
+    ...defaults,
     type: 'text',
     content,
     fontFamily: DEFAULT_TEXT_FONT,
-    fontSize: 22,
+    fontSize: Math.max(11, Math.min(22, Math.round(Math.min(defaults.width / 7.5, defaults.height * 0.42)))),
     fontWeight: 500,
     textAlign: 'center',
     color: '#1a1a1a',
