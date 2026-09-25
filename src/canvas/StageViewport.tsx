@@ -5,11 +5,12 @@ import {
   getDesignObjectsInZone,
   getElementsInView,
   getPanelColorMap,
+  getPanelMaterialMap,
   getResolvedConstruction,
   getSafeAreasInView,
   resolveActiveZone,
 } from '@/design/selectors'
-import { objectClipBox } from '@/design/objectClip'
+import { objectClipPaths } from '@/design/objectClip'
 import { getArtworkPanelBounds, paintDesignObject, zoneForPanel } from '@/design/objectPlacement'
 import { collectSnapGuideBoxes, objectIdsInMarquee, unionBoxes } from '@/design/objectEditing'
 import { useDesign } from '@/design/useDesign'
@@ -91,13 +92,13 @@ export function StageViewport({ zoom }: StageViewportProps) {
   const paintedObjects = objects.map((object) =>
     applyObjectPreview(paintDesignObject(document, object), objectGesture.preview),
   )
-  const clipBoxes = Object.fromEntries(
+  const clipPaths = Object.fromEntries(
     objects
       .map((object) => {
-        const box = objectClipBox(document, object)
-        return box ? [object.id, box] : null
+        const paths = objectClipPaths(document, object)
+        return paths.length > 0 ? [object.id, paths] : null
       })
-      .filter((entry): entry is [string, NonNullable<ReturnType<typeof objectClipBox>>] => Boolean(entry)),
+      .filter((entry): entry is [string, string[]] => Boolean(entry)),
   )
   const selectedPainted = paintedObjects.filter((object) => selectedObjectIds.includes(object.id))
   const union = unionBoxes(selectedPainted.map((object) => ({
@@ -208,6 +209,7 @@ export function StageViewport({ zoom }: StageViewportProps) {
         panelId={document.activePanelId}
         bodyColor={getBodyColor(document)}
         panelColors={getPanelColorMap(document)}
+        panelMaterials={getPanelMaterialMap(document)}
         construction={getResolvedConstruction(document)}
       />
 
@@ -220,6 +222,7 @@ export function StageViewport({ zoom }: StageViewportProps) {
       />
 
       <PanelGuides
+        garmentType={document.garmentType}
         panels={viewPanels}
         safeAreas={getSafeAreasInView(document, document.activeView)}
         activePanelId={document.activePanelId}
@@ -255,7 +258,7 @@ export function StageViewport({ zoom }: StageViewportProps) {
         objects={paintedObjects}
         selectedObjectIds={selectedObjectIds}
         clipEnabled
-        clipBoxes={clipBoxes}
+        clipPaths={clipPaths}
         onSelect={(objectId, event) => {
           selectObject(objectId, { toggle: event.shiftKey, expandGroup: true })
         }}

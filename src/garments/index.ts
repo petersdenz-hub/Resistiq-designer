@@ -18,9 +18,20 @@ export {
   visibleConstructionControls,
 } from './constructionOptions'
 export { MATERIAL_CATALOG, VISUAL_FINISHES, getCatalogMaterial, visualFinishCatalog } from './materialCatalog'
-export { colorRegionsFor, regionColor } from './colorRegions'
+export { colorRegionById, colorRegionsFor, regionColor, regionForPanel, regionLabelForPanel } from './colorRegions'
 export { garmentExportManifest } from './exportManifest'
 export type { ColorRegion } from './colorRegions'
+export {
+  attachSilhouettes,
+  asSilhouettePaths,
+  garmentSilhouettePaths,
+  hasGarmentSilhouette,
+  panelSilhouetteFor,
+  panelSilhouettePaths,
+  rectPath,
+  silhouetteBounds,
+  viewPanelSilhouettes,
+} from './topology'
 export type { GarmentExportManifest } from './exportManifest'
 export { GarmentPicker } from './GarmentPicker'
 export { GarmentSelector } from './GarmentSelector'
@@ -31,9 +42,11 @@ export {
   garmentsInCategory,
   getGarment,
   hasGarment,
+  listGarments,
   PLANNED_GARMENT_LABELS,
   registerGarment,
   resolveGarmentType,
+  unregisterGarment,
 } from './registry'
 export { GarmentRenderer } from './render/GarmentRenderer'
 export { PanelGuides } from './render/PanelGuides'
@@ -48,6 +61,7 @@ export {
   completePanel,
   garmentPreviewView,
   inferPanelSide,
+  inferPlacementZone,
   inferSupportedDesignZones,
   isGarmentDesignZone,
   isPrintablePanel,
@@ -61,9 +75,15 @@ export {
   percentFromLocal,
 } from './model'
 export type { GarmentCapabilities } from './capabilities'
+export {
+  categoryLabel,
+  GARMENT_CATEGORY_LABELS,
+  GARMENT_CATEGORY_ORDER,
+} from './types'
 export type {
   DesignZoneDefinition,
   GarmentCategory,
+  GarmentConstructionControl,
   GarmentDefaults,
   GarmentDefinition,
   GarmentDesignZoneId,
@@ -72,6 +92,7 @@ export type {
   GarmentPanelType,
   GarmentPreview,
   GarmentRect,
+  GarmentRegionDefinition,
   GarmentRenderProps,
   GarmentSafeAreaDefinition,
   GarmentViewDefinition,

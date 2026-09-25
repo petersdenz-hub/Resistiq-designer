@@ -6,33 +6,66 @@ import { shortsGarment } from './shorts'
 import { sweatshirtGarment } from './sweatshirt'
 import { tshirtGarment } from './tshirt'
 import type { GarmentCategory, GarmentDefinition } from './types'
-import { GARMENT_CATEGORY_LABELS } from './types'
+import { GARMENT_CATEGORY_ORDER, categoryLabel } from './types'
 
-const garments: Record<string, GarmentDefinition> = {
-  [tshirtGarment.id]: completeGarment(tshirtGarment),
-  [hoodieGarment.id]: completeGarment(hoodieGarment),
-  [sweatshirtGarment.id]: completeGarment(sweatshirtGarment),
-  [jacketGarment.id]: completeGarment(jacketGarment),
-  [pantsGarment.id]: completeGarment(pantsGarment),
-  [shortsGarment.id]: completeGarment(shortsGarment),
-}
+const garments: Record<string, GarmentDefinition> = {}
+const builtinIds = [
+  tshirtGarment.id,
+  hoodieGarment.id,
+  sweatshirtGarment.id,
+  jacketGarment.id,
+  pantsGarment.id,
+  shortsGarment.id,
+] as const
 
-export const AVAILABLE_GARMENTS: GarmentDefinition[] = [
-  garments.tshirt,
-  garments.hoodie,
-  garments.sweatshirt,
-  garments.jacket,
-  garments.pants,
-  garments.shorts,
-]
-
+/**
+ * Live catalog. `registerGarment` / `unregisterGarment` keep this array in
+ * sync so the editor and picker never hard-code a garment list.
+ */
+export const AVAILABLE_GARMENTS: GarmentDefinition[] = []
 export const GARMENT_CATALOG = AVAILABLE_GARMENTS
 
 /**
- * Future garment types belong in this registry.
- * Add a definition and a renderer, then register it here.
+ * Labels for categories that are architecturally supported but not shipped.
+ * Do not implement these garments here — add a definition later.
  */
-export const PLANNED_GARMENT_LABELS = ['Leggings', 'Ski / snowboard'] as const
+export const PLANNED_GARMENT_LABELS = [
+  'Cap',
+  'Beanie',
+  'Gloves',
+  'Socks',
+  'Bag',
+  'Backpack',
+] as const
+
+function refreshCatalog() {
+  AVAILABLE_GARMENTS.length = 0
+  const seen = new Set<string>()
+  for (const id of builtinIds) {
+    const garment = garments[id]
+    if (garment) {
+      AVAILABLE_GARMENTS.push(garment)
+      seen.add(id)
+    }
+  }
+  for (const [id, garment] of Object.entries(garments)) {
+    if (!seen.has(id)) {
+      AVAILABLE_GARMENTS.push(garment)
+    }
+  }
+}
+
+function putGarment(definition: GarmentDefinition) {
+  garments[definition.id] = completeGarment(definition)
+}
+
+putGarment(tshirtGarment)
+putGarment(hoodieGarment)
+putGarment(sweatshirtGarment)
+putGarment(jacketGarment)
+putGarment(pantsGarment)
+putGarment(shortsGarment)
+refreshCatalog()
 
 export function hasGarment(garmentType: string | undefined | null): boolean {
   return Boolean(garmentType && garments[garmentType])
@@ -52,8 +85,28 @@ export function getGarment(garmentType: string | undefined | null): GarmentDefin
   return garments[resolveGarmentType(garmentType)] ?? garments.tshirt
 }
 
+export function listGarments(): GarmentDefinition[] {
+  return [...AVAILABLE_GARMENTS]
+}
+
+/**
+ * Add a garment definition at runtime. The editor, picker, artwork zones,
+ * regions, construction and renderer all read this registry — they do not
+ * need a special case for the new type.
+ */
 export function registerGarment(definition: GarmentDefinition): void {
-  garments[definition.id] = completeGarment(definition)
+  putGarment(definition)
+  refreshCatalog()
+}
+
+/** Remove a previously registered non-builtin garment. */
+export function unregisterGarment(garmentType: string): boolean {
+  if ((builtinIds as readonly string[]).includes(garmentType) || !garments[garmentType]) {
+    return false
+  }
+  delete garments[garmentType]
+  refreshCatalog()
+  return true
 }
 
 export function garmentsInCategory(category: GarmentCategory): GarmentDefinition[] {
@@ -65,9 +118,9 @@ export function garmentCatalogGroups(): {
   label: string
   garments: GarmentDefinition[]
 }[] {
-  return (['tops', 'outerwear', 'bottoms'] as const).map((category) => ({
+  return GARMENT_CATEGORY_ORDER.map((category) => ({
     category,
-    label: GARMENT_CATEGORY_LABELS[category],
+    label: categoryLabel(category),
     garments: garmentsInCategory(category),
-  }))
+  })).filter((group) => group.garments.length > 0)
 }

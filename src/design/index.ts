@@ -1,5 +1,5 @@
 export { constrainElementInDocument, getConstraintBounds, getSafeAreaForPanel } from './constraints'
-export { createNewDesign, documentChromeFromGarment } from './createDesign'
+export { createNewDesign, documentChromeFromGarment, mergeDocumentChrome } from './createDesign'
 export {
   canSafelyTransferArtwork,
   documentHasArtwork,
@@ -28,6 +28,7 @@ export {
   objectAspect,
   objectDisplayName,
   PLACEMENT_ZONE_LABELS,
+  placementZoneLabel,
   PLACEMENT_ZONES,
   SHAPE_KIND_LABELS,
   SHAPE_KINDS,
@@ -91,7 +92,7 @@ export {
   zoneForPanel,
 } from './objectPlacement'
 export type { ArtworkPanelBounds, RelativeBox } from './objectPlacement'
-export { objectClipBox, panelPrintBox } from './objectClip'
+export { garmentViewClipPaths, objectClipBox, objectClipPaths, panelPrintBox } from './objectClip'
 export type {
   AnchorSpace,
   DesignObject,
@@ -121,7 +122,9 @@ export {
   setConstructionVariant,
   setGarmentMaterial,
   setPanelColor,
+  setPanelMaterial,
   setRegionColor,
+  setRegionMaterial,
   setDesignName,
   updateElement,
   upsertMaterial,
@@ -138,6 +141,8 @@ export {
   getConstruction,
   getPanelColor,
   getPanelColorMap,
+  getPanelMaterial,
+  getPanelMaterialMap,
   getResolvedConstruction,
   getTrimColor,
   getElementById,

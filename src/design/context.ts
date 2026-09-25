@@ -57,6 +57,7 @@ export interface DesignContextValue {
   setBodyColor: (value: string, history?: HistoryMode) => void
   setPanelColor: (panelId: string, value: string, history?: HistoryMode) => void
   setRegionColor: (panelIds: string[], value: string, history?: HistoryMode) => void
+  setRegionMaterial: (panelIds: string[], materialId: string, history?: HistoryMode) => void
   patchConstruction: (patch: DesignConstruction, history?: HistoryMode) => void
   setConstructionPart: (part: DesignConstructionPart, history?: HistoryMode) => void
   clearConstructionPart: (kind: ConstructionKind, partId?: string, history?: HistoryMode) => void

@@ -1,9 +1,15 @@
 import { getGarmentPanel } from '@/garments/coordinates'
+import { inferPlacementZone } from '@/garments/model'
 import { getGarment } from '@/garments/registry'
+import type { GarmentPanelType } from '@/garments/types'
 import { createId } from './ids'
 import { DEFAULT_TEXT_FONT, type FontWeight, type TextAlign } from './typography'
 import type { DesignDocument, LayerDirection } from './types'
 
+/**
+ * Well-known placement zone ids. A garment may also declare its own
+ * zone strings (crown, brim, strap, …) via `supportedDesignZones`.
+ */
 export const PLACEMENT_ZONES = [
   'front',
   'back',
@@ -12,7 +18,7 @@ export const PLACEMENT_ZONES = [
   'left-leg',
   'right-leg',
 ] as const
-export type PlacementZone = (typeof PLACEMENT_ZONES)[number]
+export type PlacementZone = (typeof PLACEMENT_ZONES)[number] | (string & {})
 
 export const DESIGN_OBJECT_TYPES = ['text', 'image', 'shape'] as const
 export type DesignObjectType = (typeof DESIGN_OBJECT_TYPES)[number]
@@ -111,13 +117,20 @@ export type DesignObjectPatch = Partial<
 
 export const DEFAULT_GRID_SIZE = 16
 
-export const PLACEMENT_ZONE_LABELS: Record<PlacementZone, string> = {
+export const PLACEMENT_ZONE_LABELS: Record<string, string> = {
   front: 'Front',
   back: 'Back',
   'left-sleeve': 'Left sleeve',
   'right-sleeve': 'Right sleeve',
   'left-leg': 'Left leg',
   'right-leg': 'Right leg',
+}
+
+export function placementZoneLabel(zone: string): string {
+  return (
+    PLACEMENT_ZONE_LABELS[zone] ??
+    zone.replace(/[-_]+/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())
+  )
 }
 
 export function zonesForGarment(garmentType: string): PlacementZone[] {
@@ -127,31 +140,43 @@ export function zonesForGarment(garmentType: string): PlacementZone[] {
 }
 
 export function defaultZoneForView(viewId: string): PlacementZone {
-  return viewId === 'back' ? 'back' : 'front'
+  if (viewId === 'back') {
+    return 'back'
+  }
+  if (viewId === 'front' || !viewId) {
+    return 'front'
+  }
+  return viewId
 }
 
 export function isPlacementZone(value: unknown): value is PlacementZone {
-  return typeof value === 'string' && (PLACEMENT_ZONES as readonly string[]).includes(value)
-}
-
-const ZONE_PANEL_CANDIDATES: Record<PlacementZone, string[]> = {
-  front: ['front_body', 'front_body_left', 'front_body_right'],
-  back: ['back_body'],
-  'left-sleeve': ['left_sleeve'],
-  'right-sleeve': ['right_sleeve'],
-  'left-leg': ['left_leg'],
-  'right-leg': ['right_leg'],
+  return typeof value === 'string' && value.length > 0
 }
 
 export function defaultPanelIdForZone(
   document: DesignDocument,
   zone: PlacementZone,
 ): string | undefined {
+  const garment = getGarment(document.garmentType)
   const ids = new Set(document.panels.map((panel) => panel.id))
-  for (const id of ZONE_PANEL_CANDIDATES[zone]) {
-    if (ids.has(id)) {
-      return id
-    }
+  const fromDefinition = garment.panels.find(
+    (panel) => ids.has(panel.id) && inferPlacementZone(panel) === zone,
+  )
+  if (fromDefinition) {
+    return fromDefinition.id
+  }
+
+  const fromDocument = document.panels.find((panel) => {
+    return (
+      inferPlacementZone({
+        id: panel.id,
+        viewId: panel.viewId,
+        type: (panel.type as GarmentPanelType) ?? 'body',
+      }) === zone
+    )
+  })
+  if (fromDocument) {
+    return fromDocument.id
   }
 
   if (zone === 'front' || zone === 'back') {

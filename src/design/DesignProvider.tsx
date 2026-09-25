@@ -57,6 +57,7 @@ import {
   setGarmentMaterial as writeSetGarmentMaterial,
   setPanelColor as writePanelColor,
   setRegionColor as writeRegionColor,
+  setRegionMaterial as writeRegionMaterial,
   setDesignName,
   updateElement,
   upsertMaterial as writeUpsertMaterial,
@@ -376,6 +377,8 @@ export function DesignProvider({
         apply(writePanelColor(current().document, panelId, value), history),
       setRegionColor: (panelIds, value, history = 'record') =>
         apply(writeRegionColor(current().document, panelIds, value), history),
+      setRegionMaterial: (panelIds, materialId, history = 'record') =>
+        apply(writeRegionMaterial(current().document, panelIds, materialId), history),
       patchConstruction: (patch, history = 'record') =>
         apply(writePatchConstruction(current().document, patch), history),
       setConstructionPart: (part, history = 'record') =>

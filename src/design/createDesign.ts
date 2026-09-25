@@ -1,5 +1,5 @@
 import { getGarment } from '@/garments/registry'
-import { panelName } from '@/garments/model'
+import { inferPlacementZone, inferSupportedDesignZones, panelName } from '@/garments/model'
 import type { GarmentDefinition } from '@/garments/types'
 import { createId } from './ids'
 import type { DesignDocument, DesignPanel, DesignSafeArea, DesignView } from './types'
@@ -35,11 +35,43 @@ export function documentChromeFromGarment(garment: GarmentDefinition): {
   }
 }
 
+/** Add any panels/safe areas the current garment definition exposes. */
+export function mergeDocumentChrome(document: DesignDocument): DesignDocument {
+  const garment = getGarment(document.garmentType)
+  const chrome = documentChromeFromGarment(garment)
+  const havePanels = new Set(document.panels.map((panel) => panel.id))
+  const haveSafe = new Set(document.safeAreas.map((area) => area.id))
+  const panels = [
+    ...document.panels,
+    ...chrome.panels.filter((panel) => !havePanels.has(panel.id)),
+  ]
+  const safeAreas = [
+    ...document.safeAreas,
+    ...chrome.safeAreas.filter((area) => !haveSafe.has(area.id)),
+  ]
+  return {
+    ...document,
+    views: chrome.views,
+    panels,
+    safeAreas,
+  }
+}
+
 export function createNewDesign(garmentType = 'tshirt'): DesignDocument {
   const garment = getGarment(garmentType)
   const now = new Date().toISOString()
-  const activeView = garment.views[0]?.id ?? 'front'
+  const activeView = garment.preview?.viewId ?? garment.views[0]?.id ?? 'front'
   const chrome = documentChromeFromGarment(garment)
+  const zones = inferSupportedDesignZones(garment)
+  const activePanelId = garment.defaultPanelId(activeView)
+  const defaultPanel = garment.panels.find((panel) => panel.id === activePanelId)
+  const panelZone = defaultPanel ? inferPlacementZone(defaultPanel) : undefined
+  const activeZone =
+    panelZone && zones.includes(panelZone)
+      ? panelZone
+      : zones.includes(activeView)
+        ? activeView
+        : (zones[0] ?? (activeView === 'back' ? 'back' : 'front'))
 
   return {
     id: createId(),
@@ -48,7 +80,7 @@ export function createNewDesign(garmentType = 'tshirt'): DesignDocument {
     status: 'draft',
     garmentType: garment.id,
     activeView,
-    activePanelId: garment.defaultPanelId(activeView),
+    activePanelId,
     views: chrome.views,
     panels: chrome.panels,
     safeAreas: chrome.safeAreas,
@@ -56,7 +88,7 @@ export function createNewDesign(garmentType = 'tshirt'): DesignDocument {
     materials: [],
     elements: [],
     designObjects: [],
-    activeZone: activeView === 'back' ? 'back' : 'front',
+    activeZone,
     createdAt: now,
     updatedAt: now,
   }

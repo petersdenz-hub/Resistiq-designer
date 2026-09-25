@@ -1,5 +1,4 @@
 import {
-  GARMENT_DESIGN_ZONES,
   type DesignZoneDefinition,
   type GarmentDefinition,
   type GarmentDesignZoneId,
@@ -15,13 +14,20 @@ const PRINTABLE_TYPES = new Set<GarmentPanelType>([
   'leg',
   'hood',
   'chest',
+  'crown',
+  'brim',
+  'band',
+  'hand',
+  'foot',
+  'shell',
+  'flap',
 ])
 
 const TOP_ZONES: GarmentDesignZoneId[] = ['front', 'back', 'left-sleeve', 'right-sleeve']
 const BOTTOM_ZONES: GarmentDesignZoneId[] = ['front', 'back', 'left-leg', 'right-leg']
 
 export function isGarmentDesignZone(value: unknown): value is GarmentDesignZoneId {
-  return typeof value === 'string' && (GARMENT_DESIGN_ZONES as readonly string[]).includes(value)
+  return typeof value === 'string' && value.length > 0
 }
 
 export function panelName(panel: GarmentPanelDefinition): string {
@@ -31,6 +37,36 @@ export function panelName(panel: GarmentPanelDefinition): string {
 /** Technical label used on the canvas. Derived from the definition name. */
 export function panelDisplayLabel(panel: GarmentPanelDefinition): string {
   return panelName(panel).toUpperCase()
+}
+
+export function inferPlacementZone(
+  panel: Pick<GarmentPanelDefinition, 'id' | 'viewId' | 'side' | 'type' | 'placementZone' | 'printable'>,
+): string | undefined {
+  if (panel.placementZone) {
+    return panel.placementZone
+  }
+  if (panel.type === 'sleeve') {
+    return inferPanelSide(panel) === 'left' ? 'left-sleeve' : 'right-sleeve'
+  }
+  if (panel.type === 'leg') {
+    return inferPanelSide(panel) === 'left' ? 'left-leg' : 'right-leg'
+  }
+  if (panel.type === 'hand') {
+    return inferPanelSide(panel) === 'left' ? 'left-hand' : 'right-hand'
+  }
+  if (panel.type === 'foot') {
+    return inferPanelSide(panel) === 'left' ? 'left-foot' : 'right-foot'
+  }
+  if (panel.type === 'crown' || panel.type === 'brim' || panel.type === 'band' || panel.type === 'strap') {
+    return panel.type
+  }
+  if (panel.type === 'shell' || panel.type === 'flap' || panel.type === 'body' || panel.printable) {
+    if (panel.viewId === 'back' || inferPanelSide(panel) === 'back') {
+      return 'back'
+    }
+    return panel.viewId || 'front'
+  }
+  return undefined
 }
 
 export function inferPanelSide(panel: Pick<GarmentPanelDefinition, 'id' | 'viewId' | 'side'>): GarmentPanelSide {
@@ -216,6 +252,19 @@ export function inferSupportedDesignZones(
   if (garment.supportedDesignZones && garment.supportedDesignZones.length > 0) {
     return [...garment.supportedDesignZones]
   }
+  const zones: GarmentDesignZoneId[] = []
+  const seen = new Set<string>()
+  for (const panel of garment.panels) {
+    const zone = inferPlacementZone(panel)
+    if (!zone || seen.has(zone)) {
+      continue
+    }
+    seen.add(zone)
+    zones.push(zone)
+  }
+  if (zones.length > 0) {
+    return zones
+  }
   const types = new Set(garment.panels.map((panel) => panel.type))
   if (types.has('leg')) {
     return [...BOTTOM_ZONES]
@@ -237,6 +286,10 @@ export function completePanel(panel: GarmentPanelDefinition): GarmentPanelDefini
     printable: isPrintablePanel(panel),
     designBounds: panelDesignBounds(panel),
     designZones: panelDesignZones(panel),
+    silhouette: panel.silhouette,
+    placementZone: inferPlacementZone(panel),
+    regionId: panel.regionId,
+    regionLabel: panel.regionLabel,
   }
 }
 
@@ -246,5 +299,8 @@ export function completeGarment(garment: GarmentDefinition): GarmentDefinition {
     preview: { viewId: garmentPreviewView(garment) },
     supportedDesignZones: inferSupportedDesignZones(garment),
     panels: garment.panels.map(completePanel),
+    regions: garment.regions,
+    constructionDefaults: garment.constructionDefaults,
+    constructionControls: garment.constructionControls,
   }
 }

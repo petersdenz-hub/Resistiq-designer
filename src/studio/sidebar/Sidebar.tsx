@@ -1,13 +1,13 @@
 import { ACCEPTED_IMAGE_ACCEPT } from '@/design/ingestImage'
 import { DesignPanel } from './DesignPanel'
 import { MaterialsPanel } from './MaterialsPanel'
-import { PLACEMENT_ZONE_LABELS, resolveActiveZone, zonesForGarment } from '@/design/designObjects'
+import { placementZoneLabel, resolveActiveZone, zonesForGarment } from '@/design/designObjects'
 import { getElementsInView, getPanelById } from '@/design/selectors'
 import { useDesign } from '@/design/useDesign'
 import { GarmentSelector } from '@/garments/GarmentSelector'
 import { getGarment } from '@/garments/registry'
 import { isPrintablePanel, panelDisplayLabel } from '@/garments/model'
-import { GARMENT_CATEGORY_LABELS } from '@/garments/types'
+import { categoryLabel } from '@/garments/types'
 import {
   Button,
   ColorPicker,
@@ -145,7 +145,7 @@ function GarmentPanel() {
         <span className="mx-1">→</span>
         <span>{viewLabel}</span>
         <span className="mx-1">→</span>
-        <span className="text-ink">{PLACEMENT_ZONE_LABELS[zone]}</span>
+        <span className="text-ink">{placementZoneLabel(zone)}</span>
       </div>
       <div>
         <div className="mb-2 text-[10px] font-medium uppercase tracking-[0.14em] text-mute">
@@ -195,7 +195,7 @@ function GarmentPanel() {
                   : 'border-line text-mute hover:text-ink'
               }`}
             >
-              {PLACEMENT_ZONE_LABELS[item]}
+              {placementZoneLabel(item)}
             </button>
           ))}
         </div>
@@ -210,7 +210,7 @@ function GarmentPanel() {
         ) : null}
       </div>
       <p className="text-[11px] leading-5 text-mute">
-        {GARMENT_CATEGORY_LABELS[garment.category]} · artwork stays on its original panels when you
+        {categoryLabel(garment.category)} · artwork stays on its original panels when you
         switch garments.
       </p>
     </div>

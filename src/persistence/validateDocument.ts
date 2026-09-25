@@ -1,4 +1,5 @@
 import { sanitizeConstruction } from '@/design/construction'
+import { mergeDocumentChrome } from '@/design/createDesign'
 import { sanitizeActiveZone, sanitizeDesignObjects } from '@/design/designObjects'
 import type { DesignColor, DesignDocument, DesignMaterial } from '@/design/types'
 import { COLOR_ROLES } from '@/design/types'
@@ -12,6 +13,7 @@ function sanitizeColors(value: DesignColor[]): DesignColor[] {
       id: color.id,
       role: (COLOR_ROLES as readonly string[]).includes(color.role) ? color.role : 'panel',
       value: normalizeHex(color.value) ?? color.value,
+      materialId: typeof color.materialId === 'string' && color.materialId.length > 0 ? color.materialId : undefined,
     }))
 }
 
@@ -52,7 +54,7 @@ export function normalizeDocument(document: DesignDocument): DesignDocument {
   const construction = sanitizeConstruction(document.construction)
   const designObjects = sanitizeDesignObjects(document.designObjects)
   const activeZone = sanitizeActiveZone(document.activeZone)
-  return {
+  return mergeDocumentChrome({
     ...document,
     garmentType: resolveGarmentType(document.garmentType),
     colors: sanitizeColors(document.colors ?? []),
@@ -60,5 +62,5 @@ export function normalizeDocument(document: DesignDocument): DesignDocument {
     ...(construction ? { construction } : { construction: undefined }),
     ...(designObjects ? { designObjects } : { designObjects: undefined }),
     ...(activeZone ? { activeZone } : { activeZone: undefined }),
-  }
+  })
 }

@@ -88,14 +88,23 @@ async function run() {
   const tshirtRegions = await page.$$eval('[data-color-region]', (nodes) =>
     nodes.map((node) => node.getAttribute('data-color-region')),
   )
-  if (!tshirtRegions.includes('body') || !tshirtRegions.includes('sleeve-left') || !tshirtRegions.includes('collar')) {
+  if (!tshirtRegions.includes('front-body') || !tshirtRegions.includes('left-sleeve') || !tshirtRegions.includes('collar') || !tshirtRegions.includes('hem')) {
     throw new Error(`T-shirt color regions are wrong: ${tshirtRegions.join(',')}`)
   }
   if (tshirtRegions.includes('hood') || tshirtRegions.includes('waistband')) {
     throw new Error('T-shirt showed unsupported color regions')
   }
 
-  const sleeveRegion = await page.$('[data-color-region="sleeve-left"] [data-color-preset="#8b3a3a"]')
+  const silhouette = await page.$('#design-stage [data-garment-silhouette="true"]')
+  if (!silhouette) {
+    throw new Error('T-shirt silhouette is missing')
+  }
+  const regionBoundary = await page.$('[data-region-boundary="front_body"]')
+  if (!regionBoundary) {
+    throw new Error('T-shirt region boundary is missing')
+  }
+
+  const sleeveRegion = await page.$('[data-color-region="left-sleeve"] [data-color-preset="#8b3a3a"]')
   if (!sleeveRegion) {
     throw new Error('Region color presets are missing')
   }
@@ -152,6 +161,10 @@ async function run() {
   const clipped = await page.$('[data-artwork-clip="true"]')
   if (!clipped) {
     throw new Error('Artwork clipping is not enabled on the canvas')
+  }
+  const silhouetteClip = await page.$('[data-artwork-clip-kind="silhouette"]')
+  if (!silhouetteClip) {
+    throw new Error('Artwork is not clipped to the garment silhouette')
   }
 
   const addToolsAfterSelect = await page.$('[data-add-design-text="true"]')
@@ -332,8 +345,12 @@ async function run() {
     const regions = await page.$$eval('[data-color-region]', (nodes) =>
       nodes.map((node) => node.getAttribute('data-color-region')),
     )
-    if (!regions.includes('hood') || !regions.includes('cuffs') || regions.includes('waistband')) {
+    if (!regions.includes('hood') || !regions.includes('left-cuff') || !regions.includes('waistband') || !regions.includes('kangaroo-pocket')) {
       throw new Error(`Hoodie regions are wrong: ${regions.join(',')}`)
+    }
+    const hoodieSilhouette = await page.$('#design-stage [data-garment-silhouette="true"]')
+    if (!hoodieSilhouette) {
+      throw new Error('Hoodie silhouette is missing')
     }
     await page.waitForSelector('[data-construction-control="hood"]')
     await page.waitForSelector('[data-construction-option="pocket:kangaroo"]')
@@ -344,7 +361,7 @@ async function run() {
     const regions = await page.$$eval('[data-color-region]', (nodes) =>
       nodes.map((node) => node.getAttribute('data-color-region')),
     )
-    if (!regions.includes('collar') || !regions.includes('cuffs') || regions.includes('hood')) {
+    if (!regions.includes('collar') || !regions.includes('left-cuff') || !regions.includes('waistband') || regions.includes('hood')) {
       throw new Error(`Sweatshirt regions are wrong: ${regions.join(',')}`)
     }
   })
@@ -354,7 +371,7 @@ async function run() {
     const regions = await page.$$eval('[data-color-region]', (nodes) =>
       nodes.map((node) => node.getAttribute('data-color-region')),
     )
-    if (!regions.includes('front-left') || !regions.includes('front-right') || regions.includes('cuffs')) {
+    if (!regions.includes('front-left') || !regions.includes('front-right') || !regions.includes('left-cuff') || !regions.includes('zipper')) {
       throw new Error(`Jacket regions are wrong: ${regions.join(',')}`)
     }
     await page.waitForSelector('[data-construction-control="zipper"]')
@@ -366,7 +383,7 @@ async function run() {
     const regions = await page.$$eval('[data-color-region]', (nodes) =>
       nodes.map((node) => node.getAttribute('data-color-region')),
     )
-    if (!regions.includes('leg-left') || !regions.includes('waistband')) {
+    if (!regions.includes('left-leg') || !regions.includes('waistband') || !regions.includes('left-pocket') || !regions.includes('inseam')) {
       throw new Error(`Pants regions are wrong: ${regions.join(',')}`)
     }
   })
@@ -386,7 +403,7 @@ async function run() {
     const regions = await page.$$eval('[data-color-region]', (nodes) =>
       nodes.map((node) => node.getAttribute('data-color-region')),
     )
-    if (!regions.includes('body') || regions.includes('hood')) {
+    if (!regions.includes('front-body') || !regions.includes('hem') || regions.includes('hood')) {
       throw new Error(`Returned T-shirt regions are wrong: ${regions.join(',')}`)
     }
   })
@@ -395,7 +412,7 @@ async function run() {
   if (vite) {
     vite.kill('SIGTERM')
   }
-  console.log('Phase 8 browser smoke passed')
+  console.log('Phase 10 browser smoke passed')
   process.exit(0)
 }
 

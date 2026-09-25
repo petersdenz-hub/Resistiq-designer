@@ -1,6 +1,7 @@
 import { canvasRectToLocal, getGarmentPanel, localRectToCanvas } from '@/garments/coordinates'
-import { getGarment } from '@/garments/registry'
-import type { GarmentRect } from '@/garments/types'
+import { inferPlacementZone } from '@/garments/model'
+import { AVAILABLE_GARMENTS, getGarment } from '@/garments/registry'
+import type { GarmentPanelType, GarmentRect } from '@/garments/types'
 import {
   defaultPanelIdForZone,
   getDesignObjectById,
@@ -63,31 +64,20 @@ export function getArtworkPanelBounds(
 }
 
 export function panelsForZone(document: DesignDocument, zone: PlacementZone) {
-  return document.panels.filter((panel) => panelMatchesZone(panel.id, panel.viewId, panel.type, zone))
-}
-
-function panelMatchesZone(
-  id: string,
-  viewId: string,
-  type: string | undefined,
-  zone: PlacementZone,
-): boolean {
-  if (zone === 'front') {
-    return viewId === 'front' && (type === 'body' || id.startsWith('front_body'))
-  }
-  if (zone === 'back') {
-    return viewId === 'back' && (type === 'body' || id.startsWith('back_body'))
-  }
-  if (zone === 'left-sleeve') {
-    return id.includes('left_sleeve')
-  }
-  if (zone === 'right-sleeve') {
-    return id.includes('right_sleeve')
-  }
-  if (zone === 'left-leg') {
-    return id.includes('left_leg')
-  }
-  return id.includes('right_leg')
+  const garment = getGarment(document.garmentType)
+  return document.panels.filter((panel) => {
+    const definition = garment.panels.find((item) => item.id === panel.id)
+    if (definition) {
+      return inferPlacementZone(definition) === zone
+    }
+    return (
+      inferPlacementZone({
+        id: panel.id,
+        viewId: panel.viewId,
+        type: (panel.type as GarmentPanelType) ?? 'body',
+      }) === zone
+    )
+  })
 }
 
 export function panelScale(document: DesignDocument, panelId: string | undefined): number {
@@ -339,28 +329,36 @@ export function assignDesignObjectZone(
   })
 }
 
+function guessPanelType(panelId: string): GarmentPanelType {
+  if (panelId.includes('sleeve')) return 'sleeve'
+  if (panelId.includes('leg')) return 'leg'
+  if (panelId.includes('hood')) return 'hood'
+  if (panelId.includes('crown')) return 'crown'
+  if (panelId.includes('brim')) return 'brim'
+  if (panelId.includes('band')) return 'band'
+  if (panelId.includes('hand')) return 'hand'
+  if (panelId.includes('foot')) return 'foot'
+  if (panelId.includes('shell')) return 'shell'
+  if (panelId.includes('strap')) return 'strap'
+  if (panelId.includes('flap')) return 'flap'
+  return 'body'
+}
+
 export function zoneForPanel(
   panelId: string,
   fallback: PlacementZone,
   viewId?: string,
 ): PlacementZone {
-  if (panelId.includes('left_sleeve')) {
-    return 'left-sleeve'
+  for (const garment of AVAILABLE_GARMENTS) {
+    const panel = garment.panels.find((item) => item.id === panelId)
+    if (panel) {
+      return inferPlacementZone(panel) ?? fallback
+    }
   }
-  if (panelId.includes('right_sleeve')) {
-    return 'right-sleeve'
-  }
-  if (panelId.includes('left_leg')) {
-    return 'left-leg'
-  }
-  if (panelId.includes('right_leg')) {
-    return 'right-leg'
-  }
-  if (panelId.includes('back') || viewId === 'back') {
-    return 'back'
-  }
-  if (panelId.includes('front') || viewId === 'front') {
-    return 'front'
-  }
-  return isPlacementZone(fallback) ? fallback : 'front'
+  const inferred = inferPlacementZone({
+    id: panelId,
+    viewId: viewId ?? '',
+    type: guessPanelType(panelId),
+  })
+  return inferred ?? (isPlacementZone(fallback) ? fallback : 'front')
 }

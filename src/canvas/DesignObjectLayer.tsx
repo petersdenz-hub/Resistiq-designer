@@ -14,6 +14,7 @@ interface DesignObjectLayerProps {
   selectedObjectId?: string | null
   selectedObjectIds?: string[]
   clipBoxes?: Record<string, GarmentRect>
+  clipPaths?: Record<string, string[]>
   clipEnabled?: boolean
   onSelect: (objectId: string, event: { shiftKey: boolean }) => void
   onMoveStart: (objectId: string, event: ReactPointerEvent<SVGElement>) => void
@@ -23,7 +24,7 @@ export function DesignObjectLayer({
   objects,
   selectedObjectId = null,
   selectedObjectIds,
-  clipBoxes,
+  clipPaths,
   clipEnabled = false,
   onSelect,
   onMoveStart,
@@ -37,7 +38,7 @@ export function DesignObjectLayer({
           return null
         }
         const isSelected = selected.has(object.id)
-        const clip = clipEnabled ? clipBoxes?.[object.id] : undefined
+        const clipShape = clipEnabled ? clipPaths?.[object.id] : undefined
         const clipId = `artwork-clip-${object.id}`
         const rotate = `rotate(${object.rotation} ${object.x + object.width / 2} ${object.y + object.height / 2})`
         const visuals = (
@@ -59,7 +60,7 @@ export function DesignObjectLayer({
             data-object-locked={object.locked ? 'true' : 'false'}
             data-object-selected={isSelected ? 'true' : 'false'}
             data-object-name={object.name ?? ''}
-            data-object-clipped={clip ? 'true' : 'false'}
+            data-object-clipped={clipShape && clipShape.length > 0 ? 'true' : 'false'}
             opacity={object.opacity}
             style={{ cursor: object.locked ? 'default' : 'move' }}
             onPointerDown={(event) => {
@@ -80,12 +81,14 @@ export function DesignObjectLayer({
               window.dispatchEvent(new CustomEvent('resistq-edit-text', { detail: object.id }))
             }}
           >
-            {clip ? (
+            {clipShape && clipShape.length > 0 ? (
               <>
                 <clipPath id={clipId} clipPathUnits="userSpaceOnUse">
-                  <rect x={clip.x} y={clip.y} width={clip.width} height={clip.height} />
+                  {clipShape.map((path) => (
+                    <path key={path} d={path} />
+                  ))}
                 </clipPath>
-                <g clipPath={`url(#${clipId})`} data-artwork-clip-box={object.id}>
+                <g clipPath={`url(#${clipId})`} data-artwork-clip-path={object.id} data-artwork-clip-kind="silhouette">
                   <g transform={rotate}>{visuals}</g>
                 </g>
               </>

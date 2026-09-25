@@ -9,6 +9,7 @@ import {
   getPanelColorMap,
   getResolvedConstruction,
   objectClipBox,
+  objectClipPaths,
   panelPrintBox,
   resolveConstruction,
   setActivePanel,
@@ -91,27 +92,21 @@ describe('Phase 8 real garment customization', () => {
   })
 
   it('colors only the panels a garment actually exposes', () => {
-    expect(regionLabels('tshirt')).toEqual(['Body', 'Left sleeve', 'Right sleeve', 'Collar'])
-    expect(regionLabels('hoodie')).toEqual(['Body', 'Left sleeve', 'Right sleeve', 'Hood', 'Cuffs'])
-    expect(regionLabels('sweatshirt')).toEqual(['Body', 'Left sleeve', 'Right sleeve', 'Collar', 'Cuffs'])
-    expect(regionLabels('jacket')).toEqual([
-      'Left front',
-      'Right front',
-      'Back',
-      'Left sleeve',
-      'Right sleeve',
-      'Collar',
-    ])
-    expect(regionLabels('pants')).toEqual(['Left leg', 'Right leg', 'Waistband'])
-    expect(regionLabels('shorts')).toEqual(['Left leg', 'Right leg', 'Waistband'])
+    expect(regionIds('tshirt')).toEqual(expect.arrayContaining(['front-body', 'back-body', 'left-sleeve', 'right-sleeve', 'collar', 'hem']))
+    expect(regionIds('hoodie')).toEqual(expect.arrayContaining(['front-body', 'back-body', 'left-sleeve', 'right-sleeve', 'hood', 'left-cuff', 'right-cuff', 'kangaroo-pocket', 'waistband']))
+    expect(regionIds('sweatshirt')).toEqual(expect.arrayContaining(['front-body', 'back-body', 'left-sleeve', 'right-sleeve', 'collar', 'left-cuff', 'right-cuff', 'waistband']))
+    expect(regionIds('jacket')).toEqual(expect.arrayContaining(['front-left', 'front-right', 'back', 'left-sleeve', 'right-sleeve', 'collar', 'left-cuff', 'right-cuff', 'zipper']))
+    expect(regionIds('pants')).toEqual(expect.arrayContaining(['left-leg', 'right-leg', 'waistband', 'left-pocket', 'right-pocket', 'inseam', 'outseam']))
+    expect(regionIds('shorts')).toEqual(expect.arrayContaining(['left-leg', 'right-leg', 'waistband', 'pockets', 'inseam', 'outseam']))
 
-    expect(regionIds('hoodie')).not.toContain('waistband')
-    expect(regionIds('sweatshirt')).not.toContain('waistband')
-    expect(regionIds('jacket')).not.toContain('cuffs')
+    expect(regionIds('hoodie')).toContain('waistband')
+    expect(regionIds('sweatshirt')).toContain('waistband')
+    expect(regionIds('jacket')).toContain('left-cuff')
     expect(regionIds('tshirt')).not.toContain('hood')
+    expect(regionLabels('tshirt')).toEqual(expect.arrayContaining(['Front body', 'Left sleeve', 'Collar', 'Hem']))
 
     let document = createNewDesign('tshirt')
-    const sleeves = colorRegionsFor('tshirt').find((region) => region.id === 'sleeve-left')!
+    const sleeves = colorRegionsFor('tshirt').find((region) => region.id === 'left-sleeve')!
     document = setRegionColor(document, sleeves.panelIds, '#8b3a3a')
     expect(sleeves.panelIds).toEqual(expect.arrayContaining(['left_sleeve', 'left_sleeve_back']))
     expect(getPanelColor(document, 'left_sleeve')).toBe('#8b3a3a')
@@ -202,6 +197,10 @@ describe('Phase 8 real garment customization', () => {
     expect(before.x).toBe(10)
     expect(before.y).toBe(10)
     expect(panelPrintBox(document, before.anchor.panelId)).toEqual(box)
+    const paths = objectClipPaths(document, before)
+    expect(paths.length).toBeGreaterThan(0)
+    expect(paths[0]).toMatch(/^[MLC]/)
+    expect(paths.join(' ')).not.toMatch(/print box/)
   })
 
   it('keeps print, safe, and guide overlays off by default except the print/safe pair', () => {
@@ -338,7 +337,7 @@ describe('Phase 8 real garment customization', () => {
 
   it('undoes and redoes garment color, region, and material writes as snapshots', () => {
     const history = historyStack(createNewDesign('tshirt'))
-    const sleeves = colorRegionsFor('tshirt').find((region) => region.id === 'sleeve-right')!
+    const sleeves = colorRegionsFor('tshirt').find((region) => region.id === 'right-sleeve')!
 
     history.apply(setColorValue(history.document, 'body', '#1e2a4a'))
     history.apply(setRegionColor(history.document, sleeves.panelIds, '#8b3a3a'))

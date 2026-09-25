@@ -3,7 +3,7 @@ import { moveDesignObjectLayer } from '@/design/designObjects'
 import {
   getDesignObjectsInZone,
   objectDisplayName,
-  PLACEMENT_ZONE_LABELS,
+  placementZoneLabel,
   resolveActiveZone,
   SHAPE_KIND_LABELS,
   SHAPE_KINDS,
@@ -114,7 +114,7 @@ export function DesignPanel() {
         <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Layers</div>
         {objects.length === 0 ? (
           <p className="text-[12px] leading-5 text-mute">
-            No artwork on {PLACEMENT_ZONE_LABELS[zone]} yet.
+            No artwork on {placementZoneLabel(zone)} yet.
           </p>
         ) : (
           <ul className="space-y-1">
@@ -239,7 +239,7 @@ export function DesignPanel() {
                   : 'border-line text-mute hover:text-ink'
               }`}
             >
-              {PLACEMENT_ZONE_LABELS[item]}
+              {placementZoneLabel(item)}
             </button>
           ))}
         </div>

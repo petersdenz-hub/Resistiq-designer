@@ -1,7 +1,7 @@
 import { Dialog, DialogActions } from '@/ui'
 import { Button } from '@/ui/Button'
 import { AVAILABLE_GARMENTS } from './registry'
-import { GARMENT_CATEGORY_LABELS } from './types'
+import { categoryLabel } from './types'
 
 interface GarmentPickerProps {
   onPick: (garmentType: string) => void
@@ -38,7 +38,7 @@ export function GarmentPicker({ onPick, onClose }: GarmentPickerProps) {
               <div className="border-t border-line bg-panel px-3 py-2">
                 <div className="text-[12px] font-medium text-ink">{garment.name}</div>
                 <div className="text-[10px] uppercase tracking-[0.12em] text-mute">
-                  {GARMENT_CATEGORY_LABELS[garment.category]}
+                  {categoryLabel(garment.category)}
                 </div>
               </div>
             </button>

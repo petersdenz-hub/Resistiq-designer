@@ -3,6 +3,7 @@ import { useDesign } from '@/design/useDesign'
 import {
   colorRegionsFor,
   regionColor,
+  regionForPanel,
 } from '@/garments/colorRegions'
 import {
   controlValue,
@@ -18,6 +19,7 @@ export function GarmentCustomization() {
     document,
     setBodyColor,
     setRegionColor,
+    setRegionMaterial,
     setGarmentMaterial,
     setConstructionStyle,
     setConstructionVariant,
@@ -27,7 +29,13 @@ export function GarmentCustomization() {
   const resolved = resolveConstruction(document)
   const controls = visibleConstructionControls(document.garmentType, resolved)
   const regions = colorRegionsFor(document.garmentType)
-  const materialId = document.construction?.materialId
+  const selectedRegion = regionForPanel(document.garmentType, document.activePanelId)
+  const materialId =
+    (selectedRegion
+      ? selectedRegion.panelIds
+          .map((panelId) => document.colors.find((color) => color.role === 'panel' && color.id === panelId)?.materialId)
+          .find((value) => value)
+      : undefined) ?? document.construction?.materialId
   const originRef = useRef(document)
   const body = document.colors.find((color) => color.role === 'body')?.value ?? garment.defaults.bodyColor
 
@@ -56,8 +64,18 @@ export function GarmentCustomization() {
 
       <section className="space-y-2" data-color-regions="true">
         <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Regions</div>
+        {selectedRegion ? (
+          <div className="text-[11px] text-ink" data-selected-region={selectedRegion.id}>
+            Selected region: {selectedRegion.label}
+          </div>
+        ) : null}
         {regions.map((region) => (
-          <div key={region.id} data-color-region={region.id} data-color-region-panels={region.panelIds.join(',')}>
+          <div
+            key={region.id}
+            data-color-region={region.id}
+            data-color-region-panels={region.panelIds.join(',')}
+            data-color-region-selected={selectedRegion?.id === region.id ? 'true' : 'false'}
+          >
             <ColorPicker
               label={region.label}
               value={regionColor(document, region)}
@@ -83,7 +101,12 @@ export function GarmentCustomization() {
                 type="button"
                 data-material-option={material.id}
                 aria-pressed={selected}
-                onClick={() => setGarmentMaterial(material.id)}
+                onClick={() => {
+                  setGarmentMaterial(material.id)
+                  if (selectedRegion) {
+                    setRegionMaterial(selectedRegion.panelIds, material.id)
+                  }
+                }}
                 className={`rounded-md border px-2.5 py-2 text-left ${
                   selected
                     ? 'border-accent/50 bg-accent/10 text-ink'

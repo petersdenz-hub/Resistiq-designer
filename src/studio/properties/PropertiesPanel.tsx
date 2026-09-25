@@ -1,7 +1,7 @@
 import { FONT_WEIGHTS, TEXT_ALIGNS, TEXT_FONT_FAMILIES } from '@/design/typography'
 import {
   imageKeepsAlpha,
-  PLACEMENT_ZONE_LABELS,
+  placementZoneLabel,
   SHAPE_KIND_LABELS,
   SHAPE_KINDS,
   zonesForGarment,
@@ -338,7 +338,7 @@ function MultiObjectProperties() {
         <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Object</div>
         <div className="mt-1 text-[12px] font-medium text-ink">{selectedObjects.length} objects</div>
         <div className="mt-1 text-[11px] text-mute">
-          {sharedZone ? PLACEMENT_ZONE_LABELS[sharedZone] : 'Mixed zones'}
+          {sharedZone ? placementZoneLabel(sharedZone) : 'Mixed zones'}
           {panel ? ` · ${panel.label}` : sharedPanel === '' ? '' : ' · mixed panels'}
         </div>
       </section>
@@ -493,7 +493,7 @@ function ObjectPlacementFields({
         >
           {garmentZones.map((item) => (
             <option key={item} value={item}>
-              {PLACEMENT_ZONE_LABELS[item]}
+              {placementZoneLabel(item)}
             </option>
           ))}
         </select>

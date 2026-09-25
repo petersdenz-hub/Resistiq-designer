@@ -1,6 +1,9 @@
+import { JACKET_CONSTRUCTION, JACKET_CONTROLS } from '../constructionCatalog'
 import { garmentCapabilities } from '../capabilities'
+import { attachSilhouettes } from '../topology'
 import { FRONT_BACK_VIEWS, STANDARD_VIEWBOX } from '../types'
 import type { GarmentDefinition, GarmentPanelDefinition } from '../types'
+import { JACKET_PATHS } from './geometry'
 
 const LEFT_CHEST = {
   id: 'jacket_left_chest_print',
@@ -122,6 +125,69 @@ export const JACKET_PANELS: GarmentPanelDefinition[] = [
     local: { width: 140, height: 44 },
     frame: { x: 216, y: 124, width: 128, height: 42 },
   },
+  {
+    id: 'cuff_right',
+    label: 'Right cuff',
+    viewId: 'front',
+    type: 'cuff',
+    printable: false,
+    local: { width: 70, height: 70 },
+    frame: { x: 36, y: 300, width: 70, height: 70 },
+  },
+  {
+    id: 'cuff_left',
+    label: 'Left cuff',
+    viewId: 'front',
+    type: 'cuff',
+    printable: false,
+    local: { width: 70, height: 70 },
+    frame: { x: 454, y: 300, width: 70, height: 70 },
+  },
+  {
+    id: 'cuff_right_back',
+    label: 'Right cuff',
+    viewId: 'back',
+    type: 'cuff',
+    printable: false,
+    local: { width: 70, height: 70 },
+    frame: { x: 454, y: 300, width: 70, height: 70 },
+  },
+  {
+    id: 'cuff_left_back',
+    label: 'Left cuff',
+    viewId: 'back',
+    type: 'cuff',
+    printable: false,
+    local: { width: 70, height: 70 },
+    frame: { x: 36, y: 300, width: 70, height: 70 },
+  },
+  {
+    id: 'zipper',
+    label: 'Zipper',
+    viewId: 'front',
+    type: 'zipper',
+    printable: false,
+    local: { width: 18, height: 368 },
+    frame: { x: 271, y: 166, width: 18, height: 368 },
+  },
+  {
+    id: 'pocket_left',
+    label: 'Left pocket',
+    viewId: 'front',
+    type: 'pocket',
+    printable: false,
+    local: { width: 74, height: 84 },
+    frame: { x: 170, y: 388, width: 74, height: 84 },
+  },
+  {
+    id: 'pocket_right',
+    label: 'Right pocket',
+    viewId: 'front',
+    type: 'pocket',
+    printable: false,
+    local: { width: 74, height: 84 },
+    frame: { x: 318, y: 388, width: 74, height: 84 },
+  },
 ]
 
 export function jacketDefaultPanelId(viewId: string): string {
@@ -135,10 +201,12 @@ export const jacketMeta = {
   category: 'outerwear',
   views: FRONT_BACK_VIEWS,
   viewBox: STANDARD_VIEWBOX,
-  panels: JACKET_PANELS,
+  panels: attachSilhouettes(JACKET_PANELS, JACKET_PATHS),
   preview: { viewId: 'front' },
   supportedDesignZones: ['front', 'back', 'left-sleeve', 'right-sleeve'],
   reservedPanelTypes: ['hood', 'pocket', 'chest', 'collar', 'lower_sleeve', 'side_panel'],
+  constructionDefaults: JACKET_CONSTRUCTION,
+  constructionControls: JACKET_CONTROLS,
   defaults: { bodyColor: '#3d4a3c' },
   capabilities: garmentCapabilities({
     sleeves: true,

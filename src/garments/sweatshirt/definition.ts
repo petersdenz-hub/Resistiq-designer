@@ -1,6 +1,9 @@
+import { SWEATSHIRT_CONSTRUCTION, SWEATSHIRT_CONTROLS } from '../constructionCatalog'
 import { garmentCapabilities } from '../capabilities'
+import { attachSilhouettes } from '../topology'
 import { FRONT_BACK_VIEWS, STANDARD_VIEWBOX } from '../types'
 import type { GarmentDefinition, GarmentPanelDefinition } from '../types'
+import { SWEATSHIRT_PATHS } from './geometry'
 
 const CHEST_PRINT = {
   id: 'sweatshirt_chest_print',
@@ -195,6 +198,28 @@ export const SWEATSHIRT_PANELS: GarmentPanelDefinition[] = [
     local: { width: 60, height: 40 },
     frame: { x: 26, y: 356, width: 58, height: 52 },
   },
+  {
+    id: 'waistband',
+    name: 'Waistband',
+    label: 'Waistband',
+    viewId: 'front',
+    side: 'front',
+    type: 'waistband',
+    printable: false,
+    local: { width: 124, height: 16 },
+    frame: { x: 218, y: 522, width: 124, height: 16 },
+  },
+  {
+    id: 'waistband_back',
+    name: 'Waistband',
+    label: 'Waistband',
+    viewId: 'back',
+    side: 'back',
+    type: 'waistband',
+    printable: false,
+    local: { width: 124, height: 16 },
+    frame: { x: 218, y: 522, width: 124, height: 16 },
+  },
 ]
 
 export function sweatshirtDefaultPanelId(viewId: string): string {
@@ -208,9 +233,11 @@ export const sweatshirtMeta = {
   category: 'tops',
   views: FRONT_BACK_VIEWS,
   viewBox: STANDARD_VIEWBOX,
-  panels: SWEATSHIRT_PANELS,
+  panels: attachSilhouettes(SWEATSHIRT_PANELS, SWEATSHIRT_PATHS),
   preview: { viewId: 'front' },
   supportedDesignZones: ['front', 'back', 'left-sleeve', 'right-sleeve'],
+  constructionDefaults: SWEATSHIRT_CONSTRUCTION,
+  constructionControls: SWEATSHIRT_CONTROLS,
   defaults: { bodyColor: '#4a3f38' },
   capabilities: garmentCapabilities({
     sleeves: true,

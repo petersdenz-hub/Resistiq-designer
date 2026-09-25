@@ -59,6 +59,8 @@ export interface DesignColor {
    */
   role: string
   value: string
+  /** Optional fabric for this panel. Older documents omit this. */
+  materialId?: string
 }
 
 export const MATERIAL_FAMILIES = [
