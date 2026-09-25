@@ -55,6 +55,7 @@ export function DesignActions() {
           }}
         />
         <Button
+          variant="accent"
           className="w-full"
           data-add-design-image="true"
           disabled={busy}

@@ -38,7 +38,7 @@ export function isLogoFileName(fileName: string): boolean {
   return /logo/i.test(fileName)
 }
 
-export const DEFAULT_OPEN_SECTIONS: StudioSectionId[] = ['garment', 'design']
+export const DEFAULT_OPEN_SECTIONS: StudioSectionId[] = ['design', 'layers']
 
 export function toggleStudioSections(
   open: readonly StudioSectionId[],

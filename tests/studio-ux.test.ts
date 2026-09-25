@@ -49,8 +49,8 @@ describe('Phase 14 studio UX', () => {
   })
 
   it('opens garment and design first and keeps at most two sections expanded', () => {
-    expect(DEFAULT_OPEN_SECTIONS).toEqual(['garment', 'design'])
-    expect(toggleStudioSections(['garment', 'design'], 'layers')).toEqual(['design', 'layers'])
+    expect(DEFAULT_OPEN_SECTIONS).toEqual(['design', 'layers'])
+    expect(toggleStudioSections(['design', 'layers'], 'garment')).toEqual(['layers', 'garment'])
     expect(toggleStudioSections(['design', 'layers'], 'layers')).toEqual(['design'])
   })
 

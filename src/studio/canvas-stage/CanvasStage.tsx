@@ -7,7 +7,6 @@ import { EditToolbar } from '@/studio/EditToolbar'
 import { fitCanvasZoom } from '@/studio/editorChrome'
 import { useCanvasEditor } from '@/studio/canvasEditorContext'
 import { ViewToggle } from '@/studio/ViewToggle'
-import { ZoneChips } from '@/studio/ZoneChips'
 import { getGarment } from '@/garments/registry'
 import { GARMENT_COLOR_PRESETS } from '@/ui'
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type WheelEvent } from 'react'
@@ -30,7 +29,21 @@ export function CanvasStage({
   onToggleRight: () => void
 }) {
   const { document, setBodyColor, commitGesture } = useDesign()
-  const { pan, setPan, gridSize, gridVisible, snapToGrid, setGridVisible, setSnapToGrid } = useCanvasEditor()
+  const {
+    pan,
+    setPan,
+    gridSize,
+    gridVisible,
+    snapToGrid,
+    setGridVisible,
+    setSnapToGrid,
+    showPrintArea,
+    showSafeAreas,
+    showGuides,
+    setShowPrintArea,
+    setShowSafeAreas,
+    setShowGuides,
+  } = useCanvasEditor()
   const [zoom, setZoom] = useState(0.95)
   const panning = useRef<{ x: number; y: number; panX: number; panY: number } | null>(null)
   const areaRef = useRef<HTMLDivElement | null>(null)
@@ -199,8 +212,25 @@ export function CanvasStage({
           >
             Snap
           </button>
+          <GuideChip
+            pressed={showPrintArea}
+            label="Print"
+            dataAttr="print-area"
+            onClick={() => setShowPrintArea(!showPrintArea)}
+          />
+          <GuideChip
+            pressed={showSafeAreas}
+            label="Safe"
+            dataAttr="safe-area"
+            onClick={() => setShowSafeAreas(!showSafeAreas)}
+          />
+          <GuideChip
+            pressed={showGuides}
+            label="Guides"
+            dataAttr="guides"
+            onClick={() => setShowGuides(!showGuides)}
+          />
           <span className="sr-only" data-grid-visible={gridVisible ? 'true' : 'false'} data-snap-enabled={snapToGrid ? 'true' : 'false'} />
-          <ZoneChips hidden />
           <div className="sr-only" data-garment-color-control="true" title="Garment color">
             {GARMENT_COLOR_PRESETS.slice(0, 6).map((preset) => (
               <button
@@ -261,5 +291,32 @@ export function CanvasStage({
       </div>
       <span className="sr-only" data-visible-object-count={visibleCount} />
     </section>
+  )
+}
+
+function GuideChip({
+  pressed,
+  label,
+  dataAttr,
+  onClick,
+}: {
+  pressed: boolean
+  label: string
+  dataAttr: string
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      data-guide-toggle={dataAttr}
+      aria-pressed={pressed}
+      title={label}
+      onClick={onClick}
+      className={`h-7 rounded-md border px-2 text-[11px] ${
+        pressed ? 'border-accent/40 bg-accent/10 text-ink' : 'border-line text-mute hover:text-ink'
+      }`}
+    >
+      {label}
+    </button>
   )
 }

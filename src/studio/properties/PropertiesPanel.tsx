@@ -33,6 +33,7 @@ import {
   type LayerDirection,
 } from '@/design/types'
 import { useDesign } from '@/design/useDesign'
+import { ZoneChips } from '@/studio/ZoneChips'
 import { GarmentCustomization } from './GarmentCustomization'
 import { minLocalSize, getGarmentPanel } from '@/garments/coordinates'
 import { getGarment } from '@/garments/registry'
@@ -126,6 +127,10 @@ function SelectedObjectProperties() {
       <section className="space-y-2" data-properties-section="object" data-artwork-properties="true">
         <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">
           {selectedObject.type === 'image' ? 'Image / Logo' : selectedObject.type === 'text' ? 'Text' : 'Artwork'}
+        </div>
+        <div className="space-y-1">
+          <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Design area</div>
+          <ZoneChips />
         </div>
         <Field label="Name">
           <input
@@ -366,6 +371,10 @@ function MultiObjectProperties() {
       <section data-properties-section="object">
         <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Object</div>
         <div className="mt-1 text-[12px] font-medium text-ink">{selectedObjects.length} objects</div>
+        <div className="mt-2 space-y-1">
+          <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-mute">Design area</div>
+          <ZoneChips />
+        </div>
         <div className="mt-1 text-[11px] text-mute">
           {sharedZone ? placementZoneLabel(sharedZone) : 'Mixed zones'}
           {panel ? ` · ${panel.label}` : sharedPanel === '' ? '' : ' · mixed panels'}
