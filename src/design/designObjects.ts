@@ -256,8 +256,13 @@ function defaultBox(
   if (panelId) {
     const geometry = getGarmentPanel(getGarment(document.garmentType), panelId)
     if (geometry) {
-      const width = Math.min(size.width, Math.max(48, geometry.frame.width * 0.72))
-      const height = Math.min(size.height, Math.max(24, geometry.frame.height * 0.72))
+      let width = Math.min(size.width, Math.max(48, geometry.frame.width * 0.72))
+      let height = Math.min(size.height, Math.max(24, geometry.frame.height * 0.72))
+      if (shape === 'circle') {
+        const side = Math.min(width, height)
+        width = side
+        height = side
+      }
       return {
         x: geometry.frame.x + (geometry.frame.width - width) / 2 + cascade,
         y: geometry.frame.y + (geometry.frame.height - height) / 2 + cascade,
