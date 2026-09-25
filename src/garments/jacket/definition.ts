@@ -136,6 +136,9 @@ export const jacketMeta = {
   views: FRONT_BACK_VIEWS,
   viewBox: STANDARD_VIEWBOX,
   panels: JACKET_PANELS,
+  preview: { viewId: 'front' },
+  supportedDesignZones: ['front', 'back', 'left-sleeve', 'right-sleeve'],
+  reservedPanelTypes: ['hood', 'pocket', 'chest', 'collar', 'lower_sleeve', 'side_panel'],
   defaults: { bodyColor: '#3d4a3c' },
   capabilities: garmentCapabilities({
     sleeves: true,

@@ -18,6 +18,7 @@ export function Dialog({ title, children, onClose, size = 'sm' }: DialogProps) {
         onClick={onClose}
       />
       <div
+        data-dialog="true"
         className={`relative w-full rounded-xl border border-line bg-panel p-4 shadow-2xl ${
           size === 'lg' ? 'max-w-2xl' : 'max-w-sm'
         }`}
@@ -48,7 +49,9 @@ export function ConfirmDialog({
 }) {
   return (
     <Dialog title={title} onClose={onCancel}>
-      <p className="text-[12px] leading-5 text-mute">{message}</p>
+      <p className="text-[12px] leading-5 text-mute" data-confirm-message="true">
+        {message}
+      </p>
       <DialogActions>
         <Button onClick={onCancel}>Cancel</Button>
         <Button variant="accent" onClick={onConfirm}>

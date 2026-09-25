@@ -6,6 +6,15 @@ import type { ConstructionKind, DesignConstruction, DesignConstructionPart } fro
  */
 export function defaultConstructionFor(garmentType: string): DesignConstruction {
   switch (garmentType) {
+    case 'sweatshirt':
+      return {
+        collar: { id: 'collar', kind: 'collar', style: 'crew', present: true, panelId: 'collar' },
+        hem: { id: 'hem', kind: 'hem', style: 'rib', present: true, panelId: 'front_body' },
+        cuffs: [
+          { id: 'cuff_right', kind: 'cuff', style: 'rib', present: true, panelId: 'cuff_right' },
+          { id: 'cuff_left', kind: 'cuff', style: 'rib', present: true, panelId: 'cuff_left' },
+        ],
+      }
     case 'hoodie':
       return {
         hood: {
@@ -148,7 +157,7 @@ export function constructionPartsForStyle(
     case 'belt_loop':
       return [part('belt_loop', 'belt_loops', style, { panelId: 'waistband' })]
     case 'cuff':
-      return garmentType === 'hoodie'
+      return garmentType === 'hoodie' || garmentType === 'sweatshirt'
         ? [
             part('cuff', 'cuff_right', style, { panelId: 'cuff_right' }),
             part('cuff', 'cuff_left', style, { panelId: 'cuff_left' }),

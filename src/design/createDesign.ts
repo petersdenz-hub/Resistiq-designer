@@ -1,24 +1,19 @@
 import { getGarment } from '@/garments/registry'
+import { panelName } from '@/garments/model'
+import type { GarmentDefinition } from '@/garments/types'
 import { createId } from './ids'
-import type { DesignDocument } from './types'
+import type { DesignDocument, DesignPanel, DesignSafeArea, DesignView } from './types'
 
-export function createNewDesign(garmentType = 'tshirt'): DesignDocument {
-  const garment = getGarment(garmentType)
-  const now = new Date().toISOString()
-  const activeView = garment.views[0]?.id ?? 'front'
-
+export function documentChromeFromGarment(garment: GarmentDefinition): {
+  views: DesignView[]
+  panels: DesignPanel[]
+  safeAreas: DesignSafeArea[]
+} {
   return {
-    id: createId(),
-    name: `Untitled ${garment.label}`,
-    version: 1,
-    status: 'draft',
-    garmentType: garment.id,
-    activeView,
-    activePanelId: garment.defaultPanelId(activeView),
     views: garment.views.map((view) => ({ id: view.id, label: view.label })),
     panels: garment.panels.map((panel) => ({
       id: panel.id,
-      label: panel.label,
+      label: panelName(panel),
       viewId: panel.viewId,
       type: panel.type,
     })),
@@ -37,6 +32,26 @@ export function createNewDesign(garmentType = 'tshirt'): DesignDocument {
           ]
         : [],
     ),
+  }
+}
+
+export function createNewDesign(garmentType = 'tshirt'): DesignDocument {
+  const garment = getGarment(garmentType)
+  const now = new Date().toISOString()
+  const activeView = garment.views[0]?.id ?? 'front'
+  const chrome = documentChromeFromGarment(garment)
+
+  return {
+    id: createId(),
+    name: `Untitled ${garment.label}`,
+    version: 1,
+    status: 'draft',
+    garmentType: garment.id,
+    activeView,
+    activePanelId: garment.defaultPanelId(activeView),
+    views: chrome.views,
+    panels: chrome.panels,
+    safeAreas: chrome.safeAreas,
     colors: [{ id: 'body', role: 'body', value: garment.defaults.bodyColor }],
     materials: [],
     elements: [],

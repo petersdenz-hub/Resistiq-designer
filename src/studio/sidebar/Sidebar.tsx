@@ -1,9 +1,11 @@
 import { ACCEPTED_IMAGE_ACCEPT } from '@/design/ingestImage'
 import { DesignPanel } from './DesignPanel'
 import { MaterialsPanel } from './MaterialsPanel'
-import { getElementsInView, getPanelById, getPanelsInView } from '@/design/selectors'
+import { getElementsInView, getPanelById } from '@/design/selectors'
 import { useDesign } from '@/design/useDesign'
+import { GarmentSelector } from '@/garments/GarmentSelector'
 import { getGarment } from '@/garments/registry'
+import { isPrintablePanel, panelName } from '@/garments/model'
 import { GARMENT_CATEGORY_LABELS } from '@/garments/types'
 import {
   Button,
@@ -123,20 +125,12 @@ function Placeholder({ text }: { text: string }) {
 
 function GarmentPanel() {
   const { document, setActivePanel } = useDesign()
-  const viewPanels = getPanelsInView(document, document.activeView)
   const garment = getGarment(document.garmentType)
+  const viewPanels = garment.panels.filter((panel) => panel.viewId === document.activeView)
 
   return (
     <div className="space-y-4">
-      <div className="w-full rounded-lg border border-accent/40 bg-accent/10 px-3 py-2.5">
-        <div className="text-[12px] font-medium text-ink">{garment.name}</div>
-        <div className="mt-0.5 text-[11px] text-mute">
-          {GARMENT_CATEGORY_LABELS[garment.category]} · this design
-        </div>
-      </div>
-      <p className="text-[12px] leading-5 text-mute">
-        Create a new design to use a different garment. This one stays a {garment.name.toLowerCase()}.
-      </p>
+      <GarmentSelector />
       <div>
         <div className="mb-2 text-[10px] font-medium uppercase tracking-[0.14em] text-mute">
           Panels on this view
@@ -149,6 +143,7 @@ function GarmentPanel() {
               <li key={panel.id}>
                 <button
                   type="button"
+                  data-panel-option={panel.id}
                   onClick={() => setActivePanel(panel.id)}
                   className={`w-full rounded-md border px-3 py-1.5 text-left ${
                     active
@@ -156,16 +151,20 @@ function GarmentPanel() {
                       : 'border-line text-mute hover:text-ink'
                   }`}
                 >
-                  <span className="block text-[12px]">{panel.label}</span>
-                  {safe ? (
-                    <span className="mt-0.5 block text-[10px] text-mute">{safe.label}</span>
-                  ) : null}
+                  <span className="block text-[12px]">{panelName(panel)}</span>
+                  <span className="mt-0.5 block text-[10px] text-mute">
+                    {isPrintablePanel(panel) ? (safe?.label ?? 'Printable') : 'Structure'}
+                  </span>
                 </button>
               </li>
             )
           })}
         </ul>
       </div>
+      <p className="text-[11px] leading-5 text-mute">
+        {GARMENT_CATEGORY_LABELS[garment.category]} · artwork stays on its original panels when you
+        switch garments.
+      </p>
     </div>
   )
 }

@@ -84,7 +84,7 @@ describe('Phase 7B.3 garment detail editor', () => {
   })
 
   it('resolves every listed construction option onto the document', () => {
-    for (const garmentType of ['tshirt', 'hoodie', 'jacket', 'pants', 'shorts']) {
+    for (const garmentType of ['tshirt', 'hoodie', 'sweatshirt', 'jacket', 'pants', 'shorts']) {
       for (const control of constructionControlsFor(garmentType)) {
         for (const option of control.options) {
           let document = createNewDesign(garmentType)
